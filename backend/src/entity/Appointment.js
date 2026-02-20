@@ -15,7 +15,14 @@ module.exports = new EntitySchema({
         status: {
             type: "enum",
             enum: ["pending", "confirmed", "completed", "cancelled"],
-            default: "pending",
+            default: "confirmed",
+        },
+        notes: {
+            type: "text",
+            nullable: true,
+        },
+        createdAt: {
+            createDate: true,
         },
     },
     relations: {

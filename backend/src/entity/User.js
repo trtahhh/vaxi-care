@@ -14,7 +14,23 @@ module.exports = new EntitySchema({
             unique: true,
         },
         password: {
-            type: "varchar", // Hash this in real app
+            type: "varchar",
+        },
+        phone: {
+            type: "varchar",
+            nullable: true,
+        },
+        refreshToken: {
+            type: "text",
+            nullable: true,
+        },
+        resetPasswordToken: {
+            type: "varchar",
+            nullable: true,
+        },
+        resetPasswordExpires: {
+            type: "datetime",
+            nullable: true,
         },
         fullName: {
             type: "varchar",

@@ -1,35 +1,77 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-function App() {
-  const [count, setCount] = useState(0)
+// Auth pages
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+// Parent pages
+import Children from "./pages/parent/Children";
+import Appointments from "./pages/parent/Appointments";
+import Progress from "./pages/parent/Progress";
+import Notifications from "./pages/parent/Notifications";
+
+export default function App() {
+    return (
+        <AuthProvider>
+            <BrowserRouter>
+                <Routes>
+                    {/* Public routes */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+
+                    {/* Parent protected routes */}
+                    <Route
+                        path="/parent/dashboard"
+                        element={
+                            <ProtectedRoute allowedRoles={["parent"]}>
+                                <Children />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/parent/children"
+                        element={
+                            <ProtectedRoute allowedRoles={["parent"]}>
+                                <Children />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/parent/appointments"
+                        element={
+                            <ProtectedRoute allowedRoles={["parent"]}>
+                                <Appointments />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/parent/progress"
+                        element={
+                            <ProtectedRoute allowedRoles={["parent"]}>
+                                <Progress />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/parent/notifications"
+                        element={
+                            <ProtectedRoute allowedRoles={["parent"]}>
+                                <Notifications />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Default redirect */}
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+            </BrowserRouter>
+        </AuthProvider>
+    );
 }
-
-export default App
