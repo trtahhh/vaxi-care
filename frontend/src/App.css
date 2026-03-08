@@ -41,5 +41,11 @@
   color: #888;
 }
 
-// update UI
-body { background: #f5f5f5; }
+HEAD
+body {
+  background: white;
+}
+
+body {
+  background: #f5f5f5;
+}
