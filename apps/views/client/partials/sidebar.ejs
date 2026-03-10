@@ -1,0 +1,34 @@
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <span class="logo-text">VaxiCare</span>
+    </div>
+    <nav class="sidebar-nav">
+        <!-- res.locals.currentPath is provided globally via app.js middleware -->
+        <a href="/" class="nav-item <%= currentPath === '/' ? 'nav-item--active' : '' %>">
+            Tổng quan
+        </a>
+        <a href="/children" class="nav-item <%= currentPath === '/children' || currentPath === '/children/add' ? 'nav-item--active' : '' %>">
+            Hồ sơ trẻ
+        </a>
+        <a href="/appointments" class="nav-item <%= currentPath === '/appointments' || currentPath === '/appointments/book' ? 'nav-item--active' : '' %>">
+            Lịch tiêm
+        </a>
+        <a href="/progress" class="nav-item <%= currentPath === '/progress' ? 'nav-item--active' : '' %>">
+            Tiến độ tiêm
+        </a>
+        <a href="/notifications" class="nav-item <%= currentPath === '/notifications' ? 'nav-item--active' : '' %>">
+            Thông báo
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <span class="user-name"><%= user ? user.username : 'User' %></span>
+            <span class="user-role">Phụ huynh</span>
+        </div>
+        <form action="/auth/logout" method="POST" class="logout-form">
+            <button type="submit" class="logout-btn">
+                Đăng xuất
+            </button>
+        </form>
+    </div>
+</aside>

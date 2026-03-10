@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm hồ sơ trẻ - VaxiCare</title>
+    <link rel="stylesheet" href="/static/client/layout.css">
+    <link rel="stylesheet" href="/static/client/parent.css">
+</head>
+<body>
+    <div class="layout">
+        <%- include('partials/sidebar') %>
+        
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Thêm hồ sơ trẻ</h1>
+                <a href="/children" class="btn btn--secondary">Quay lại</a>
+            </div>
+
+            <div class="modal" style="margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; max-width: 600px;">
+                <form action="/children/add" method="POST" class="modal-form">
+                    <div class="form-group">
+                        <label for="name">Họ và tên bé <span class="required">*</span></label>
+                        <input id="name" name="name" type="text" placeholder="Nhập tên bé" required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dob">Ngày sinh <span class="required">*</span></label>
+                        <input id="dob" name="dob" type="date" required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gender">Giới tính <span class="required">*</span></label>
+                        <select id="gender" name="gender" required>
+                            <option value="">-- Chọn giới tính --</option>
+                            <option value="male">Nam</option>
+                            <option value="female">Nữ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+                    
+                    <% if (locals.error) { %>
+                        <p class="form-error"><%= error %></p>
+                    <% } %>
+                    
+                    <div class="modal-actions" style="margin-top: 24px;">
+                        <button type="submit" class="btn btn--primary">Thêm hồ sơ</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

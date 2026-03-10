@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt lịch tiêm - VaxiCare</title>
+    <link rel="stylesheet" href="/static/client/layout.css">
+    <link rel="stylesheet" href="/static/client/parent.css">
+    <script>
+        // Simple slot checking JS fetch
+        async function checkSlots(event) {
+            const date = event.target.value;
+            const infoContainer = document.getElementById("slot-info-box");
+            if (!date) return;
+            try {
+                const res = await fetch(`/appointments/slots?date=${date}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    infoContainer.style.display = "block";
+                    if (data.availableSlots <= 0) {
+                        infoContainer.className = "slot-info slot-info--full";
+                        infoContainer.innerText = `Hết chỗ (0/${data.maxSlots})`;
+                        document.getElementById("submit-btn").disabled = true;
+                    } else {
+                        infoContainer.className = "slot-info slot-info--ok";
+                        infoContainer.innerText = `Còn ${data.availableSlots}/${data.maxSlots} chỗ`;
+                        document.getElementById("submit-btn").disabled = false;
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="layout">
+        <%- include('partials/sidebar') %>
+        
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Đặt lịch tiêm chủng</h1>
+                <a href="/appointments" class="btn btn--secondary">Quay lại lịch tiêm</a>
+            </div>
+
+            <div class="modal" style="margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; max-width: 600px;">
+                <form action="/appointments/book" method="POST" class="modal-form">
+                    <div class="form-group">
+                        <label>Chọn bé <span class="required">*</span></label>
+                        <select name="childId" required>
+                            <option value="">-- Chọn hồ sơ trẻ --</option>
+                            <% children.forEach(function(c) { %>
+                                <option value="<%= c.id %>"><%= c.name %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Chọn vaccine <span class="required">*</span></label>
+                        <select name="vaccineId" required>
+                            <option value="">-- Chọn vaccine --</option>
+                            <% vaccines.forEach(function(v) { %>
+                                <option value="<%= v.id %>">
+                                    <%= v.name %> <%= v.ageLabel ? '(' + v.ageLabel + ')' : '' %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ngày hẹn <span class="required">*</span></label>
+                        <% const minDate = new Date().toISOString().slice(0, 16); %>
+                        <input type="datetime-local" name="date" min="<%= minDate %>" required onchange="checkSlots(event)" />
+                        <span id="slot-info-box" style="display: none; margin-top: 8px;"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ghi chú (tùy chọn)</label>
+                        <textarea name="notes" placeholder="Nhập ghi chú nếu có" rows="2"></textarea>
+                    </div>
+                    
+                    <% if (locals.error) { %>
+                        <p class="form-error"><%= error %></p>
+                    <% } %>
+
+                    <div class="modal-actions" style="margin-top: 24px;">
+                        <button type="submit" id="submit-btn" class="btn btn--primary">Xác nhận đặt lịch</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

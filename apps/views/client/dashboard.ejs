@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ trẻ - VaxiCare</title>
+    <link rel="stylesheet" href="/static/client/layout.css">
+    <link rel="stylesheet" href="/static/client/parent.css">
+</head>
+<body>
+    <div class="layout">
+        <%- include('partials/sidebar') %>
+        
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Hồ sơ trẻ</h1>
+                <a href="/children/add" class="btn btn--primary">Thêm hồ sơ</a>
+            </div>
+
+            <p class="children-note">
+                Để thêm hồ sơ trẻ chi tiết hơn kèm giấy khai sinh, vui lòng liên hệ nhân viên tại trung tâm.
+            </p>
+
+            <% if (children.length === 0) { %>
+                <div class="empty-state">
+                    <p>Chưa có hồ sơ trẻ nào được đăng ký.</p>
+                    <p style="font-size: 13px;">Vui lòng thêm tại đây hoặc đến trung tâm với giấy khai sinh để được nhân viên hỗ trợ.</p>
+                </div>
+            <% } else { %>
+                <div class="children-grid">
+                    <% children.forEach(function(child) { %>
+                        <div class="child-card">
+                            <div class="child-card__avatar">
+                                <%= child.name.charAt(0).toUpperCase() %>
+                            </div>
+                            <div class="child-card__info">
+                                <h3><%= child.name %></h3>
+                                <p>Ngày sinh: <%= new Date(child.dob).toLocaleDateString("vi-VN") %></p>
+                                <p>Giới tính: 
+                                    <%= child.gender === 'male' ? 'Nam' : (child.gender === 'female' ? 'Nữ' : 'Khác') %>
+                                </p>
+                                <p>Tuổi: 
+                                    <% 
+                                    const birth = new Date(child.dob);
+                                    const now = new Date();
+                                    const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+                                    let ageStr = "";
+                                    if (months < 12) {
+                                        ageStr = months + " tháng tuổi";
+                                    } else {
+                                        const yrs = Math.floor(months / 12);
+                                        const rem = months % 12;
+                                        ageStr = rem > 0 ? yrs + " tuổi " + rem + " tháng" : yrs + " tuổi";
+                                    }
+                                    %>
+                                    <%= ageStr %>
+                                </p>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+                
+                <h3 class="section-title">Lịch hẹn sắp tới</h3>
+                <div class="appointment-list">
+                    <% if (upcomingAppointments.length === 0) { %>
+                        <p class="loading-text">Không có lịch hẹn sắp tới.</p>
+                    <% } else { %>
+                        <% upcomingAppointments.forEach(function(appt) { %>
+                            <div class="appointment-card">
+                                <div class="appointment-card__info">
+                                    <h4><%= appt.vaccine ? appt.vaccine.name : 'Unknown Vaccine' %></h4>
+                                    <p>Bé: <strong><%= appt.child ? appt.child.name : 'Unknown Child' %></strong></p>
+                                    <p>Ngày: <%= new Date(appt.date).toLocaleString("vi-VN") %></p>
+                                    <% if (appt.notes) { %>
+                                        <p>Ghi chú: <%= appt.notes %></p>
+                                    <% } %>
+                                </div>
+                                <div class="appointment-card__right">
+                                    <span class="badge badge--yellow">Đang chờ</span>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } %>
+                </div>
+            <% } %>
+        </main>
+    </div>
+</body>
+</html>
