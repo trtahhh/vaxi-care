@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-const { AppDataSource } = require("../../models/data-source"); // We will create data-source in models
+const { AppDataSource } = require("../../models/data-source"); 
 const { authenticate } = require("./auth.middleware");
 
 const userRepo = () => AppDataSource.getRepository("User");

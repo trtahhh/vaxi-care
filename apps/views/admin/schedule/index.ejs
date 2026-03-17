@@ -1,0 +1,100 @@
+<%- include('../layout', { body: `
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-calendar-check"></i> Quản lý Lịch tiêm chủng</h1>
+</div>
+
+<div class="card">
+    <div class="calendar-header">
+        <div class="calendar-nav">
+            <a href="?month=${currentMonth === 1 ? 12 : currentMonth - 1}&year=${currentMonth === 1 ? currentYear - 1 : currentYear}" class="btn btn-primary">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            <span class="calendar-month">Tháng ${currentMonth} / ${currentYear}</span>
+            <a href="?month=${currentMonth === 12 ? 1 : currentMonth + 1}&year=${currentMonth === 12 ? currentYear + 1 : currentYear}" class="btn btn-primary">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+        <div class="calendar-legend" style="display: flex; gap: 15px; font-size: 13px;">
+            <span><span style="display: inline-block; width: 12px; height: 12px; background: #e3f2fd; border: 2px solid #3498db; border-radius: 2px; margin-right: 5px;"></span>Hôm nay</span>
+            <span><span style="display: inline-block; width: 12px; height: 12px; background: #e8f5e9; border-radius: 2px; margin-right: 5px;"></span>Có lịch hẹn</span>
+        </div>
+    </div>
+
+    <div class="calendar-grid">
+        <div class="calendar-day-header"><i class="bi bi-sun"></i> Chủ nhật</div>
+        <div class="calendar-day-header"><i class="bi bi-moon"></i> Thứ 2</div>
+        <div class="calendar-day-header"><i class="bi bi-moon"></i> Thứ 3</div>
+        <div class="calendar-day-header"><i class="bi bi-moon"></i> Thứ 4</div>
+        <div class="calendar-day-header"><i class="bi bi-moon"></i> Thứ 5</div>
+        <div class="calendar-day-header"><i class="bi bi-moon-stars"></i> Thứ 6</div>
+        <div class="calendar-day-header"><i class="bi bi-stars"></i> Thứ 7</div>
+
+        ${daysInMonth.map(d => `
+        <div class="calendar-day ${d.isPast ? 'past' : ''} ${d.today ? 'today' : ''} ${d.hasAppointments && !d.isPast ? 'has-appointments' : ''}">
+            <div class="day-number">
+                ${d.day}
+                ${d.hasAppointments && !d.isPast ? '<span class="day-indicator" title="Có lịch hẹn"></span>' : ''}
+            </div>
+            <div class="day-slots">
+                <i class="bi bi-calendar-plus"></i> Slots: <strong>${d.maxSlots}</strong>
+            </div>
+            ${!d.isPast ? `
+            <div class="day-actions">
+                <a href="#" onclick="openConfigModal('${d.date}', '${d.maxSlots}'); return false;">
+                    <i class="bi bi-gear"></i> Cấu hình
+                </a>
+            </div>
+            ` : ''}
+        </div>
+        `).join('')}
+    </div>
+</div>
+
+<!-- Config Modal -->
+<div id="config-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="bi bi-gear"></i> Cấu hình ngày</h3>
+            <button class="modal-close" onclick="closeModal('config-modal')">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <form method="POST" action="/admin/schedule/update">
+            <input type="hidden" name="_csrf" value="${csrfToken}">
+            <div class="form-group">
+                <label class="form-label"><i class="bi bi-calendar"></i> Ngày</label>
+                <input type="date" id="config-date" name="date" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="bi bi-people"></i> Số lượng slot tối đa</label>
+                <input type="number" id="config-slots" name="maxSlots" class="form-control" min="0" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('config-modal')" class="btn btn-secondary">
+                    <i class="bi bi-x"></i> Hủy
+                </button>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-lg"></i> Lưu
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openConfigModal(date, slots) {
+        document.getElementById('config-date').value = date;
+        document.getElementById('config-slots').value = slots;
+        openModal('config-modal');
+    }
+
+    // Show toast if redirected with message
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success')) {
+        showToast('success', 'Thành công', decodeURIComponent(urlParams.get('success')));
+    }
+    if (urlParams.get('error')) {
+        showToast('error', 'Lỗi', decodeURIComponent(urlParams.get('error')));
+    }
+</script>
+` }) %>

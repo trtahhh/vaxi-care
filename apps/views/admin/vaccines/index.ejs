@@ -1,0 +1,95 @@
+<%- include('../layout', { body: `
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-capsule"></i> Quản lý Vaccine</h1>
+</div>
+
+<div class="card">
+    <div class="toolbar">
+        <form class="search-box" method="GET" action="/admin/vaccines">
+            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm vaccine..." value="${search}">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Tìm
+            </button>
+            ${search ? '<a href="/admin/vaccines" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Xóa</a>' : ''}
+        </form>
+        <a href="/admin/vaccines/add" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Thêm Vaccine
+        </a>
+    </div>
+
+    ${vaccines.length > 0 ? `
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash"></i> ID</th>
+                    <th><i class="bi bi-capsule"></i> Tên vaccine</th>
+                    <th><i class="bi bi-currency-dollar"></i> Giá (VNĐ)</th>
+                    <th><i class="bi bi-box-seam"></i> Tồn kho</th>
+                    <th><i class="bi bi-calendar-heart"></i> Độ tuổi khuyến nghị</th>
+                    <th><i class="bi bi-gear"></i> Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${vaccines.map(v => `
+                <tr>
+                    <td><strong>${v.id}</strong></td>
+                    <td>${v.name}</td>
+                    <td>${new Intl.NumberFormat('vi-VN').format(v.price)}</td>
+                    <td>
+                        <span style="color: ${v.stock > 10 ? '#27ae60' : v.stock > 0 ? '#f39c12' : '#e74c3c'}; font-weight: 600;">
+                            ${v.stock > 10 ? '<i class="bi bi-check-circle"></i> ' : v.stock > 0 ? '<i class="bi bi-exclamation-triangle"></i> ' : '<i class="bi bi-x-circle"></i> '}
+                            ${v.stock}
+                        </span>
+                    </td>
+                    <td>${v.ageLabel || (v.recommendedAgeMonths ? v.recommendedAgeMonths + ' tháng' : '-')}</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="/admin/vaccines/edit/${v.id}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-pencil"></i> Sửa
+                            </a>
+                            <form method="POST" action="/admin/vaccines/delete/${v.id}" style="display:inline" onsubmit="return confirmDelete('Bạn có chắc muốn xóa vaccine &quot;${v.name}&quot;?')">
+                                <input type="hidden" name="_csrf" value="${csrfToken}">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    </div>
+
+    ${totalPages > 1 ? `
+    <div class="pagination">
+        ${currentPage > 1 ? `<a href="?page=${currentPage - 1}&search=${search}"><i class="bi bi-chevron-left"></i> Trước</a>` : '<span class="disabled"><i class="bi bi-chevron-left"></i> Trước</span>'}
+        ${Array.from({length: totalPages}, (_, i) => `
+            <a href="?page=${i + 1}&search=${search}" class="${currentPage === i + 1 ? 'active' : ''}">${i + 1}</a>
+        `).join('')}
+        ${currentPage < totalPages ? `<a href="?page=${currentPage + 1}&search=${search}">Sau <i class="bi bi-chevron-right"></i></a>` : '<span class="disabled">Sau <i class="bi bi-chevron-right"></i></span>'}
+    </div>
+    ` : ''}
+    ` : `
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <p>Không có vaccine nào</p>
+        <a href="/admin/vaccines/add" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Thêm vaccine đầu tiên
+        </a>
+    </div>
+    `}
+</div>
+
+<script>
+    // Show toast if redirected with message
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success')) {
+        showToast('success', 'Thành công', decodeURIComponent(urlParams.get('success')));
+    }
+    if (urlParams.get('error')) {
+        showToast('error', 'Lỗi', decodeURIComponent(urlParams.get('error')));
+    }
+</script>
+` }) %>

@@ -1,0 +1,101 @@
+<%- include('../layout', { body: `
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-people"></i> Quản lý Người dùng</h1>
+</div>
+
+<div class="card">
+    <div class="toolbar">
+        <form class="search-box" method="GET" action="/admin/users">
+            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm..." value="${search}">
+            <select name="role" class="form-control" style="width: 150px;" onchange="this.form.submit()">
+                <option value="">Tất cả vai trò</option>
+                <option value="admin" ${filterRole === 'admin' ? 'selected' : ''}>Admin</option>
+                <option value="parent" ${filterRole === 'parent' ? 'selected' : ''}>Phụ huynh</option>
+                <option value="staff" ${filterRole === 'staff' ? 'selected' : ''}>Nhân viên</option>
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Tìm
+            </button>
+            ${search || filterRole ? '<a href="/admin/users" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Xóa</a>' : ''}
+        </form>
+        <a href="/admin/users/add" class="btn btn-success">
+            <i class="bi bi-person-plus"></i> Thêm người dùng
+        </a>
+    </div>
+
+    ${users.length > 0 ? `
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-hash"></i> ID</th>
+                    <th><i class="bi bi-person"></i> Tên đăng nhập</th>
+                    <th><i class="bi bi-envelope"></i> Email</th>
+                    <th><i class="bi bi-person-badge"></i> Họ tên</th>
+                    <th><i class="bi bi-phone"></i> Số điện thoại</th>
+                    <th><i class="bi bi-shield"></i> Vai trò</th>
+                    <th><i class="bi bi-calendar-plus"></i> Ngày tạo</th>
+                    <th><i class="bi bi-gear"></i> Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${users.map(u => `
+                <tr>
+                    <td><strong>${u.id}</strong></td>
+                    <td>${u.username}</td>
+                    <td>${u.email}</td>
+                    <td>${u.fullName || '-'}</td>
+                    <td>${u.phone || '-'}</td>
+                    <td>
+                        <span class="badge badge-${u.role}">
+                            <i class="bi bi-${u.role === 'admin' ? 'shield-check' : u.role === 'parent' ? 'person-heart' : 'person-check'}"></i>
+                            ${u.role === 'admin' ? 'Admin' : u.role === 'parent' ? 'Phụ huynh' : 'Nhân viên'}
+                        </span>
+                    </td>
+                    <td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td>
+                        ${u.role !== 'admin' || user.id !== u.id ? `
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-danger" onclick="showToast('info', 'Thông báo', 'Chức năng đang phát triển')">
+                                <i class="bi bi-lock"></i> Khóa
+                            </button>
+                        </div>
+                        ` : '<span style="color: #999;"><i class="bi bi-dash"></i></span>'}
+                    </td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    </div>
+
+    ${totalPages > 1 ? `
+    <div class="pagination">
+        ${currentPage > 1 ? \`<a href="?page=\${currentPage - 1}&search=\${search}&role=\${filterRole}"><i class="bi bi-chevron-left"></i> Trước</a>\` : '<span class="disabled"><i class="bi bi-chevron-left"></i> Trước</span>'}
+        ${Array.from({length: totalPages}, (_, i) => \`
+            <a href="?page=\${i + 1}&search=\${search}&role=\${filterRole}" class="\${currentPage === i + 1 ? 'active' : ''}">\${i + 1}</a>
+        \`).join('')}
+        ${currentPage < totalPages ? \`<a href="?page=\${currentPage + 1}&search=\${search}&role=\${filterRole}">Sau <i class="bi bi-chevron-right"></i></a>\` : '<span class="disabled">Sau <i class="bi bi-chevron-right"></i></span>'}
+    </div>
+    ` : ''}
+    ` : `
+    <div class="empty-state">
+        <i class="bi bi-people"></i>
+        <p>Không có người dùng nào</p>
+        <a href="/admin/users/add" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Thêm người dùng đầu tiên
+        </a>
+    </div>
+    `}
+</div>
+
+<script>
+    // Show toast if redirected with message
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success')) {
+        showToast('success', 'Thành công', decodeURIComponent(urlParams.get('success')));
+    }
+    if (urlParams.get('error')) {
+        showToast('error', 'Lỗi', decodeURIComponent(urlParams.get('error')));
+    }
+</script>
+` }) %>

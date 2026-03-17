@@ -1,0 +1,49 @@
+<%- include('../layout', { body: `
+<div class="page-header">
+    <h1 class="page-title">Thêm người dùng</h1>
+</div>
+
+<div class="card">
+    <form method="POST" action="/admin/users/add">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
+        <div class="form-group">
+            <label class="form-label">Tên đăng nhập *</label>
+            <input type="text" name="username" class="form-control" value="${user ? user.username : ''}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input type="email" name="email" class="form-control" value="${user ? user.email : ''}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Mật khẩu *</label>
+            <input type="password" name="password" class="form-control" ${user ? '' : 'required'}>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Họ tên</label>
+            <input type="text" name="fullName" class="form-control" value="${user ? (user.fullName || '') : ''}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Số điện thoại</label>
+            <input type="text" name="phone" class="form-control" value="${user ? (user.phone || '') : ''}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Vai trò</label>
+            <select name="role" class="form-control">
+                <option value="parent" ${user && user.role === 'parent' ? 'selected' : ''}>Phụ huynh</option>
+                <option value="staff" ${user && user.role === 'staff' ? 'selected' : ''}>Nhân viên</option>
+                <option value="admin" ${user && user.role === 'admin' ? 'selected' : ''}>Admin</option>
+            </select>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-success">Lưu</button>
+            <a href="/admin/users" class="btn btn-danger">Hủy</a>
+        </div>
+    </form>
+</div>
+` }) %>

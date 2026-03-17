@@ -1,0 +1,37 @@
+<%- include('layout', { body: `
+<div class="page-header">
+    <h1 class="page-title">Tổng quan</h1>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Tổng số người dùng</div>
+        <div class="stat-value"><%= userCount %></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Tổng số trẻ em</div>
+        <div class="stat-value"><%= childCount %></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Số loại vaccine</div>
+        <div class="stat-value"><%= vaccineCount %></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Lịch hẹn hôm nay</div>
+        <div class="stat-value"><%= todayAppointments %></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Chức năng quản lý</h2>
+    </div>
+    <p>Chọn một mục từ menu bên trái để quản lý:</p>
+    <ul style="margin-top: 15px; padding-left: 20px; line-height: 2;">
+        <li><strong>Quản lý Vaccine:</strong> Thêm, sửa, xóa vaccine và quản lý tồn kho</li>
+        <li><strong>Quản lý Lịch tiêm:</strong> Cấu hình số lượng lịch hẹn tối đa cho từng ngày</li>
+        <li><strong>Quản lý Người dùng:</strong> Xem danh sách, thêm mới người dùng</li>
+        <li><strong>Quản lý Trẻ em:</strong> Xem hồ sơ trẻ và lịch sử tiêm chủng</li>
+    </ul>
+</div>
+` }) %>

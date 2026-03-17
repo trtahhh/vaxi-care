@@ -1,0 +1,45 @@
+<%- include('../layout', { body: `
+<div class="page-header">
+    <h1 class="page-title">${vaccine ? 'Sửa' : 'Thêm'} Vaccine</h1>
+</div>
+
+<div class="card">
+    <form method="POST" action="${vaccine ? '/admin/vaccines/edit/' + vaccine.id : '/admin/vaccines/add'}">
+        <input type="hidden" name="_csrf" value="${csrfToken}">
+        <div class="form-group">
+            <label class="form-label">Tên vaccine *</label>
+            <input type="text" name="name" class="form-control" value="${vaccine ? vaccine.name : ''}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Mô tả</label>
+            <textarea name="description" class="form-control" rows="3">${vaccine ? (vaccine.description || '') : ''}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Giá (VNĐ) *</label>
+            <input type="number" name="price" class="form-control" value="${vaccine ? vaccine.price : ''}" step="0.01" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Số lượng tồn kho</label>
+            <input type="number" name="stock" class="form-control" value="${vaccine ? vaccine.stock : 0}" min="0">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Độ tuổi khuyến nghị (tháng)</label>
+            <input type="number" name="recommendedAgeMonths" class="form-control" value="${vaccine && vaccine.recommendedAgeMonths ? vaccine.recommendedAgeMonths : ''}" min="0">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Nhãn độ tuổi (hiển thị)</label>
+            <input type="text" name="ageLabel" class="form-control" placeholder="Ví dụ: 2 tháng, 9 tháng" value="${vaccine ? (vaccine.ageLabel || '') : ''}">
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-success">Lưu</button>
+            <a href="/admin/vaccines" class="btn btn-danger">Hủy</a>
+        </div>
+    </form>
+</div>
+` }) %>

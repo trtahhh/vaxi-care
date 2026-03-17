@@ -1,0 +1,74 @@
+<%- include('../layout', { body: `
+<div class="page-header">
+    <h1 class="page-title">Chi tiết hồ sơ trẻ</h1>
+</div>
+
+<div style="margin-bottom: 20px;">
+    <a href="/admin/children" class="btn btn-primary btn-sm">← Quay lại</a>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 20px;">Thông tin trẻ</h3>
+    <table class="table">
+        <tr>
+            <th style="width: 200px;">ID</th>
+            <td>${child.id}</td>
+        </tr>
+        <tr>
+            <th>Tên trẻ</th>
+            <td>${child.name}</td>
+        </tr>
+        <tr>
+            <th>Ngày sinh</th>
+            <td>${child.dob ? new Date(child.dob).toLocaleDateString('vi-VN') : '-'}</td>
+        </tr>
+        <tr>
+            <th>Giới tính</th>
+            <td>${child.gender === 'male' ? 'Nam' : child.gender === 'female' ? 'Nữ' : 'Khác'}</td>
+        </tr>
+        <tr>
+            <th>Phụ huynh</th>
+            <td>
+                ${child.parent ? \`
+                    <strong>\${child.parent.fullName || child.parent.username}</strong><br>
+                    <small>\${child.parent.email}</small>${child.parent.phone ? \` - \${child.parent.phone}\` : ''}
+                \` : '-'}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 20px;">Lịch sử tiêm chủng</h3>
+    ${appointments.length > 0 ? `
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Ngày</th>
+                <th>Vaccine</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${appointments.map(a => `
+            <tr>
+                <td>${a.date ? new Date(a.date).toLocaleDateString('vi-VN') : '-'}</td>
+                <td>${a.vaccine ? a.vaccine.name : '-'}</td>
+                <td>
+                    <span class="badge" style="background: ${a.status === 'completed' ? '#2ecc71' : a.status === 'confirmed' ? '#3498db' : a.status === 'cancelled' ? '#e74c3c' : '#f39c12'}; color: #fff;">
+                        ${a.status === 'completed' ? 'Hoàn thành' : a.status === 'confirmed' ? 'Đã xác nhận' : a.status === 'cancelled' ? 'Đã hủy' : 'Chờ xác nhận'}
+                    </span>
+                </td>
+                <td>${a.notes || '-'}</td>
+            </tr>
+            `).join('')}
+        </tbody>
+    </table>
+    ` : `
+    <div class="empty-state">
+        <p>Chưa có lịch sử tiêm chủng</p>
+    </div>
+    `}
+</div>
+` }) %>

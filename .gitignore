@@ -19,3 +19,9 @@ yarn-error.log*
 # Rules & Architecture
 ARCHITECTURE.md
 Rules.md    
+
+# Ollama
+.ollama/
+
+# Claude
+.claude/
