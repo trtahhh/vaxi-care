@@ -4,79 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký - VaxiCare</title>
-    <link rel="stylesheet" href="/static/client/auth.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/style.css">
     <script>
-        // Simple client-side validation for password
         function validatePassword(event) {
             const password = document.getElementById("password").value;
             const confirmPassword = document.getElementById("confirmPassword").value;
-            const errorMessage = document.getElementById("js-error");
+            const errorContainer = document.getElementById("js-error-container");
+            const errorMessage = document.getElementById("js-error-text");
             
             if (password !== confirmPassword) {
                 event.preventDefault();
-                errorMessage.textContent = "Mật khẩu không khớp.";
-                errorMessage.style.display = "block";
+                errorMessage.textContent = "MẬT KHẨU XÁC NHẬN KHÔNG TRÙNG KHỚP.";
+                errorContainer.classList.remove("hidden");
+                errorContainer.classList.add("flex");
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
     </script>
 </head>
-<body>
-    <div class="auth-container">
-        <div class="auth-card auth-card--wide">
-            <div class="auth-logo">
-                <span class="logo-text">VaxiCare</span>
-                <p class="logo-sub">Hệ thống quản lý tiêm chủng</p>
+<body class="bg-background min-h-screen flex items-center justify-center py-16 px-6 sm:px-12">
+
+    <div class="w-full max-w-2xl animate-fade-in">
+        <!-- Brand Header -->
+        <div class="flex flex-col items-center mb-12">
+            <div class="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-white mb-4 shadow-xl shadow-primary/20 border-b-[4px] border-black/10">
+                <span class="material-symbols-outlined text-3xl">child_care</span>
             </div>
-            <h2 class="auth-title">Đăng ký tài khoản</h2>
+            <h1 class="text-2xl v-title tracking-widest text-on-surface uppercase border-b-4 border-primary pb-1">VaxiCare</h1>
+        </div>
+
+        <!-- Registration Form Card -->
+        <div class="v-card !p-10 md:!p-14 border-2 border-outline relative overflow-hidden group">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none"></div>
             
-            <form action="/auth/register" method="POST" class="auth-form" onsubmit="validatePassword(event)">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="username">Tên đăng nhập <span class="required">*</span></label>
-                        <input id="username" name="username" type="text" placeholder="Tên đăng nhập" required />
+            <div class="mb-12">
+                <h2 class="text-3xl v-title uppercase tracking-tighter text-on-surface">Đăng ký tài khoản</h2>
+                <p class="text-on-surface-variant text-sm font-medium mt-1">Lập hồ sơ số để bảo vệ tương lai cho bé</p>
+            </div>
+            
+            <form action="/auth/register" method="POST" class="space-y-10" onsubmit="validatePassword(event)">
+                
+                <!-- Feedback Area -->
+                <div id="js-error-container" class="hidden p-5 rounded-xl bg-error text-white border-transparent items-center gap-4 shadow-lg shadow-error/20 animate-shake">
+                    <span class="material-symbols-outlined text-2xl">warning</span>
+                    <p id="js-error-text" class="text-[11px] font-black uppercase tracking-widest leading-tight"></p>
+                </div>
+                
+                <% if (error) { %>
+                    <div class="p-5 rounded-xl bg-error text-white border-transparent flex items-center gap-4 shadow-lg shadow-error/20 animate-shake">
+                        <span class="material-symbols-outlined text-2xl">report</span>
+                        <p class="text-[11px] font-black uppercase tracking-widest leading-tight"><%= error %></p>
+                    </div>
+                <% } %>
+
+                <!-- Info Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Username -->
+                    <div class="group">
+                        <label for="username" class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 block ml-1">Tên đăng nhập <span class="text-error font-black ml-1">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">account_circle</span>
+                            <input id="username" name="username" type="text" placeholder="USER123" required autocomplete="off"
+                                   class="w-full pl-12 pr-4 py-4 bg-background border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-tight placeholder:opacity-30">
+                        </div>
+                    </div>
+    
+                    <!-- Email -->
+                    <div class="group">
+                        <label for="email" class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 block ml-1">Email liên hệ <span class="text-error font-black ml-1">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">mail</span>
+                            <input id="email" name="email" type="email" placeholder="EMAIL@EXAMPLE.COM" required autocomplete="off"
+                                   class="w-full pl-12 pr-4 py-4 bg-background border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-tight placeholder:opacity-30">
+                        </div>
+                    </div>
+
+                    <!-- Fullname -->
+                    <div class="group">
+                        <label for="fullName" class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 block ml-1">Họ và tên</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">person</span>
+                            <input id="fullName" name="fullName" type="text" placeholder="NGUYỄN VĂN A" autocomplete="off"
+                                   class="w-full pl-12 pr-4 py-4 bg-background border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-tight placeholder:opacity-30">
+                        </div>
+                    </div>
+    
+                    <!-- Phone -->
+                    <div class="group">
+                        <label for="phone" class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 block ml-1">Số điện thoại</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">phone_iphone</span>
+                            <input id="phone" name="phone" type="tel" placeholder="0XXX XXX XXX" autocomplete="off"
+                                   class="w-full pl-12 pr-4 py-4 bg-background border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-tight placeholder:opacity-30">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="fullName">Họ và tên</label>
-                    <input id="fullName" name="fullName" type="text" placeholder="Họ và tên của bạn" />
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">Email <span class="required">*</span></label>
-                    <input id="email" name="email" type="email" placeholder="Nhập email" required />
-                </div>
-                
-                <div class="form-group">
-                    <label for="phone">Số điện thoại</label>
-                    <input id="phone" name="phone" type="tel" placeholder="Nhập số điện thoại" />
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="password">Mật khẩu <span class="required">*</span></label>
-                        <input id="password" name="password" type="password" placeholder="Mật khẩu" required minlength="6" />
+                <!-- Security Section -->
+                <div class="pt-10 border-t-2 border-outline grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="group">
+                        <label for="password" class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 block ml-1">Mật khẩu mới <span class="text-error font-black ml-1">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">lock</span>
+                            <input id="password" name="password" type="password" placeholder="••••••••" required minlength="6"
+                                   class="w-full pl-12 pr-4 py-4 bg-background border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-tight placeholder:opacity-30">
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="confirmPassword">Xác nhận mật khẩu <span class="required">*</span></label>
-                        <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Nhập lại mật khẩu" required minlength="6" />
+                    <div class="group">
+                        <label for="confirmPassword" class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 block ml-1">Xác nhận lại <span class="text-error font-black ml-1">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">verified_user</span>
+                            <input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••" required minlength="6"
+                                   class="w-full pl-12 pr-4 py-4 bg-background border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-tight placeholder:opacity-30">
+                        </div>
                     </div>
                 </div>
-                
-                <p class="auth-error" id="js-error" style="display: none;"></p>
 
-                <% if (error) { %>
-                    <p class="auth-error"><%= error %></p>
-                <% } %>
-                
-                <button type="submit" class="auth-btn">Mở tài khoản</button>
+                <div class="pt-4">
+                    <button type="submit" class="v-btn v-btn-primary w-full !py-6 !rounded-2xl shadow-xl shadow-primary/30 hover:shadow-primary/40 uppercase !text-base tracking-[0.3em] transition-all transform hover:-translate-y-1 active:scale-95">
+                        Tạo tài khoản ngay
+                    </button>
+                    <p class="text-center text-[9px] text-on-surface-variant font-black uppercase tracking-widest mt-6 bg-background p-3 rounded-lg border border-outline/50">
+                        Bằng việc đăng ký, bạn đồng ý với <a href="#" class="text-primary underline">Điều khoản dịch vụ</a> và <a href="#" class="text-primary underline">Chính sách bảo mật</a> của chúng tôi.
+                    </p>
+                </div>
             </form>
             
-            <p class="auth-switch">
-                Đã có tài khoản? <a href="/auth/login">Đăng nhập</a>
-            </p>
+            <div class="mt-12 pt-8 border-t-2 border-outline text-center">
+                <p class="text-on-surface-variant text-[11px] font-bold uppercase tracking-widest">
+                    Đã là thành viên? 
+                    <a href="/auth/login" class="font-black text-primary hover:text-on-surface ml-2 underline decoration-2 underline-offset-4 transition-all uppercase">Đăng nhập</a>
+                </p>
+            </div>
         </div>
+
+        <p class="text-center text-[9px] text-on-surface-variant font-black uppercase tracking-[0.4em] mt-12 opacity-30">
+            Proudly protecting Vietnamese children since 2026
+        </p>
     </div>
 </body>
 </html>

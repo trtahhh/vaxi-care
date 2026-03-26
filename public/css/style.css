@@ -1,0 +1,118 @@
+/* VaxiCare Global Design System (Flat & Solid) */
+
+:root {
+    /* 60-30-10 Color Rule Tokens */
+    --v-base: #F8FAFC;         /* 60% Background */
+    --v-surface: #FFFFFF;      /* 30% Surface (Cards, Nav) */
+    --v-primary: #3182CE;      /* 10% Accent (Primary Actions) */
+    --v-secondary: #2F855A;    /* Success/Progress (Emerald) */
+    --v-error: #E53E3E;        /* Danger/Error */
+    --v-warning: #DD6B20;      /* Warning */
+    
+    /* Typography & Borders */
+    --v-on-surface: #1A202C;
+    --v-on-surface-variant: #64748B;
+    --v-outline: #E2E8F0;
+    --v-radius: 1rem;
+}
+
+/* Base Utility Blocks */
+.v-card {
+    background: var(--v-surface);
+    border: 1px solid var(--v-outline);
+    border-radius: var(--v-radius);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+.v-card-hover:hover {
+    border-color: rgba(49, 130, 206, 0.3);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Typography Helpers */
+.v-title {
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    color: var(--v-on-surface);
+}
+
+.v-subtitle {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--v-on-surface-variant);
+}
+
+/* Buttons */
+.v-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+}
+
+.v-btn-primary {
+    background: var(--v-primary);
+    color: #FFFFFF;
+}
+
+.v-btn-primary:hover {
+    box-shadow: 0 10px 15px -3px rgba(49, 130, 206, 0.3);
+}
+
+.v-btn-secondary {
+    background: var(--v-surface);
+    border: 1px solid var(--v-outline);
+    color: var(--v-on-surface-variant);
+}
+
+.v-btn-secondary:hover {
+    background: var(--v-base);
+    color: var(--v-primary);
+}
+
+/* Specialized Components */
+.v-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+/* Stats Layout */
+.v-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.v-stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease forwards;
+}

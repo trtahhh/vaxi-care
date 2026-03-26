@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'VaxiCare' %></title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/style.css">
+    <script id="tailwind-config">
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#3182CE",     /* Base Vaxi Blue */
+              "secondary": "#2F855A",   /* Emerald Green */
+              "background": "#F8FAFC",
+              "surface": "#FFFFFF",
+              "on-surface": "#1A202C",
+              "on-surface-variant": "#64748B",
+              "outline": "#E2E8F0",
+              "error": "#E53E3E",
+              "warning": "#DD6B20"
+            },
+            fontFamily: {
+              "headline": ["Inter", "sans-serif"],
+              "body": ["Inter", "sans-serif"]
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+      body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1A202C; min-height: 100vh; }
+      
+      /* Clean Solid Styles */
+      .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 1rem; padding: 1.5rem; }
+      .btn-primary { background: #3182CE; color: #FFFFFF; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; transition: all 0.2s; }
+      .btn-primary:active { transform: scale(0.98); }
+    </style>
+    <%- typeof extraCss !== 'undefined' ? extraCss : '' %>
+</head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+    <!-- TopAppBar -->
+    <header class="fixed top-0 w-full z-50 bg-surface border-b border-outline">
+        <div class="flex items-center justify-between px-6 h-16 max-w-4xl mx-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary/10 overflow-hidden border border-primary/20 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined">child_care</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-black text-primary tracking-tighter uppercase">VaxiCare</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <form action="/auth/logout" method="POST" class="m-0">
+                    <button type="submit" class="text-on-surface-variant hover:bg-error/10 hover:text-error transition-colors p-2 rounded-lg active:scale-95 duration-200">
+                        <span class="material-symbols-outlined">logout</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-24 px-6 max-w-4xl mx-auto space-y-10">
+        <%- body %>
+    </main>
+
+    <!-- BottomNavBar -->
+    <nav class="fixed bottom-0 left-0 w-full flex justify-center items-center pointer-events-none z-50">
+        <div class="w-full max-w-4xl flex justify-around items-center px-4 pb-6 pt-3 bg-surface border-t border-outline pointer-events-auto">
+            <a href="/client/dashboard" class="flex flex-col items-center justify-center <%= (typeof currentPath !== 'undefined' && currentPath === '/client/dashboard') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' %> w-16 h-12 transition-all active:scale-90 duration-200">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest mt-1">Hồ sơ</span>
+            </a>
+            <a href="/client/schedule" class="flex flex-col items-center justify-center <%= (typeof currentPath !== 'undefined' && currentPath === '/client/schedule') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' %> w-16 h-12 transition-all active:scale-90 duration-200">
+                <span class="material-symbols-outlined">event_upcoming</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest mt-1">Lịch</span>
+            </a>
+            
+            <% if (typeof user !== 'undefined' && user.role === 'admin') { %>
+                <a href="/children/add" class="flex flex-col items-center justify-center bg-primary text-white rounded-full w-12 h-12 hover:shadow-lg transition-all active:scale-90 duration-200">
+                    <span class="material-symbols-outlined">add</span>
+                </a>
+            <% } %>
+
+            <a href="/client/growth" class="flex flex-col items-center justify-center <%= (typeof currentPath !== 'undefined' && currentPath === '/client/growth') ? 'text-primary' : 'text-[#dee5ff]/50 hover:text-primary' %> w-16 h-12 transition-all active:scale-90 duration-200">
+                <span class="material-symbols-outlined">monitoring</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest mt-1">Theo dõi</span>
+            </a>
+            <a href="/client/settings" class="flex flex-col items-center justify-center <%= (typeof currentPath !== 'undefined' && currentPath === '/client/settings') ? 'text-primary' : 'text-[#dee5ff]/50 hover:text-primary' %> w-16 h-12 transition-all active:scale-90 duration-200">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest mt-1">Cài đặt</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize progress bars
+            document.querySelectorAll('.js-progress-bar').forEach(el => {
+                if (el.dataset.width) el.style.width = el.dataset.width;
+            });
+
+            // Initialize animation delays
+            document.querySelectorAll('.js-delay-init').forEach(el => {
+                if (el.dataset.delay) el.style.animationDelay = el.dataset.delay;
+            });
+        });
+    </script>
+</body>
+</html>

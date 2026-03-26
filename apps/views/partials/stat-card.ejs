@@ -1,0 +1,15 @@
+<% 
+    const sIcon = locals.icon || 'analytics';
+    const sLabel = locals.label || 'Metric';
+    const sValue = locals.value || '0';
+    const sIconColor = locals.iconColor || 'text-primary';
+%>
+<div class="v-card !p-6 flex flex-col gap-4 hover:border-primary transition-all group">
+    <div class="w-12 h-12 bg-background border border-outline rounded-xl flex items-center justify-center <%= sIconColor %> group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all shadow-sm">
+        <span class="material-symbols-outlined text-2xl"><%= sIcon %></span>
+    </div>
+    <div class="space-y-1">
+        <span class="text-[10px] font-black uppercase text-on-surface-variant tracking-widest block"><%= sLabel %></span>
+        <span class="text-lg font-black text-on-surface tracking-tight block uppercase"><%= sValue %></span>
+    </div>
+</div>

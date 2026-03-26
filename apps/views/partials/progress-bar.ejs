@@ -1,0 +1,16 @@
+<% 
+    const pWidth = locals.width || 0; 
+    const pColor = locals.color || 'bg-secondary';
+    const pLabel = locals.label || '';
+%>
+<div class="w-full">
+    <% if (pLabel) { %>
+        <div class="flex justify-between items-end mb-2">
+            <span class="text-[10px] font-black uppercase text-on-surface-variant tracking-widest"><%= pLabel %></span>
+            <span class="text-xl font-black text-on-surface"><%= pWidth %>%</span>
+        </div>
+    <% } %>
+    <div class="w-full h-3 bg-background rounded-full overflow-hidden border border-outline">
+        <div class="h-full <%= pColor %> transition-all duration-1000 js-progress-bar shadow-sm" data-width="<%= pWidth %>%"></div>
+    </div>
+</div>

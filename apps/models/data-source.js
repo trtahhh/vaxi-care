@@ -16,7 +16,7 @@ const AppDataSource = new DataSource({
     username: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "vaxi_care",
-    synchronize: true, // Auto-create tables (Dev only)
+    synchronize: true, // Auto-create tables 
     logging: false,
     entities: [User, Child, Vaccine, Appointment, DailySlotConfig, Notification],
     subscribers: [],

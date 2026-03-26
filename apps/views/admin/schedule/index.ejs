@@ -1,80 +1,151 @@
-<%- include('../layout', { body: `
-<div class="page-header">
-    <h1 class="page-title"><i class="bi bi-calendar-check"></i> Quản lý Lịch tiêm chủng</h1>
+<%- include('../layout', { 
+    title: 'Quản lý Lịch Tiêm - VaxiCare',
+    body: `
+
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 animate-fade-in">
+    <div>
+        <h1 class="text-3xl v-title tracking-tight flex items-center gap-3 uppercase">
+            <span class="material-symbols-outlined text-primary text-3xl">edit_calendar</span>
+            Quản lý Lịch Tiêm
+        </h1>
+        <p class="text-on-surface-variant font-medium mt-1">Sắp xếp ca trực và mở cổng đăng ký tiêm chủng theo ngày.</p>
+    </div>
 </div>
 
-<div class="card">
-    <div class="calendar-header">
-        <div class="calendar-nav">
-            <a href="?month=${currentMonth === 1 ? 12 : currentMonth - 1}&year=${currentMonth === 1 ? currentYear - 1 : currentYear}" class="btn btn-primary">
-                <i class="bi bi-chevron-left"></i>
+<div class="v-card !p-6 md:!p-10 animate-fade-in" style="animation-delay: 0.1s">
+    
+    <!-- Calendar Navigation & Legend -->
+    <div class="flex flex-col xl:flex-row justify-between items-center mb-10 gap-8 pb-8 border-b border-outline">
+        <div class="flex items-center gap-6 p-2 rounded-xl bg-background border border-outline">
+            <a href="?month=<%= currentMonth === 1 ? 12 : currentMonth - 1 %>&year=<%= currentMonth === 1 ? currentYear - 1 : currentYear %>" 
+               class="w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-outline text-on-surface-variant hover:text-primary transition-all shadow-sm">
+                <span class="material-symbols-outlined">chevron_left</span>
             </a>
-            <span class="calendar-month">Tháng ${currentMonth} / ${currentYear}</span>
-            <a href="?month=${currentMonth === 12 ? 1 : currentMonth + 1}&year=${currentMonth === 12 ? currentYear + 1 : currentYear}" class="btn btn-primary">
-                <i class="bi bi-chevron-right"></i>
+            <span class="text-lg v-title tracking-widest w-40 text-center uppercase">
+                THÁNG <%= currentMonth %> / <%= currentYear %>
+            </span>
+            <a href="?month=<%= currentMonth === 12 ? 1 : currentMonth + 1 %>&year=<%= currentMonth === 12 ? currentYear + 1 : currentYear %>" 
+               class="w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-outline text-on-surface-variant hover:text-primary transition-all shadow-sm">
+                <span class="material-symbols-outlined">chevron_right</span>
             </a>
         </div>
-        <div class="calendar-legend" style="display: flex; gap: 15px; font-size: 13px;">
-            <span><span style="display: inline-block; width: 12px; height: 12px; background: #e3f2fd; border: 2px solid #3498db; border-radius: 2px; margin-right: 5px;"></span>Hôm nay</span>
-            <span><span style="display: inline-block; width: 12px; height: 12px; background: #e8f5e9; border-radius: 2px; margin-right: 5px;"></span>Có lịch hẹn</span>
+        
+        <div class="flex flex-wrap items-center justify-center gap-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded bg-primary/10 border-2 border-primary"></span>
+                <span>Hôm nay</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+                <span>Có lịch hẹn</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded bg-background border border-outline"></span>
+                <span>Đã mở ca</span>
+            </div>
         </div>
     </div>
 
-    <div class="calendar-grid">
-        <div class="calendar-day-header"><i class="bi bi-sun"></i> Chủ nhật</div>
-        <div class="calendar-day-header"><i class="bi bi-moon"></i> Thứ 2</div>
-        <div class="calendar-day-header"><i class="bi bi-moon"></i> Thứ 3</div>
-        <div class="calendar-day-header"><i class="bi bi-moon"></i> Thứ 4</div>
-        <div class="calendar-day-header"><i class="bi bi-moon"></i> Thứ 5</div>
-        <div class="calendar-day-header"><i class="bi bi-moon-stars"></i> Thứ 6</div>
-        <div class="calendar-day-header"><i class="bi bi-stars"></i> Thứ 7</div>
+    <!-- Calendar Grid -->
+    <div class="grid grid-cols-7 gap-3 md:gap-5">
+        <!-- Weekdays -->
+        <div class="text-center pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-error opacity-70">CN</div>
+        <div class="text-center pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">T2</div>
+        <div class="text-center pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">T3</div>
+        <div class="text-center pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">T4</div>
+        <div class="text-center pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">T5</div>
+        <div class="text-center pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant">T6</div>
+        <div class="text-center pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary opacity-70">T7</div>
 
-        ${daysInMonth.map(d => `
-        <div class="calendar-day ${d.isPast ? 'past' : ''} ${d.today ? 'today' : ''} ${d.hasAppointments && !d.isPast ? 'has-appointments' : ''}">
-            <div class="day-number">
-                ${d.day}
-                ${d.hasAppointments && !d.isPast ? '<span class="day-indicator" title="Có lịch hẹn"></span>' : ''}
+        <!-- Days -->
+        <% daysInMonth.forEach(d => { %>
+        <div class="relative min-h-[100px] md:min-h-[140px] rounded-xl border-2 transition-all <%= d.empty ? 'border-transparent' : 'bg-background border-outline hover:border-primary/30 hover:shadow-xl' %> 
+            <%= d.today ? 'border-primary bg-primary/5 !opacity-100' : '' %> 
+            <%= d.isPast ? 'opacity-40 grayscale-[0.5]' : '' %>">
+            
+            <% if (!d.empty) { %>
+            <div class="p-3 h-full flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <span class="text-lg font-black <%= d.today ? 'text-primary' : 'text-on-surface' %>"><%= d.day %></span>
+                    <% if (d.hasAppointments && !d.isPast) { %>
+                        <span class="w-2 h-2 rounded-full bg-secondary shadow-sm mt-1"></span>
+                    <% } %>
+                </div>
+                
+                <div class="mt-auto space-y-2">
+                    <% if (d.maxSlots > 0) { %>
+                        <div class="text-[9px] font-black uppercase tracking-tighter px-2 py-1.5 rounded-lg bg-white border border-outline text-primary flex items-center gap-1 shadow-sm">
+                            <span class="material-symbols-outlined text-[14px]">confirmation_number</span>
+                            <%= d.maxSlots %> VÉ
+                        </div>
+                    <% } else if (!d.isPast) { %>
+                        <div class="text-[9px] font-black uppercase tracking-tighter text-on-surface-variant/40 italic text-center p-1">NGHỈ</div>
+                    <% } %>
+                    
+                    <% if (!d.isPast) { %>
+                        <button onclick="openConfigModal('<%= d.date %>', '<%= d.maxSlots %>'); return false;" 
+                                class="w-full text-center py-2 text-[9px] font-black uppercase tracking-widest text-on-surface-variant hover:text-primary hover:bg-white rounded-lg transition-all border border-transparent hover:border-outline">
+                            THIẾT LẬP
+                        </button>
+                    <% } %>
+                </div>
             </div>
-            <div class="day-slots">
-                <i class="bi bi-calendar-plus"></i> Slots: <strong>${d.maxSlots}</strong>
-            </div>
-            ${!d.isPast ? `
-            <div class="day-actions">
-                <a href="#" onclick="openConfigModal('${d.date}', '${d.maxSlots}'); return false;">
-                    <i class="bi bi-gear"></i> Cấu hình
-                </a>
-            </div>
-            ` : ''}
+            <% } %>
         </div>
-        `).join('')}
+        <% }) %>
     </div>
 </div>
+
+<!-- Modal Logic outside include body to avoid complex nesting issues if needed, but here we include it in layout -->
+` }) %>
 
 <!-- Config Modal -->
-<div id="config-modal" class="modal-overlay">
-    <div class="modal">
-        <div class="modal-header">
-            <h3 class="modal-title"><i class="bi bi-gear"></i> Cấu hình ngày</h3>
-            <button class="modal-close" onclick="closeModal('config-modal')">
-                <i class="bi bi-x-lg"></i>
+<div id="config-modal" class="fixed inset-0 z-[100] hidden items-center justify-center px-4">
+    <div class="absolute inset-0 bg-on-surface/40 backdrop-blur-sm transition-opacity" onclick="closeModal('config-modal')"></div>
+    
+    <div class="relative v-card w-full max-w-md !p-0 shadow-2xl animate-fade-in">
+        <div class="px-8 py-5 border-b border-outline flex justify-between items-center bg-background/50">
+            <h3 class="v-title text-[15px] uppercase flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">calendar_clock</span> 
+                Cài đặt cổng tiêm
+            </h3>
+            <button onclick="closeModal('config-modal')" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-error/5 hover:text-error text-on-surface-variant transition-all">
+                <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
         </div>
-        <form method="POST" action="/admin/schedule/update">
-            <input type="hidden" name="_csrf" value="${csrfToken}">
-            <div class="form-group">
-                <label class="form-label"><i class="bi bi-calendar"></i> Ngày</label>
-                <input type="date" id="config-date" name="date" class="form-control" required>
+        
+        <form method="POST" action="/admin/schedule/update" class="p-8 space-y-6">
+            <% if (typeof csrfToken !== 'undefined') { %>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% } %>
+            
+            <div class="group">
+                <label class="v-subtitle mb-2 block ml-1 uppercase text-[10px]">Ngày thực hiện</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">event</span>
+                    <input type="date" id="config-date" name="date" readonly
+                           class="w-full pl-12 pr-4 py-3.5 bg-background border border-outline text-on-surface-variant rounded-xl cursor-not-allowed font-black text-sm uppercase">
+                </div>
             </div>
-            <div class="form-group">
-                <label class="form-label"><i class="bi bi-people"></i> Số lượng slot tối đa</label>
-                <input type="number" id="config-slots" name="maxSlots" class="form-control" min="0" required>
+            
+            <div class="group">
+                <label class="v-subtitle mb-2 block ml-1 uppercase text-[10px]">Số lượng vé đăng ký (SLOTS)</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">groups</span>
+                    <input type="number" id="config-slots" name="maxSlots" min="0" required autofocus
+                           class="w-full pl-12 pr-4 py-3.5 bg-white border border-outline text-on-surface rounded-xl focus:border-primary transition-all font-black text-sm" placeholder="VD: 50">
+                </div>
+                <p class="text-[9px] font-bold text-on-surface-variant mt-2 px-1 uppercase tracking-tight">Hệ thống sẽ dựa vào số này để giới hạn lượt đặt lịch cho phụ huynh.</p>
             </div>
-            <div class="modal-footer">
-                <button type="button" onclick="closeModal('config-modal')" class="btn btn-secondary">
-                    <i class="bi bi-x"></i> Hủy
+            
+            <div class="pt-4 flex gap-3">
+                <button type="button" onclick="closeModal('config-modal')" 
+                        class="v-btn v-btn-secondary flex-1 uppercase !text-[10px]">
+                    Hủy bỏ
                 </button>
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-check-lg"></i> Lưu
+                <button type="submit" class="v-btn v-btn-primary flex-1 uppercase !text-[10px] tracking-widest shadow-lg shadow-primary/20">
+                    LƯU CẤU HÌNH
                 </button>
             </div>
         </form>
@@ -85,16 +156,16 @@
     function openConfigModal(date, slots) {
         document.getElementById('config-date').value = date;
         document.getElementById('config-slots').value = slots;
-        openModal('config-modal');
+        const modal = document.getElementById('config-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        // Auto focus slots
+        setTimeout(() => document.getElementById('config-slots').focus(), 100);
     }
 
-    // Show toast if redirected with message
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success')) {
-        showToast('success', 'Thành công', decodeURIComponent(urlParams.get('success')));
-    }
-    if (urlParams.get('error')) {
-        showToast('error', 'Lỗi', decodeURIComponent(urlParams.get('error')));
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
 </script>
-` }) %>

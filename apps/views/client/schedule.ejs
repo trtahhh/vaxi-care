@@ -1,0 +1,95 @@
+<%- include('layout', { 
+    currentPath: '/client/schedule', 
+    title: 'Lộ trình tiêm chủng - VaxiCare',
+    body: `
+
+<!-- Hero Section -->
+<section class="mb-10 flex items-center gap-4 animate-fade-in">
+    <a href="/client/dashboard" class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface border border-outline text-on-surface-variant hover:text-primary transition-all">
+        <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <div>
+        <h1 class="text-3xl v-title uppercase">Lộ trình tiêm</h1>
+        <p class="text-on-surface-variant text-sm font-medium">Theo dõi các mốc bảo vệ sức khỏe quan trọng của bé.</p>
+    </div>
+</section>
+
+<!-- Filter Tabs -->
+<nav class="flex gap-3 mb-10 overflow-x-auto pb-2 animate-fade-in" id="schedule-tabs" style="animation-delay: 0.1s">
+    <button class="v-btn v-btn-primary !py-2 !px-5">Tất cả</button>
+    <button class="v-btn v-btn-secondary !py-2 !px-5">Đã tiêm</button>
+    <button class="v-btn v-btn-secondary !py-2 !px-5">Sắp tới</button>
+</nav>
+
+<!-- Vaccination Timeline -->
+<div class="relative animate-fade-in" style="animation-delay: 0.2s">
+    <!-- Vertical Track (Solid Line) -->
+    <div class="absolute left-[19px] top-4 bottom-0 w-[2px] bg-outline"></div>
+    
+    <div class="space-y-10">
+        <!-- Completed Item -->
+        <div class="relative pl-12 group">
+            <div class="absolute left-0 top-1 w-10 h-10 rounded-xl bg-secondary text-white flex items-center justify-center z-10 transition-transform group-hover:scale-105">
+                <span class="material-symbols-outlined text-xl">done_all</span>
+            </div>
+            <div class="v-card v-card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="v-badge bg-secondary/10 text-secondary">HOÀN THÀNH</span>
+                    <span class="text-on-surface-variant text-xs font-bold">15 THÁNG 08, 2026</span>
+                </div>
+                <h3 class="text-xl v-title mb-2 uppercase tracking-tight">Lao (BCG)</h3>
+                <p class="text-on-surface-variant text-sm font-medium leading-normal mb-4">Phòng bệnh Lao phổi và các thể lao ngoài phổi khác.</p>
+                <div class="flex items-center gap-2 text-secondary text-xs font-black uppercase">
+                    <span class="material-symbols-outlined text-sm">verified</span>
+                    Cơ sở tiêm chủng VaxiCare
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Focus Item -->
+        <div class="relative pl-12 group">
+            <div class="absolute left-0 top-1 w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center z-10 transition-transform group-hover:scale-105 shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-xl">event_available</span>
+            </div>
+            <div class="v-card border-2 border-primary relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="v-badge bg-primary/10 text-primary">SẮP TỚI</span>
+                    <span class="text-primary text-xs font-black">15 THÁNG 10, 2026</span>
+                </div>
+                <h3 class="text-xl v-title mb-2 uppercase tracking-tight">5 trong 1 (Quinvaxem)</h3>
+                <p class="text-on-surface-variant text-sm font-medium leading-normal mb-6">Bạch hầu, ho gà, uốn ván, viêm gan B, Hib.</p>
+                <a href="/appointments/book" class="v-btn v-btn-primary w-full">
+                    ĐẶT HẸN NGAY
+                </a>
+            </div>
+        </div>
+
+        <!-- Future Item -->
+        <div class="relative pl-12 group opacity-60 hover:opacity-100 transition-opacity">
+            <div class="absolute left-0 top-1 w-10 h-10 rounded-xl bg-background border border-outline text-on-surface-variant flex items-center justify-center z-10 transition-transform group-hover:scale-105">
+                <span class="material-symbols-outlined text-xl">schedule</span>
+            </div>
+            <div class="v-card v-card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="v-badge bg-background text-on-surface-variant">DỰ KIẾN</span>
+                    <span class="text-on-surface-variant text-xs font-bold">15 THÁNG 11, 2026</span>
+                </div>
+                <h3 class="text-xl v-title mb-2 uppercase tracking-tight">Bại liệt (IPV)</h3>
+                <p class="text-on-surface-variant text-sm font-medium leading-normal">Tiêm vaccine bất hoạt phòng bệnh bại liệt.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Important Tip Card -->
+<section class="mt-12 p-6 bg-warning/5 border border-warning/20 rounded-2xl flex items-start gap-5 animate-fade-in" style="animation-delay: 0.3s">
+    <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-warning text-2xl">lightbulb</span>
+    </div>
+    <div>
+        <h4 class="v-title mb-1 text-base">Kinh nghiệm đi tiêm</h4>
+        <p class="text-on-surface-variant text-sm font-medium leading-normal">Bố mẹ nhớ mang theo sổ tiêm chủng và cho bé ăn nhẹ trước 30 phút. Nếu bé sốt >37.5 độ, hãy tạm lùi lịch tiêm nhé.</p>
+    </div>
+</section>
+
+` }) %>

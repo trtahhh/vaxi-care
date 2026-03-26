@@ -1,49 +1,111 @@
-<%- include('../layout', { body: `
-<div class="page-header">
-    <h1 class="page-title">Thêm người dùng</h1>
+<%- include('../layout', { 
+    title: (locals.editingUser ? 'Sửa' : 'Thêm') + ' Người dùng - VaxiCare',
+    body: `
+
+<!-- Page Header -->
+<div class="flex items-center gap-4 mb-8 animate-fade-in">
+    <a href="/admin/users" class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface border border-outline text-on-surface-variant hover:text-primary transition-all shadow-sm">
+        <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <div>
+        <h1 class="text-3xl v-title tracking-tight uppercase"><%= locals.editingUser ? 'Cập nhật' : 'Thêm mới' %> Người dùng</h1>
+        <p class="text-on-surface-variant text-sm font-medium">Điền thông tin tài khoản cho hệ thống VaxiCare.</p>
+    </div>
 </div>
 
-<div class="card">
-    <form method="POST" action="/admin/users/add">
-        <input type="hidden" name="_csrf" value="${csrfToken}">
-        <div class="form-group">
-            <label class="form-label">Tên đăng nhập *</label>
-            <input type="text" name="username" class="form-control" value="${user ? user.username : ''}" required>
+<div class="v-card !p-8 md:!p-10 max-w-4xl animate-fade-in" style="animation-delay: 0.1s">
+    <form method="POST" action="<%= locals.editingUser ? '/admin/users/edit/' + editingUser.id : '/admin/users/add' %>" class="space-y-8">
+        <% if (locals.csrfToken) { %>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <% } %>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Username -->
+            <div class="group">
+                <label class="v-subtitle mb-2 block ml-1">Tên đăng nhập <span class="text-error font-black ml-1">*</span></label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">account_circle</span>
+                    <input type="text" name="username" value="<%= locals.editingUser ? editingUser.username : '' %>" required
+                           placeholder="VD: pahuynh123"
+                           class="w-full pl-12 pr-4 py-3.5 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm">
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="group">
+                <label class="v-subtitle mb-2 block ml-1">Email <span class="text-error font-black ml-1">*</span></label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">mail</span>
+                    <input type="email" name="email" value="<%= locals.editingUser ? editingUser.email : '' %>" required
+                           placeholder="email@example.com"
+                           class="w-full pl-12 pr-4 py-3.5 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm">
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="group">
+                <label class="v-subtitle mb-2 block ml-1">
+                    Mật khẩu <%= locals.editingUser ? '(Để trống nếu không đổi)' : '*' %>
+                </label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">lock</span>
+                    <input type="password" name="password" <%= locals.editingUser ? '' : 'required' %>
+                           placeholder="••••••••"
+                           class="w-full pl-12 pr-4 py-3.5 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm">
+                </div>
+            </div>
+
+            <!-- Role Selection -->
+            <div class="group">
+                <label class="v-subtitle mb-2 block ml-1">Vai trò hệ thống</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary pointer-events-none text-xl">shield_person</span>
+                    <select name="role" class="w-full pl-12 pr-10 py-3.5 appearance-none bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm cursor-pointer">
+                        <option value="parent" <%= locals.editingUser && editingUser.role === 'parent' ? 'selected' : '' %>>Phụ huynh</option>
+                        <option value="staff" <%= locals.editingUser && editingUser.role === 'staff' ? 'selected' : '' %>>Nhân viên Y tế</option>
+                        <option value="admin" <%= locals.editingUser && editingUser.role === 'admin' ? 'selected' : '' %>>Quản trị viên</option>
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <span class="material-symbols-outlined text-on-surface-variant">arrow_drop_down</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label class="form-label">Email *</label>
-            <input type="email" name="email" class="form-control" value="${user ? user.email : ''}" required>
+        <div class="pt-6 border-t border-outline grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Fullname -->
+            <div class="group">
+                <label class="v-subtitle mb-2 block ml-1">Họ và tên</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">badge</span>
+                    <input type="text" name="fullName" value="<%= locals.editingUser ? (editingUser.fullName || '') : '' %>"
+                           placeholder="Nhập tên đầy đủ"
+                           class="w-full pl-12 pr-4 py-3.5 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm">
+                </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="group">
+                <label class="v-subtitle mb-2 block ml-1">Số điện thoại</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">call</span>
+                    <input type="text" name="phone" value="<%= locals.editingUser ? (editingUser.phone || '') : '' %>"
+                           placeholder="0xxx xxx xxx"
+                           class="w-full pl-12 pr-4 py-3.5 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm">
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label class="form-label">Mật khẩu *</label>
-            <input type="password" name="password" class="form-control" ${user ? '' : 'required'}>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Họ tên</label>
-            <input type="text" name="fullName" class="form-control" value="${user ? (user.fullName || '') : ''}">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Số điện thoại</label>
-            <input type="text" name="phone" class="form-control" value="${user ? (user.phone || '') : ''}">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Vai trò</label>
-            <select name="role" class="form-control">
-                <option value="parent" ${user && user.role === 'parent' ? 'selected' : ''}>Phụ huynh</option>
-                <option value="staff" ${user && user.role === 'staff' ? 'selected' : ''}>Nhân viên</option>
-                <option value="admin" ${user && user.role === 'admin' ? 'selected' : ''}>Admin</option>
-            </select>
-        </div>
-
-        <div class="btn-group">
-            <button type="submit" class="btn btn-success">Lưu</button>
-            <a href="/admin/users" class="btn btn-danger">Hủy</a>
+        <div class="flex items-center gap-4 pt-4">
+            <button type="submit" class="v-btn v-btn-primary !px-10 uppercase !text-xs tracking-widest gap-2">
+                <span class="material-symbols-outlined text-[18px]">save</span>
+                <%= locals.editingUser ? 'Cập nhật' : 'Lưu tài khoản' %>
+            </button>
+            <a href="/admin/users" class="v-btn v-btn-secondary !px-10 uppercase !text-xs tracking-widest">
+                Hủy bỏ
+            </a>
         </div>
     </form>
 </div>
+
 ` }) %>

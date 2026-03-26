@@ -1,95 +1,192 @@
-<%- include('../layout', { body: `
-<div class="page-header">
-    <h1 class="page-title"><i class="bi bi-capsule"></i> Quản lý Vaccine</h1>
-</div>
+<%
+  const safeVaccines = typeof vaccines !== 'undefined' ? vaccines : [];
+  const safeSearch = typeof search !== 'undefined' ? search : '';
+  const safeTotalPages = typeof totalPages !== 'undefined' ? totalPages : 1;
+  const safeCurrentPage = typeof currentPage !== 'undefined' ? currentPage : 1;
+  const safeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : '';
+  const totalStock = safeVaccines.reduce((acc, v) => acc + (v.stock || 0), 0);
+  const lowStockCount = safeVaccines.filter(v => v.stock <= 10).length;
+%>
+<%- include('../layout', { 
+    title: 'Kho Vaccine - VaxiCare',
+    body: `
 
-<div class="card">
-    <div class="toolbar">
-        <form class="search-box" method="GET" action="/admin/vaccines">
-            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm vaccine..." value="${search}">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-search"></i> Tìm
-            </button>
-            ${search ? '<a href="/admin/vaccines" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Xóa</a>' : ''}
-        </form>
-        <a href="/admin/vaccines/add" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Thêm Vaccine
-        </a>
+<!-- Page Header -->
+<header class="mb-10 animate-fade-in">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div>
+            <h1 class="text-4xl v-title tracking-tight uppercase flex items-center gap-4">
+                <span class="material-symbols-outlined text-primary text-4xl">inventory_2</span>
+                KHO VẮC XIN 
+            </h1>
+            <p class="text-on-surface-variant font-medium mt-2 max-w-lg leading-relaxed opacity-70">Giám sát tồn kho, giá thành và tình trạng cung ứng vắc xin toàn hệ thống.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-4 items-center">
+            <form class="relative group w-full sm:w-auto" method="GET" action="/admin/vaccines">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">search</span>
+                <input type="text" name="search" value="${safeSearch}" 
+                       class="w-full sm:w-64 pl-12 pr-4 py-4 bg-white border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-widest placeholder:opacity-30" 
+                       placeholder="TÌM VẮC XIN...">
+            </form>
+            <a href="/admin/vaccines/add" class="v-btn v-btn-primary gap-3 !py-4 !px-8 shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-xl">add_box</span>
+                NHẬP KHO MỚI
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Stats Overview (Flat & Solid) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12 animate-fade-in" style="animation-delay: 0.1s">
+    <div class="md:col-span-2 v-card !bg-primary !border-none !p-10 relative overflow-hidden group shadow-xl shadow-primary/20">
+        <div class="relative z-10 flex flex-col justify-between h-full">
+            <span class="text-on-primary font-black text-[12px] uppercase tracking-[0.3em] opacity-80">Tổng liều vắc xin khả dụng</span>
+            <div class="text-7xl v-title text-white mt-6 tracking-tighter">
+                ${new Intl.NumberFormat('vi-VN').format(totalStock)}
+            </div>
+        </div>
+        <span class="material-symbols-outlined absolute -right-8 -bottom-8 text-white/10 text-[12rem] group-hover:rotate-12 transition-transform duration-700 pointer-events-none">vaccines</span>
     </div>
 
-    ${vaccines.length > 0 ? `
-    <div class="table-wrapper">
-        <table class="table">
+    <div class="v-card !p-8 flex flex-col justify-between border-2 border-error border-b-8">
+        <div class="w-14 h-14 rounded-2xl bg-error text-white flex items-center justify-center mb-6 shadow-lg shadow-error/20">
+            <span class="material-symbols-outlined text-3xl">warning_amber</span>
+        </div>
+        <div>
+            <div class="text-4xl v-title text-error tracking-tighter">${lowStockCount}</div>
+            <span class="text-on-surface-variant font-black text-[10px] uppercase tracking-widest mt-1 block">Sắp hết hàng</span>
+        </div>
+    </div>
+
+    <div class="v-card !p-8 flex flex-col justify-between border-2 border-secondary border-b-8">
+        <div class="w-14 h-14 rounded-2xl bg-secondary text-white flex items-center justify-center mb-6 shadow-lg shadow-secondary/20">
+            <span class="material-symbols-outlined text-3xl">category</span>
+        </div>
+        <div>
+            <div class="text-4xl v-title text-on-surface tracking-tighter">${safeVaccines.length}</div>
+            <span class="text-on-surface-variant font-black text-[10px] uppercase tracking-widest mt-1 block">Danh mục loại</span>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory List Wrapper -->
+<div class="v-card !p-0 overflow-hidden animate-fade-in shadow-xl border-2" style="animation-delay: 0.2s">
+    <div class="px-8 py-6 border-b-2 border-outline flex items-center justify-between bg-background/50">
+        <h3 class="v-title text-[13px] uppercase tracking-widest text-on-surface">Bảng kê chi tiết tồn kho</h3>
+        <% if (locals.search) { %>
+            <a href="/admin/vaccines" class="v-btn v-btn-secondary !bg-background !py-2 !px-4 !text-[10px] uppercase tracking-widest text-error">Xóa lọc hiện tại</a>
+        <% } %>
+    </div>
+
+    <% if (safeVaccines.length > 0) { %>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
             <thead>
-                <tr>
-                    <th><i class="bi bi-hash"></i> ID</th>
-                    <th><i class="bi bi-capsule"></i> Tên vaccine</th>
-                    <th><i class="bi bi-currency-dollar"></i> Giá (VNĐ)</th>
-                    <th><i class="bi bi-box-seam"></i> Tồn kho</th>
-                    <th><i class="bi bi-calendar-heart"></i> Độ tuổi khuyến nghị</th>
-                    <th><i class="bi bi-gear"></i> Thao tác</th>
+                <tr class="bg-background text-on-surface-variant text-[10px] font-black uppercase tracking-[0.2em] border-b-2 border-outline">
+                    <th class="px-8 py-5">Tên Vắc xin & Phác đồ</th>
+                    <th class="px-8 py-5">Đơn giá</th>
+                    <th class="px-8 py-5">Lượng tồn</th>
+                    <th class="px-8 py-5">Trạng thái</th>
+                    <th class="px-8 py-5 text-center">Quản lý</th>
                 </tr>
             </thead>
-            <tbody>
-                ${vaccines.map(v => `
-                <tr>
-                    <td><strong>${v.id}</strong></td>
-                    <td>${v.name}</td>
-                    <td>${new Intl.NumberFormat('vi-VN').format(v.price)}</td>
-                    <td>
-                        <span style="color: ${v.stock > 10 ? '#27ae60' : v.stock > 0 ? '#f39c12' : '#e74c3c'}; font-weight: 600;">
-                            ${v.stock > 10 ? '<i class="bi bi-check-circle"></i> ' : v.stock > 0 ? '<i class="bi bi-exclamation-triangle"></i> ' : '<i class="bi bi-x-circle"></i> '}
-                            ${v.stock}
+            <tbody class="divide-y-2 divide-outline">
+                <% safeVaccines.forEach(v => { %>
+                <tr class="group hover:bg-primary/5 transition-colors">
+                    <td class="px-8 py-8">
+                        <div class="flex items-center gap-5">
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border-2 shadow-sm
+                                        <%= v.stock <= 10 ? 'bg-error text-white border-error/20' : 'bg-background text-primary border-primary/20' %>">
+                                <span class="material-symbols-outlined text-2xl"><%= v.stock <= 10 ? 'notifications_active' : 'vaccines' %></span>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-on-surface text-base uppercase tracking-tight"><%= v.name %></h4>
+                                <div class="flex items-center gap-3 mt-1.5">
+                                    <span class="text-[9px] font-black bg-on-surface/5 text-on-surface-variant px-2 py-0.5 rounded uppercase tracking-widest">ID: #<%= v.id %></span>
+                                    <span class="text-[9px] font-black text-primary uppercase tracking-widest">● PHÁC ĐỒ: <%= v.recommendedAgeMonths ? v.recommendedAgeMonths + ' THÁNG' : 'MỌI LỨA TUỔI' %></span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-8 py-8">
+                        <span class="px-4 py-2 bg-on-surface/5 rounded-xl font-black text-on-surface text-sm tracking-tight border border-outline">
+                            ${new Intl.NumberFormat('vi-VN').format(v.price)}<span class="ml-1 text-[10px] opacity-40 uppercase">vnđ</span>
                         </span>
                     </td>
-                    <td>${v.ageLabel || (v.recommendedAgeMonths ? v.recommendedAgeMonths + ' tháng' : '-')}</td>
-                    <td>
-                        <div class="btn-group">
-                            <a href="/admin/vaccines/edit/${v.id}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-pencil"></i> Sửa
+                    <td class="px-8 py-8">
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-black tracking-tighter <%= v.stock <= 10 ? 'text-error' : 'text-on-surface' %>">
+                                ${new Intl.NumberFormat('vi-VN').format(v.stock)}
+                            </span>
+                            <span class="text-[9px] font-black text-on-surface-variant uppercase tracking-widest opacity-60">Liều khả dụng</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-8">
+                        <% if (v.stock > 10) { %>
+                            <span class="v-badge bg-secondary text-white border-transparent py-2 px-4 shadow-lg shadow-secondary/10">DỒI DÀO</span>
+                        <% } else if (v.stock > 0) { %>
+                            <span class="v-badge bg-warning text-white border-transparent py-2 px-4 shadow-lg shadow-warning/10">SẮP HẾT</span>
+                        <% } else { %>
+                            <span class="v-badge bg-error text-white border-transparent py-2 px-4 shadow-lg shadow-error/10">HẾT HÀNG</span>
+                        <% } %>
+                    </td>
+                    <td class="px-8 py-8">
+                        <div class="flex items-center justify-center gap-3">
+                            <a href="/admin/vaccines/edit/${v.id}" class="w-11 h-11 rounded-xl flex items-center justify-center bg-white border-2 border-outline text-on-surface-variant hover:text-primary hover:border-primary transition-all shadow-sm">
+                                <span class="material-symbols-outlined text-xl">edit_note</span>
                             </a>
-                            <form method="POST" action="/admin/vaccines/delete/${v.id}" style="display:inline" onsubmit="return confirmDelete('Bạn có chắc muốn xóa vaccine &quot;${v.name}&quot;?')">
-                                <input type="hidden" name="_csrf" value="${csrfToken}">
-                                <button type="submit" class="btn btn-danger btn-sm">
-                                    <i class="bi bi-trash"></i> Xóa
+                            <form method="POST" action="/admin/vaccines/delete/${v.id}" class="m-0" onsubmit="return confirm('Xác nhận xóa vắc xin khỏi kho lưu trữ?')">
+                                <input type="hidden" name="_csrf" value="${safeCsrfToken}">
+                                <button type="submit" class="w-11 h-11 rounded-xl flex items-center justify-center bg-white border-2 border-outline text-on-surface-variant hover:text-error hover:border-error transition-all shadow-sm">
+                                    <span class="material-symbols-outlined text-xl">delete_forever</span>
                                 </button>
                             </form>
                         </div>
                     </td>
                 </tr>
-                `).join('')}
+                <% }) %>
             </tbody>
         </table>
     </div>
 
-    ${totalPages > 1 ? `
-    <div class="pagination">
-        ${currentPage > 1 ? `<a href="?page=${currentPage - 1}&search=${search}"><i class="bi bi-chevron-left"></i> Trước</a>` : '<span class="disabled"><i class="bi bi-chevron-left"></i> Trước</span>'}
-        ${Array.from({length: totalPages}, (_, i) => `
-            <a href="?page=${i + 1}&search=${search}" class="${currentPage === i + 1 ? 'active' : ''}">${i + 1}</a>
-        `).join('')}
-        ${currentPage < totalPages ? `<a href="?page=${currentPage + 1}&search=${search}">Sau <i class="bi bi-chevron-right"></i></a>` : '<span class="disabled">Sau <i class="bi bi-chevron-right"></i></span>'}
+    <!-- Pagination System -->
+    <% if (safeTotalPages > 1) { %>
+    <div class="p-8 bg-background/50 flex items-center justify-center gap-4 border-t-2 border-outline">
+        <% if (safeCurrentPage > 1) { %>
+            <a href="?page=${safeCurrentPage - 1}&search=${safeSearch}" class="v-btn v-btn-secondary !bg-white !p-3 shadow-sm hover:!bg-primary hover:!text-white transition-all">
+                <span class="material-symbols-outlined">west</span>
+            </a>
+        <% } %>
+        
+        <div class="flex gap-2">
+            <% for(let i=1; i<=safeTotalPages; i++) { %>
+                <a href="?page=${i}&search=${safeSearch}" 
+                   class="w-12 h-12 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm border-2
+                          ${safeCurrentPage === i ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-110' : 'bg-white border-outline text-on-surface-variant hover:border-primary hover:text-primary'}">
+                    ${i}
+                </a>
+            <% } %>
+        </div>
+
+        <% if (safeCurrentPage < safeTotalPages) { %>
+            <a href="?page=${safeCurrentPage + 1}&search=${safeSearch}" class="v-btn v-btn-secondary !bg-white !p-3 shadow-sm hover:!bg-primary hover:!text-white transition-all">
+                <span class="material-symbols-outlined">east</span>
+            </a>
+        <% } %>
     </div>
-    ` : ''}
-    ` : `
-    <div class="empty-state">
-        <i class="bi bi-inbox"></i>
-        <p>Không có vaccine nào</p>
-        <a href="/admin/vaccines/add" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Thêm vaccine đầu tiên
-        </a>
+    <% } %>
+
+    <% } else { %>
+    <!-- Empty State -->
+    <div class="py-24 flex flex-col items-center justify-center text-center opacity-60">
+        <div class="w-24 h-24 bg-background border-2 border-outline rounded-[2rem] flex items-center justify-center mb-8 shadow-inner">
+            <span class="material-symbols-outlined text-5xl text-on-surface-variant/20">medication_liquid</span>
+        </div>
+        <h3 class="text-3xl v-title uppercase mb-3 tracking-tighter">Kho chưa có dữ liệu</h3>
+        <p class="text-on-surface-variant text-sm font-medium mb-10 max-w-sm px-8">Hệ thống chưa ghi nhận bất kỳ loại vắc xin nào trong kho lưu trữ hoặc không tìm thấy kết quả phù hợp với lọc.</p>
+        <a href="/admin/vaccines/add" class="v-btn v-btn-primary !px-10 !py-4 uppercase text-[10px] font-black tracking-widest shadow-xl shadow-primary/20">PHÁT HÀNH ĐỢT VẮC XIN MỚI</a>
     </div>
-    `}
+    <% } %>
 </div>
 
-<script>
-    // Show toast if redirected with message
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success')) {
-        showToast('success', 'Thành công', decodeURIComponent(urlParams.get('success')));
-    }
-    if (urlParams.get('error')) {
-        showToast('error', 'Lỗi', decodeURIComponent(urlParams.get('error')));
-    }
-</script>
 ` }) %>

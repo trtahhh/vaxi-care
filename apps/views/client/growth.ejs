@@ -1,0 +1,116 @@
+<%- include('layout', { 
+    currentPath: '/client/growth', 
+    title: 'Theo dõi tăng trưởng - VaxiCare',
+    body: `
+
+<!-- Page Header -->
+<section class="mb-10 flex items-center gap-4 animate-fade-in">
+    <a href="/client/dashboard" class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface border border-outline text-on-surface-variant hover:text-primary transition-all shadow-sm">
+        <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <div>
+        <h1 class="text-3xl v-title tracking-tight uppercase">Biểu đồ tăng trưởng</h1>
+        <p class="text-on-surface-variant text-sm font-medium opacity-60">Theo dõi sự phát triển thể chất của bé theo chuẩn WHO.</p>
+    </div>
+</section>
+
+<!-- Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 animate-fade-in" style="animation-delay: 0.1s">
+    <!-- Status Card -->
+    <div class="md:col-span-2 v-card !p-10 flex flex-col justify-between border-2 border-primary/30">
+        <div class="space-y-6">
+            <span class="v-badge bg-primary text-white border-transparent uppercase">TÌNH TRẠNG HIỆN TẠI</span>
+            <div class="flex items-center gap-4">
+                <h2 class="text-5xl v-title uppercase tracking-tighter text-on-surface">PHÁT TRIỂN TỐT</h2>
+                <div class="w-4 h-4 rounded-full bg-primary animate-pulse"></div>
+            </div>
+            <p class="text-on-surface-variant font-medium text-base leading-relaxed opacity-80">Bé đang phát triển cực kỳ ổn định. Chỉ số cân nặng và chiều cao của bé hiện tại đang nằm ở trung vị <span class="text-primary font-black">50th PERCENTILE</span> - một tín hiệu sức khỏe tuyệt vời.</p>
+        </div>
+        <div class="mt-10">
+            <button class="v-btn v-btn-primary !px-8 !py-4 !text-[10px] uppercase tracking-widest gap-2 shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-sm">edit_square</span>
+                CẬP NHẬT CHỈ SỐ LÂM SÀNG
+            </button>
+        </div>
+    </div>
+    
+    <!-- Quick Stats Bento -->
+    <div class="v-card !p-10 space-y-10 flex flex-col justify-center bg-background/30">
+        <div class="space-y-2">
+            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">scale</span> CÂN NẶNG HIỆN TẠI
+            </p>
+            <p class="text-5xl font-black text-on-surface tracking-tighter">8.4 <span class="text-xl font-bold text-on-surface-variant ml-1 uppercase">KG</span></p>
+        </div>
+        <div class="w-full h-px bg-outline"></div>
+        <div class="space-y-2">
+            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">straighten</span> CHIỀU CAO HIỆN TẠI
+            </p>
+            <p class="text-5xl font-black text-on-surface tracking-tighter">72 <span class="text-xl font-bold text-on-surface-variant ml-1 uppercase">CM</span></p>
+        </div>
+    </div>
+</div>
+
+<!-- Growth Charts -->
+<div class="space-y-12 animate-fade-in" style="animation-delay: 0.2s">
+    <section>
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 px-2">
+            <h2 class="v-title text-[15px] uppercase tracking-widest flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary text-2xl">monitoring</span>
+                Phân tích Cân nặng (0-24 tháng)
+            </h2>
+            <div class="flex gap-6">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded bg-primary"></span>
+                    <span class="text-[10px] font-black text-on-surface uppercase tracking-widest">Dữ liệu của Bé</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 border-2 border-outline bg-white rounded"></span>
+                    <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Tiêu chuẩn WHO</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="v-card !p-10 !bg-white h-96 relative shadow-inner overflow-hidden">
+            <!-- Grid Lines (Solid) -->
+            <div class="absolute inset-x-16 inset-y-12 flex flex-col justify-between pointer-events-none opacity-[0.05]">
+                <div class="w-full h-px bg-on-surface"></div>
+                <div class="w-full h-px bg-on-surface"></div>
+                <div class="w-full h-px bg-on-surface"></div>
+                <div class="w-full h-px bg-on-surface"></div>
+                <div class="w-full h-px bg-on-surface"></div>
+            </div>
+
+            <!-- SVG Chart (Solid Lines) -->
+            <svg class="absolute inset-x-16 inset-y-12 w-[calc(100%-8rem)] h-[calc(100%-6rem)]" preserveAspectRatio="none" viewBox="0 0 100 100">
+                <!-- WHO Standard (Dashed Solid) -->
+                <path class="text-outline" d="M0,85 Q25,80 50,60 T100,30" fill="none" stroke="currentColor" stroke-dasharray="3 3" stroke-width="2"></path>
+                <!-- Baby Line (Solid Primary) -->
+                <path class="text-primary" d="M0,90 Q20,85 40,65 T80,40" fill="none" stroke="currentColor" stroke-width="4"></path>
+                <!-- Data Nodes -->
+                <circle cx="20" cy="85" fill="#FFFFFF" stroke="#3182CE" stroke-width="3" r="4"></circle>
+                <circle cx="40" cy="65" fill="#FFFFFF" stroke="#3182CE" stroke-width="3" r="4"></circle>
+                <circle cx="60" cy="52" fill="#FFFFFF" stroke="#3182CE" stroke-width="3" r="4"></circle>
+                <circle cx="80" cy="40" fill="#3182CE" r="6" class="animate-pulse"></circle>
+            </svg>
+            
+            <div class="absolute bottom-6 left-16 right-16 flex justify-between text-[10px] font-black text-on-surface-variant opacity-80 uppercase tracking-widest">
+                <span>Khởi đầu</span><span>3 tháng</span><span>6 tháng</span><span>9 tháng</span><span>12 tháng</span><span>24 tháng</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Expert Advisor -->
+    <section class="v-card !p-8 !bg-primary/5 !border-primary/20 flex items-start gap-6 animate-fade-in" style="animation-delay: 0.3s">
+        <div class="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+            <span class="material-symbols-outlined text-3xl">medical_services</span>
+        </div>
+        <div>
+            <h4 class="v-title text-[15px] text-primary mb-2 uppercase tracking-tight">Cố vấn chuyên môn nhi khoa</h4>
+            <p class="text-on-surface-variant text-sm font-medium leading-relaxed">Bé đang có đà tăng trưởng cực kỳ tốt và đúng kế hoạch. Ở giai đoạn này, hãy tập trung bổ sung kẽm và Vitamin D3 để củng cố hệ xương cũng như sức đề kháng tự nhiên cho con nhé.</p>
+        </div>
+    </section>
+</div>
+
+` }) %>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>VaxiCare - Bảo vệ mầm xanh Việt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--v-background);
+            color: var(--v-on-surface);
+        }
+        .v-hero-bg {
+            background-color: #EBF8FF;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 800px;
+            z-index: -1;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+<div class="v-hero-bg"></div>
+
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 h-20 bg-white/95 border-b border-outline shadow-sm">
+    <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-3xl">child_care</span>
+        <span class="text-2xl md:text-3xl font-black text-on-surface tracking-tighter uppercase">VaxiCare</span>
+    </div>
+    <nav class="hidden md:flex items-center gap-10">
+        <a class="text-primary font-black uppercase text-xs tracking-widest" href="#">Trang chủ</a>
+        <a class="text-on-surface-variant font-bold uppercase text-xs tracking-widest hover:text-primary transition-all" href="#features">Tính năng</a>
+        <a class="text-on-surface-variant font-bold uppercase text-xs tracking-widest hover:text-primary transition-all" href="#how-it-works">Cách hoạt động</a>
+    </nav>
+    <div class="flex items-center gap-4">
+        <% if (locals.user) { %>
+            <a href="<%= user.role === 'admin' ? '/admin/dashboard' : '/client/dashboard' %>" class="v-btn v-btn-primary !px-6 !py-2.5 !text-[10px] shadow-lg shadow-primary/20">
+                BẢNG ĐIỀU KHIỂN
+            </a>
+        <% } else { %>
+            <a href="/auth/login" class="v-btn v-btn-primary !px-6 !py-2.5 !text-[10px] shadow-lg shadow-primary/20">
+                ĐĂNG NHẬP
+            </a>
+        <% } %>
+    </div>
+</header>
+
+<main class="pt-20">
+    <!-- Hero Section -->
+    <section class="relative min-h-[85vh] flex items-center px-6 md:px-20 py-20">
+        <div class="container mx-auto grid lg:grid-cols-2 gap-16 items-center w-full">
+            <div class="space-y-8 max-w-2xl animate-fade-in">
+                <div class="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-sm"></span>
+                    <span class="text-primary text-[10px] font-black uppercase tracking-[0.2em]">Hệ thống Y tế Thông minh</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl lg:text-[5.5rem] font-black text-on-surface leading-[0.95] tracking-tight uppercase">
+                    Bảo vệ bé yêu bằng <span class="text-primary block mt-4">Sự An Tâm Từ Sớm</span>
+                </h1>
+                <p class="text-on-surface-variant text-lg md:text-xl font-medium leading-relaxed max-w-xl">
+                    VaxiCare là nền tảng đáng tin cậy giúp phụ huynh theo dõi lịch tiêm chủng, quản lý hồ sơ y tế điện tử và nhận thông báo nhắc hẹn hoàn toàn tự động.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                    <% if (!locals.user) { %>
+                        <a href="/auth/register" class="v-btn v-btn-primary !px-10 !py-5 !text-sm tracking-[0.2em] shadow-xl shadow-primary/30">
+                            ĐĂNG KÝ NGAY
+                        </a>
+                    <% } else { %>
+                        <a href="<%= user.role === 'admin' ? '/admin/dashboard' : '/client/dashboard' %>" class="v-btn v-btn-primary !px-10 !py-5 !text-sm tracking-[0.2em] shadow-xl shadow-primary/30">
+                            VÀO HỆ THỐNG
+                        </a>
+                    <% } %>
+                    <a href="#features" class="v-btn v-btn-secondary !px-10 !py-5 !text-sm tracking-[0.2em]">
+                        TÌM HIỂU THÊM
+                    </a>
+                </div>
+            </div>
+            
+            <div class="relative hidden lg:block animate-fade-in" style="animation-delay: 0.2s">
+                <div class="relative rounded-[3rem] overflow-hidden border-[12px] border-white shadow-2xl skew-y-1 transform group transition-all duration-700 hover:skew-y-0">
+                    <img class="w-full aspect-[4/5] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAT40lvqxUbSTIS5V0iwDJo92IA_3m_BnyQUCMfuZejAbcP9HsoOiWScqBLC0Bkp6vfzguKK1q_ZeqT9ZV-OM8AhFCYukSnQOmkeb6MoTNEx2kSuMg1PyyPisoNZ6bNz0aRmxZNA8edZTwUhD-IcOshtBkmaTcjCurkRY8r0_48nxwUtOdFhol00cP14gqDGJYBOWZ9bq1Pfg4zXXsr4XVNtab_-O1SDx53GH2lDCMRsrHGUY8HFPkpO1kP0wzijXBrjjTlzxEZspA"/>
+                    
+                    <!-- Floating Solid Metric -->
+                    <div class="absolute bottom-10 left-10 right-10 bg-white p-8 rounded-2xl border-2 border-primary border-b-[8px] flex items-center gap-6 shadow-2xl animate-float">
+                        <div class="w-16 h-16 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                            <span class="material-symbols-outlined text-4xl">verified</span>
+                        </div>
+                        <div>
+                            <h4 class="text-on-surface font-black text-xl uppercase tracking-tight">Hệ thống Đạt Chuẩn</h4>
+                            <p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest mt-1 opacity-70">Kết nối toàn diện với B-Y-T</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Bento Grid -->
+    <section id="features" class="py-32 px-6 md:px-20 bg-white relative z-20">
+        <div class="container mx-auto">
+            <div class="text-center mb-20 space-y-4 max-w-3xl mx-auto">
+                <span class="text-primary font-black uppercase tracking-[0.3em] text-[10px] bg-primary/5 px-4 py-2 rounded-full border border-primary/10">Tính năng cốt lõi</span>
+                <h2 class="text-4xl md:text-6xl v-title uppercase tracking-tighter text-on-surface">Giải pháp y tế số hằng đầu</h2>
+                <p class="text-on-surface-variant text-lg font-medium opacity-70">Thiết kế tinh tế mang trải nghiệm hiện đại, giúp bạn theo dõi lịch tiêm chủng và biểu đồ phát triển con yêu một cách khoa học nhất.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Large Feature Card -->
+                <div class="md:col-span-2 v-card !p-12 flex flex-col md:flex-row gap-10 items-center hover:border-primary transition-all group">
+                    <div class="space-y-8 flex-1">
+                        <div class="w-20 h-20 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-5xl">calendar_month</span>
+                        </div>
+                        <h3 class="text-4xl v-title uppercase text-on-surface tracking-tight">Nhắc Lịch Tự Động</h3>
+                        <p class="text-on-surface-variant font-medium leading-relaxed">Không bao giờ bỏ lỡ mũi tiêm quan trọng. Hệ thống thông báo thông minh qua App & Email dựa trên phác đồ tiêu chuẩn của Bộ Y Tế, linh hoạt theo tuổi của trẻ.</p>
+                    </div>
+                    <div class="w-full md:w-1/2 h-72 bg-background border border-outline rounded-[2rem] p-6 relative flex flex-col justify-center">
+                        <div class="space-y-4">
+                            <div class="p-5 bg-white border-2 border-error rounded-xl flex items-center justify-between shadow-md">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-error text-2xl">notification_important</span>
+                                    <span class="text-xs font-black text-on-surface uppercase tracking-tight">MAI TIÊM: 6 TRONG 1</span>
+                                </div>
+                                <span class="v-badge bg-error text-white border-transparent">KHẨN</span>
+                            </div>
+                            <div class="p-5 bg-white border border-outline rounded-xl flex items-center gap-3 opacity-40 ml-6">
+                                <span class="material-symbols-outlined text-secondary text-2xl">check_circle</span>
+                                <span class="text-xs font-black text-on-surface uppercase tracking-tight">ĐÃ XONG: PHẾ CẦU</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Small Feature 1 -->
+                <div class="v-card !p-10 space-y-8 hover:border-secondary transition-all group h-full flex flex-col">
+                    <div class="w-16 h-16 rounded-xl bg-secondary text-white flex items-center justify-center shadow-lg shadow-secondary/20 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-3xl">history_edu</span>
+                    </div>
+                    <h3 class="text-2xl v-title uppercase text-on-surface">Sổ Tiêm Chủng Số</h3>
+                    <p class="text-on-surface-variant font-medium text-sm leading-relaxed flex-1 opacity-80">Lưu trữ trọn đời an toàn với mã hóa chuẩn y tế. Dễ dàng truy xuất hồ sơ mọi lúc để làm thủ tục nhập học cho trẻ.</p>
+                </div>
+                
+                <!-- Small Feature 2 -->
+                <div class="v-card !p-10 space-y-8 hover:border-error transition-all group h-full flex flex-col">
+                    <div class="w-16 h-16 rounded-xl bg-error text-white flex items-center justify-center shadow-lg shadow-error/20 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-3xl">monitoring</span>
+                    </div>
+                    <h3 class="text-2xl v-title uppercase text-on-surface">Chuẩn Tăng Trưởng</h3>
+                    <p class="text-on-surface-variant font-medium text-sm leading-relaxed flex-1 opacity-80">Theo dõi trực quan sự phát triển Cân nặng, Chiều cao của bé so với đường phân vị (Percentile) chuẩn của WHO ngay trên ứng dụng.</p>
+                </div>
+                
+                <!-- Another Large Feature -->
+                <div class="md:col-span-2 v-card !p-12 flex flex-col md:flex-row-reverse gap-10 items-center hover:border-primary transition-all group">
+                    <div class="space-y-8 flex-1">
+                        <div class="w-20 h-20 rounded-2xl bg-on-surface text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-5xl">qr_code_scanner</span>
+                        </div>
+                        <h3 class="text-4xl v-title uppercase text-on-surface tracking-tight">Đồng Bộ Tại Trạm</h3>
+                        <p class="text-on-surface-variant font-medium leading-relaxed">Admin hoặc nhân viên y tế sẽ quét mã QR từ App của bạn để tự động nhập liệu 1 chạm mũi tiêm vào sổ ngay sau tiêm. Trọn vẹn vòng tuần hoàn số.</p>
+                    </div>
+                    <div class="w-full md:w-1/2 aspect-video bg-background border border-outline rounded-[2rem] overflow-hidden">
+                        <img class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLvm9fAzHUjzuF-eC8c_-CvlWWc7xtojfxd2jiyljMA1QsewI7Rwuy4Lc2wLee6rl4GLJx3OK4SAAadWXjiWaCeoWrDYKF0JTb40m0VnesH7QqmTJ5TVxJjz6SjBKh_LXKY6dJ93LtcyVn_BKofwW0I7TsVjf8K1kIwLnJLiMJZ5jlxrUkxcga9-yc79Hb2R07oJyr7S3jrMluEafDimtDEGK-6V8dUyd_RP0wqpDKsUYQstAjZmx37e7h5jjp5fKYsJWwE6JP9EQ"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Steps Section -->
+    <section id="how-it-works" class="py-40 px-6 md:px-20 bg-background overflow-hidden">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-32 gap-6">
+                <div class="space-y-4 max-w-2xl">
+                    <span class="text-primary font-black uppercase tracking-[0.3em] text-[10px]">Quy trình đơn giản</span>
+                    <h2 class="text-5xl md:text-7xl v-title uppercase tracking-tighter text-on-surface mt-4">Vận hành trong <span class="text-primary italic">3 phút</span></h2>
+                </div>
+                <p class="text-on-surface-variant text-lg font-medium max-w-sm pb-2 opacity-60">Chỉ vài thao tác, hệ thống sẽ trở thành bác sĩ gia đình lên lộ trình chích ngừa chuẩn chỉnh cho con yêu.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+                <!-- Step 1 -->
+                <div class="v-card !p-10 !bg-white space-y-10 group hover:-translate-y-4 transition-all duration-500">
+                    <div class="w-24 h-24 rounded-3xl bg-primary text-white flex items-center justify-center text-4xl font-black shadow-xl shadow-primary/20 transition-transform group-hover:rotate-6">01</div>
+                    <div class="space-y-4">
+                        <h3 class="text-3xl v-title uppercase text-on-surface">Thiết lập Hồ sơ</h3>
+                        <p class="text-on-surface-variant font-medium leading-relaxed opacity-80">Đăng ký và thêm thông tin cơ sở của bé (Ngày sinh, Cân nặng). VaxiCare lập tức nội suy lịch tiêm dự kiến suốt 24 tháng.</p>
+                    </div>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="v-card !p-10 !bg-white space-y-10 group hover:-translate-y-4 transition-all duration-500 delay-100">
+                    <div class="w-24 h-24 rounded-3xl bg-secondary text-white flex items-center justify-center text-4xl font-black shadow-xl shadow-secondary/20 transition-transform group-hover:rotate-6">02</div>
+                    <div class="space-y-4">
+                        <h3 class="text-3xl v-title uppercase text-on-surface">Ghi nhận Mũi</h3>
+                        <p class="text-on-surface-variant font-medium leading-relaxed opacity-80">Phụ huynh đặt lịch qua App, đưa bé tới trung tâm tiêm. Admin quét mã từ App để tự động Check-in và cập nhật sổ.</p>
+                    </div>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="v-card !p-10 !bg-white space-y-10 group hover:-translate-y-4 transition-all duration-500 delay-200">
+                    <div class="w-24 h-24 rounded-3xl bg-on-surface text-white flex items-center justify-center text-4xl font-black shadow-xl shadow-on-surface/20 transition-transform group-hover:rotate-6">03</div>
+                    <div class="space-y-4">
+                        <h3 class="text-3xl v-title uppercase text-on-surface">Đánh giá & An tâm</h3>
+                        <p class="text-on-surface-variant font-medium leading-relaxed opacity-80">Xem chi tiết trạng thái đã tiêm. Theo dõi biểu đồ sinh trưởng liên tục để nắm bắt sớm các vấn đề thể chất tiềm ẩn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="py-32 px-6 md:px-20 mb-20">
+        <div class="container mx-auto">
+            <div class="v-card !bg-primary !border-none !p-20 md:!p-32 text-center shadow-3xl shadow-primary/40 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                
+                <div class="relative z-10 max-w-4xl mx-auto space-y-10">
+                    <span class="material-symbols-outlined text-8xl text-white mb-4 block animate-bounce">security</span>
+                    <h2 class="text-5xl md:text-8xl v-title uppercase tracking-tighter text-white leading-none">Cùng VaxiCare <span class="block text-on-primary">Bảo Vệ Tương Lai</span></h2>
+                    <p class="text-on-primary font-black text-xl uppercase tracking-widest opacity-80">Ứng dụng thiết yếu cho mọi phụ huynh Việt hiện đại.</p>
+                    
+                    <div class="pt-10 flex flex-col sm:flex-row items-center justify-center gap-6">
+                        <a href="/auth/register" class="w-full sm:w-auto px-16 py-6 bg-white text-primary font-black text-lg uppercase tracking-[0.2em] rounded-2xl shadow-2xl hover:bg-on-primary hover:text-white transition-all transform hover:-translate-y-2">
+                            Đăng Ký Tài Khoản Trực Tuyến
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Footer -->
+<footer class="w-full py-20 bg-white border-t-2 border-outline">
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center px-12 gap-12 text-center md:text-left">
+        <div class="space-y-4">
+            <div class="flex items-center justify-center md:justify-start gap-3">
+                <span class="material-symbols-outlined text-primary text-3xl">child_care</span>
+                <span class="text-on-surface font-black text-2xl tracking-tighter uppercase">VaxiCare</span>
+            </div>
+            <p class="text-on-surface-variant font-bold text-[10px] uppercase tracking-widest opacity-60">© 2026 VaxiCare Team. Code for a healthier world.</p>
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-10">
+            <a class="text-on-surface-variant font-black uppercase text-[10px] tracking-widest hover:text-primary transition-all" href="#">Về Đội ngũ</a>
+            <a class="text-on-surface-variant font-black uppercase text-[10px] tracking-widest hover:text-primary transition-all" href="#">Chính sách bảo mật</a>
+            <a class="text-on-surface-variant font-black uppercase text-[10px] tracking-widest hover:text-primary transition-all" href="#">Hỗ trợ 24/7</a>
+        </div>
+        
+        <div class="flex gap-4">
+            <a class="w-10 h-10 rounded-lg bg-background border border-outline flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-all" href="#"><span class="material-symbols-outlined">public</span></a>
+            <a class="w-10 h-10 rounded-lg bg-background border border-outline flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-all" href="#"><span class="material-symbols-outlined">mail</span></a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

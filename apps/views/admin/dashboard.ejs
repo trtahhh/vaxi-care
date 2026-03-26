@@ -1,37 +1,140 @@
-<%- include('layout', { body: `
-<div class="page-header">
-    <h1 class="page-title">Tổng quan</h1>
+<%- include('layout', { 
+    title: 'Tổng quan quản trị - VaxiCare',
+    body: `
+
+<!-- Dashboard Header -->
+<div class="mb-10 animate-fade-in">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <h2 class="text-3xl v-title tracking-tight">Chào buổi sáng, Quản trị viên</h2>
+            <p class="text-on-surface-variant font-medium mt-1">Hôm nay là ngày <%= new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+        </div>
+        <div class="flex gap-3">
+            <a href="/admin/appointments/pending" class="v-btn v-btn-secondary gap-2">
+                <span class="material-symbols-outlined text-sm">pending_actions</span>
+                DUYỆT LỊCH HẸN
+            </a>
+            <button class="v-btn v-btn-primary gap-2">
+                <span class="material-symbols-outlined text-sm">download</span>
+                XUẤT BÁO CÁO
+            </button>
+        </div>
+    </div>
 </div>
 
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-label">Tổng số người dùng</div>
-        <div class="stat-value"><%= userCount %></div>
+<!-- Stats Grid -->
+<div class="v-stat-grid mb-10 animate-fade-in js-delay-init" data-delay="0.1s">
+    <div class="v-card bg-primary text-white border-none flex flex-col justify-between min-h-[140px]">
+        <div class="flex justify-between items-start">
+            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                <span class="material-symbols-outlined text-white">event_available</span>
+            </div>
+            <span class="v-badge bg-white/20">Hôm nay</span>
+        </div>
+        <div class="mt-4">
+            <p class="text-white/80 v-subtitle !text-white">Lịch tiêm</p>
+            <h3 class="text-4xl font-black tracking-tighter"><%= locals.todayAppointments || 0 %></h3>
+        </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Tổng số trẻ em</div>
-        <div class="stat-value"><%= childCount %></div>
+
+    <%- include('../partials/stat-card', { icon: 'child_care', label: 'Trẻ em quản lý', value: locals.childCount || 0, iconColor: 'text-secondary' }) %>
+    <%- include('../partials/stat-card', { icon: 'vaccines', label: 'Loại Vắc xin', value: locals.vaccineCount || 0, iconColor: 'text-primary' }) %>
+    <%- include('../partials/stat-card', { icon: 'group', label: 'Người dùng', value: locals.userCount || 0, iconColor: 'text-warning' }) %>
+</div>
+
+<!-- Main Insights Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10 animate-fade-in js-delay-init" data-delay="0.2s">
+    
+    <!-- Weekly Trend Chart -->
+    <div class="lg:col-span-2 v-card">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="v-subtitle flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-sm">trending_up</span>
+                Xu hướng lịch hẹn (7 ngày qua)
+            </h3>
+        </div>
+        <div class="h-[300px] w-full relative" id="trendChartContainer" data-trend='<%- JSON.stringify(locals.weeklyTrend || []) %>'>
+            <canvas id="trendChart"></canvas>
+        </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Số loại vaccine</div>
-        <div class="stat-value"><%= vaccineCount %></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Lịch hẹn hôm nay</div>
-        <div class="stat-value"><%= todayAppointments %></div>
+
+    <!-- Vaccine Stock Alerts -->
+    <div class="v-card flex flex-col">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="v-subtitle flex items-center gap-2">
+                <span class="material-symbols-outlined text-error text-sm">inventory_2</span>
+                Cảnh báo kho
+            </h3>
+            <a href="/admin/vaccines" class="text-[10px] font-bold text-primary hover:underline">TẤT CẢ</a>
+        </div>
+        <div class="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+            <% if (locals.stockAlerts && stockAlerts.length > 0) { %>
+                <% stockAlerts.forEach(vaccine => { %>
+                    <div class="flex items-center justify-between p-3 bg-background rounded-lg border border-outline/50 hover:border-error/30 transition-colors">
+                        <div>
+                            <p class="text-sm font-bold text-on-surface truncate w-32"><%= vaccine.name %></p>
+                            <p class="v-subtitle opacity-60"><%= vaccine.type %></p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-black text-error"><%= vaccine.quantity %></span>
+                            <p class="text-[10px] text-error font-bold uppercase">Còn lại</p>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="text-center py-10 opacity-40">
+                    <span class="material-symbols-outlined text-secondary text-4xl mb-2">check_circle</span>
+                    <p class="v-subtitle">Kho hàng ổn định</p>
+                </div>
+            <% } %>
+        </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Chức năng quản lý</h2>
-    </div>
-    <p>Chọn một mục từ menu bên trái để quản lý:</p>
-    <ul style="margin-top: 15px; padding-left: 20px; line-height: 2;">
-        <li><strong>Quản lý Vaccine:</strong> Thêm, sửa, xóa vaccine và quản lý tồn kho</li>
-        <li><strong>Quản lý Lịch tiêm:</strong> Cấu hình số lượng lịch hẹn tối đa cho từng ngày</li>
-        <li><strong>Quản lý Người dùng:</strong> Xem danh sách, thêm mới người dùng</li>
-        <li><strong>Quản lý Trẻ em:</strong> Xem hồ sơ trẻ và lịch sử tiêm chủng</li>
-    </ul>
-</div>
-` }) %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('trendChartContainer');
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        const trendData = JSON.parse(container.dataset.trend || '[]');
+        
+        if (!trendData || trendData.length === 0) return;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: trendData.map(item => item.date),
+                datasets: [{
+                    label: 'Số lịch hẹn',
+                    data: trendData.map(item => item.count),
+                    borderColor: '#3182CE',
+                    backgroundColor: 'rgba(49, 130, 206, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#FFFFFF',
+                    pointBorderColor: '#3182CE',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#E2E8F0' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    });
+</script>
+`,
+extraCss: `
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+</style>
+`
+}) %>

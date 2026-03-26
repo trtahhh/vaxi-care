@@ -1,89 +1,128 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hồ sơ trẻ - VaxiCare</title>
-    <link rel="stylesheet" href="/static/client/layout.css">
-    <link rel="stylesheet" href="/static/client/parent.css">
-</head>
-<body>
-    <div class="layout">
-        <%- include('partials/sidebar') %>
-        
-        <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">Hồ sơ trẻ</h1>
-                <a href="/children/add" class="btn btn--primary">Thêm hồ sơ</a>
-            </div>
+<%- include('layout', { 
+    currentPath: '/client/dashboard', 
+    title: 'Hồ sơ của bé - VaxiCare',
+    body: `
 
-            <p class="children-note">
-                Để thêm hồ sơ trẻ chi tiết hơn kèm giấy khai sinh, vui lòng liên hệ nhân viên tại trung tâm.
-            </p>
+<!-- Dashboard Header -->
+<div class="mb-10 animate-fade-in">
+    <h2 class="text-3xl v-title tracking-tight uppercase">Xin chào, <%= locals.user ? user.username : 'PHỤ HUYNH' %></h2>
+    <p class="text-on-surface-variant font-medium mt-1">Hôm nay bé có khỏe không? Hãy theo dõi lịch tiêm để bảo vệ bé nhé.</p>
+</div>
 
-            <% if (children.length === 0) { %>
-                <div class="empty-state">
-                    <p>Chưa có hồ sơ trẻ nào được đăng ký.</p>
-                    <p style="font-size: 13px;">Vui lòng thêm tại đây hoặc đến trung tâm với giấy khai sinh để được nhân viên hỗ trợ.</p>
-                </div>
-            <% } else { %>
-                <div class="children-grid">
-                    <% children.forEach(function(child) { %>
-                        <div class="child-card">
-                            <div class="child-card__avatar">
-                                <%= child.name.charAt(0).toUpperCase() %>
-                            </div>
-                            <div class="child-card__info">
-                                <h3><%= child.name %></h3>
-                                <p>Ngày sinh: <%= new Date(child.dob).toLocaleDateString("vi-VN") %></p>
-                                <p>Giới tính: 
-                                    <%= child.gender === 'male' ? 'Nam' : (child.gender === 'female' ? 'Nữ' : 'Khác') %>
-                                </p>
-                                <p>Tuổi: 
-                                    <% 
-                                    const birth = new Date(child.dob);
-                                    const now = new Date();
-                                    const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
-                                    let ageStr = "";
-                                    if (months < 12) {
-                                        ageStr = months + " tháng tuổi";
-                                    } else {
-                                        const yrs = Math.floor(months / 12);
-                                        const rem = months % 12;
-                                        ageStr = rem > 0 ? yrs + " tuổi " + rem + " tháng" : yrs + " tuổi";
-                                    }
-                                    %>
-                                    <%= ageStr %>
-                                </p>
-                            </div>
+<% if (!locals.children || children.length === 0) { %>
+    <!-- Empty State -->
+    <div class="flex flex-col items-center justify-center py-24 text-center v-card border-dashed">
+        <div class="w-20 h-20 bg-background border border-outline rounded-2xl flex items-center justify-center mb-6 text-on-surface-variant opacity-30 shadow-inner">
+            <span class="material-symbols-outlined text-5xl">child_friendly</span>
+        </div>
+        <h2 class="text-xl v-title uppercase mb-2">Chưa có hồ sơ trẻ</h2>
+        <p class="text-on-surface-variant text-sm font-medium mb-8 max-w-sm px-8">Vui lòng thêm hồ sơ để hệ thống có thể lập phác đồ tiêm chủng chuẩn WHO cho bé.</p>
+        <a href="/client/add-child" class="v-btn v-btn-primary gap-2 !px-8 !py-4 shadow-lg shadow-primary/20">
+            <span class="material-symbols-outlined text-xl">add_circle</span>
+            LẬP HỒ SƠ BÉ NGAY
+        </a>
+    </div>
+<% } else { %>
+    <div class="space-y-16">
+        <% children.forEach((child, index) => { 
+            const birth = new Date(child.dob);
+            const now = new Date();
+            const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+            let ageStr = months < 12 ? months + " tháng tuổi" : Math.floor(months/12) + " tuổi " + (months%12 > 0 ? (months%12 + " tháng") : "");
+            const progress = child.vaccinationProgress || 0;
+            const milestone = child.nextMilestone || "Đang cập nhật...";
+            const completedCount = child.appointments ? child.appointments.filter(a => a.status === 'completed').length : 0;
+        %>
+            <div class="<%= index > 0 ? 'pt-16 border-t border-outline' : '' %> animate-fade-in group">
+                <!-- Child Header & Progress -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-4">
+                            <h1 class="text-4xl v-title tracking-tighter uppercase text-on-surface"><%= child.name %></h1>
+                            <span class="v-badge <%= child.gender === 'male' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-error/10 text-error border-error/20' %>">
+                                <%= child.gender === 'male' ? 'NAM' : 'NỮ' %>
+                            </span>
                         </div>
-                    <% }); %>
+                        <p class="text-sm font-black text-on-surface-variant uppercase tracking-widest opacity-60">
+                            Phác đồ hiện tại: <span class="text-primary opacity-100"><%= ageStr.toUpperCase() %></span>
+                        </p>
+                    </div>
+                    
+                    <!-- Progress Section -->
+                    <div class="v-card !p-6 min-w-[320px] bg-white shadow-sm hover:border-primary transition-all">
+                        <%- include('../partials/progress-bar', { width: progress, label: 'Tiến độ bao phủ vắc xin' }) %>
+                    </div>
+                </div>
+
+                <!-- Next Milestone Action Card -->
+                <div class="v-card !bg-primary !border-none !p-6 mb-10 flex flex-col md:flex-row items-center gap-6 shadow-xl shadow-primary/20 group-hover:shadow-primary/30 transition-all">
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-white shrink-0">
+                        <span class="material-symbols-outlined text-3xl">notification_important</span>
+                    </div>
+                    <div class="text-center md:text-left flex-1">
+                        <p class="text-[10px] font-black uppercase text-on-primary-container tracking-widest opacity-70">Mũi tiêm quan trọng sắp tới</p>
+                        <p class="text-xl font-black text-white uppercase tracking-tight mt-1"><%= milestone %></p>
+                    </div>
+                    <a href="/appointments/book?childId=<%= child.id %>" class="v-btn v-btn-primary !bg-white !text-primary !py-3 !px-8 !text-[10px] hover:!bg-on-primary hover:!text-white shadow-lg transition-all">ĐẶT LỊCH NGAY</a>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    <%- include('../partials/stat-card', { icon: 'history_edu', label: 'Tình trạng', value: completedCount + ' mũi đã tiêm', iconColor: 'text-secondary' }) %>
+                    <%- include('../partials/stat-card', { icon: 'scale', label: 'Cân nặng', value: '-- kg' }) %>
+                    <%- include('../partials/stat-card', { icon: 'straighten', label: 'Chiều cao', value: '-- cm' }) %>
+                    <%- include('../partials/stat-card', { icon: 'cake', label: 'Khai sinh', value: birth.toLocaleDateString("vi-VN"), iconColor: 'text-error' }) %>
                 </div>
                 
-                <h3 class="section-title">Lịch hẹn sắp tới</h3>
-                <div class="appointment-list">
-                    <% if (upcomingAppointments.length === 0) { %>
-                        <p class="loading-text">Không có lịch hẹn sắp tới.</p>
-                    <% } else { %>
-                        <% upcomingAppointments.forEach(function(appt) { %>
-                            <div class="appointment-card">
-                                <div class="appointment-card__info">
-                                    <h4><%= appt.vaccine ? appt.vaccine.name : 'Unknown Vaccine' %></h4>
-                                    <p>Bé: <strong><%= appt.child ? appt.child.name : 'Unknown Child' %></strong></p>
-                                    <p>Ngày: <%= new Date(appt.date).toLocaleString("vi-VN") %></p>
-                                    <% if (appt.notes) { %>
-                                        <p>Ghi chú: <%= appt.notes %></p>
-                                    <% } %>
-                                </div>
-                                <div class="appointment-card__right">
-                                    <span class="badge badge--yellow">Đang chờ</span>
-                                </div>
-                            </div>
-                        <% }); %>
-                    <% } %>
+                <!-- History & Growth Link -->
+                <div class="mt-6 flex gap-4">
+                     <a href="/admin/children/<%= child.id %>" class="v-btn v-btn-secondary !text-[10px] !py-2 !px-4 uppercase gap-2">
+                        <span class="material-symbols-outlined text-sm">visibility</span>
+                        Xem chi tiết sổ tiêm
+                    </a>
                 </div>
-            <% } %>
-        </main>
+            </div>
+        <% }) %>
     </div>
-</body>
-</html>
+<% } %>
+
+<!-- Upcoming Section -->
+<div class="mt-20 animate-fade-in" style="animation-delay: 0.3s">
+    <h2 class="text-2xl v-title uppercase tracking-tighter text-on-surface mb-8 flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">event_upcoming</span>
+        Lịch hẹn đã xác nhận
+    </h2>
+    
+    <% if (!locals.upcomingAppointments || upcomingAppointments.length === 0) { %>
+        <div class="p-16 v-card !border-dashed text-center opacity-40">
+            <span class="material-symbols-outlined text-5xl mb-4 text-on-surface-variant">event_busy</span>
+            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Chưa có lịch hẹn nào sắp tới</p>
+        </div>
+    <% } else { %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <% upcomingAppointments.forEach((appt) => { %>
+                <div class="v-card !p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-lg transition-all group/appt">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/10 group-hover/appt:rotate-6 transition-transform">
+                            <span class="material-symbols-outlined text-2xl">vaccines</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-on-surface uppercase tracking-tight"><%= appt.vaccine ? appt.vaccine.name : 'VẮC XIN' %></h3>
+                            <p class="text-[10px] font-bold text-on-surface-variant uppercase mt-1">BÉ: <span class="text-primary"><%= appt.child ? appt.child.name : 'N/A' %></span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col md:items-end gap-1.5 p-3 rounded-lg bg-background border border-outline">
+                        <div class="flex items-center gap-2 text-primary">
+                            <span class="material-symbols-outlined text-sm">calendar_month</span>
+                            <span class="text-[11px] font-black uppercase"><%= new Date(appt.appointmentDate).toLocaleDateString("vi-VN") %></span>
+                        </div>
+                        <span class="text-[10px] font-black text-on-surface-variant uppercase ml-6">Giờ hẹn: <%= appt.appointmentTime || '--:--' %></span>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+</div>
+
+` }) %>

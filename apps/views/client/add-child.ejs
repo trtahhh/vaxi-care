@@ -1,54 +1,92 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm hồ sơ trẻ - VaxiCare</title>
-    <link rel="stylesheet" href="/static/client/layout.css">
-    <link rel="stylesheet" href="/static/client/parent.css">
-</head>
-<body>
-    <div class="layout">
-        <%- include('partials/sidebar') %>
-        
-        <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">Thêm hồ sơ trẻ</h1>
-                <a href="/children" class="btn btn--secondary">Quay lại</a>
-            </div>
+<%- include('layout', { 
+    currentPath: '/children/add',
+    title: 'Lập hồ sơ Trẻ em - VaxiCare',
+    body: `
 
-            <div class="modal" style="margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; max-width: 600px;">
-                <form action="/children/add" method="POST" class="modal-form">
-                    <div class="form-group">
-                        <label for="name">Họ và tên bé <span class="required">*</span></label>
-                        <input id="name" name="name" type="text" placeholder="Nhập tên bé" required />
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="dob">Ngày sinh <span class="required">*</span></label>
-                        <input id="dob" name="dob" type="date" required />
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="gender">Giới tính <span class="required">*</span></label>
-                        <select id="gender" name="gender" required>
-                            <option value="">-- Chọn giới tính --</option>
-                            <option value="male">Nam</option>
-                            <option value="female">Nữ</option>
-                            <option value="other">Khác</option>
-                        </select>
-                    </div>
-                    
-                    <% if (locals.error) { %>
-                        <p class="form-error"><%= error %></p>
-                    <% } %>
-                    
-                    <div class="modal-actions" style="margin-top: 24px;">
-                        <button type="submit" class="btn btn--primary">Thêm hồ sơ</button>
-                    </div>
-                </form>
-            </div>
-        </main>
+<!-- Page Header -->
+<div class="mb-10 text-center relative animate-fade-in">
+    <a href="/client/dashboard" class="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-lg bg-surface border border-outline text-on-surface-variant hover:text-primary transition-all shadow-sm">
+        <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <h2 class="text-3xl v-title uppercase tracking-tight text-primary">Lập hồ sơ trẻ em</h2>
+    <p class="text-on-surface-variant text-[10px] font-black uppercase tracking-widest mt-2 opacity-60 max-w-sm mx-auto">Vui lòng nhập thông tin chính xác theo giấy khai sinh của trẻ.</p>
+</div>
+
+<% if (typeof error !== 'undefined' && error) { %>
+    <div class="v-card !bg-error/5 !border-error/20 flex items-center gap-3 p-4 mb-8 max-w-2xl mx-auto animate-fade-in">
+        <span class="material-symbols-outlined text-error text-xl">report</span>
+        <p class="text-error text-xs font-black uppercase tracking-tight"><%= error %></p>
     </div>
-</body>
-</html>
+<% } %>
+
+<form action="/children/add" method="POST" class="space-y-8 max-w-2xl mx-auto animate-fade-in" style="animation-delay: 0.1s">
+    <div class="v-card !p-8 md:!p-10 space-y-8">
+        
+        <!-- Parent Selection -->
+        <div class="group">
+            <label class="v-subtitle mb-2 block ml-1 uppercase text-[10px]">Người bảo hộ chịu trách nhiệm <span class="text-error font-black ml-1">*</span></label>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">family_restroom</span>
+                <select required name="parentId" class="w-full pl-12 pr-10 py-3.5 appearance-none bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm cursor-pointer">
+                    <option value="">-- Chọn phụ huynh quản lý --</option>
+                    <% if (locals.parents) { %>
+                        <% parents.forEach(p => { %>
+                            <option value="<%= p.id %>" <%= (typeof selectedParentId !== 'undefined' && selectedParentId == p.id) ? 'selected' : '' %>><%= p.fullName || p.username %> (<%= p.phone || p.email %>)</option>
+                        <% }) %>
+                    <% } %>
+                </select>
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <span class="material-symbols-outlined text-on-surface-variant">arrow_drop_down</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Name Field -->
+        <div class="group">
+            <label class="v-subtitle mb-2 block ml-1 uppercase text-[10px]">Họ và tên của trẻ <span class="text-error font-black ml-1">*</span></label>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">badge</span>
+                <input required name="name" type="text" placeholder="VD: NGUYỄN GIA BẢO"
+                       class="w-full pl-12 pr-4 py-3.5 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-black text-sm uppercase">
+            </div>
+        </div>
+
+        <!-- Date of Birth -->
+        <div class="group">
+            <label class="v-subtitle mb-2 block ml-1 uppercase text-[10px]">Ngày sinh trên giấy tờ <span class="text-error font-black ml-1">*</span></label>
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">cake</span>
+                <input required name="dob" type="date"
+                       class="w-full pl-12 pr-4 py-3.5 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-black text-sm uppercase">
+            </div>
+        </div>
+
+        <!-- Gender Selection -->
+        <div class="group">
+            <label class="v-subtitle mb-2 block ml-1 uppercase text-[10px]">Giới tính <span class="text-error font-black ml-1">*</span></label>
+            <div class="grid grid-cols-2 gap-4">
+                <label class="relative flex items-center justify-center gap-2 p-4 rounded-xl bg-background border-2 border-outline hover:border-primary/30 cursor-pointer transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:checked]:shadow-sm group/btn">
+                    <input checked name="gender" type="radio" value="male" class="hidden" required/>
+                    <span class="material-symbols-outlined text-primary text-2xl group-has-[:checked]/btn:scale-110 transition-transform">boy</span>
+                    <span class="font-black text-xs uppercase text-on-surface-variant group-has-[:checked]/btn:text-primary tracking-widest">Bé Trai</span>
+                </label>
+                <label class="relative flex items-center justify-center gap-2 p-4 rounded-xl bg-background border-2 border-outline hover:border-error/30 cursor-pointer transition-all has-[:checked]:border-error has-[:checked]:bg-error/5 has-[:checked]:shadow-sm group/btn">
+                    <input name="gender" type="radio" value="female" class="hidden" required/>
+                    <span class="material-symbols-outlined text-error text-2xl group-has-[:checked]/btn:scale-110 transition-transform">girl</span>
+                    <span class="font-black text-xs uppercase text-on-surface-variant group-has-[:checked]/btn:text-error tracking-widest">Bé Gái</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Action -->
+    <div class="pt-4 flex flex-col gap-4">
+        <button type="submit" class="v-btn v-btn-primary !py-5 uppercase !text-sm tracking-[0.2em] gap-3 shadow-lg shadow-primary/20">
+            <span class="material-symbols-outlined">save</span>
+            HOÀN TẤT LẬP HỒ SƠ
+        </button>
+        <p class="text-[9px] font-bold text-on-surface-variant text-center uppercase tracking-tighter opacity-40">Bằng việc lưu thông tin, bạn xác nhận tính trung thực của dữ liệu lâm sàng.</p>
+    </div>
+</form>
+
+` }) %>

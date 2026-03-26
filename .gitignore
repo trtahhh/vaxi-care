@@ -19,6 +19,7 @@ yarn-error.log*
 # Rules & Architecture
 ARCHITECTURE.md
 Rules.md    
+SETUP_GUIDE.md
 
 # Ollama
 .ollama/

@@ -6,33 +6,31 @@ const crypto = require("crypto");
 const { AppDataSource } = require("./apps/models/data-source");
 const { startNotificationScheduler } = require("./apps/scheduler/notificationScheduler");
 
+// Global path base
+global.__basedir = __dirname;
+
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Setup EJS for Server-Side Rendering
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'apps/views'));
 
-// Serve static assets publicly
 app.use('/static', express.static(path.join(__dirname, 'public')));
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Limit body size for security
+app.use(express.urlencoded({ extended: true, limit: '10kb' })); 
 app.use(cookieParser());
 
-// Security: Rate limiting placeholder - can be enhanced with express-rate-limit
 app.use((req, res, next) => {
-    // Basic DDoS protection - simple request counter (in production, use redis)
     const ip = req.ip;
     const now = Date.now();
 
     if (!global.requestCounts) global.requestCounts = {};
     if (!global.requestCounts[ip]) global.requestCounts[ip] = [];
 
-    // Clean old requests (older than 1 minute)
     global.requestCounts[ip] = global.requestCounts[ip].filter(t => now - t < 60000);
 
     // Rate limit: 100 requests per minute
@@ -44,7 +42,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// CSRF Token generation for forms
 const generateCsrfToken = (req, res, next) => {
     let token = req.cookies['csrf-token'];
     if (!token) {
@@ -60,7 +57,6 @@ const generateCsrfToken = (req, res, next) => {
     next();
 };
 
-// Pass variables global to all Views
 app.use((req, res, next) => {
     res.locals.error = null;
     res.locals.success = null;
@@ -70,20 +66,15 @@ app.use((req, res, next) => {
     next();
 });
 
-// Apply CSRF token to all GET requests (for forms)
 app.use(generateCsrfToken);
 
-// FEATURE-BASED ROUTERS (Controller-as-Router)
-app.use("/auth", require("./apps/controllers/auth/auth.controller"));
-app.use("/admin", require("./apps/controllers/admin/admin.controller"));
-app.use("/", require("./apps/controllers/home/home.controller"));
+const controller = require(global.__basedir + "/apps/controllers");
+app.use(controller);
 
-// Fallback logic for not-found pages
 app.use((req, res) => {
     res.status(404).render("client/404", { error: "Không tìm thấy trang." });
 });
 
-// Khởi động DB rồi mới chạy server và scheduler
 AppDataSource.initialize()
     .then(() => {
         console.log("Data Source has been initialized!");

@@ -1,94 +1,186 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt lịch tiêm - VaxiCare</title>
-    <link rel="stylesheet" href="/static/client/layout.css">
-    <link rel="stylesheet" href="/static/client/parent.css">
-    <script>
-        // Simple slot checking JS fetch
-        async function checkSlots(event) {
-            const date = event.target.value;
-            const infoContainer = document.getElementById("slot-info-box");
-            if (!date) return;
-            try {
-                const res = await fetch(`/appointments/slots?date=${date}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    infoContainer.style.display = "block";
-                    if (data.availableSlots <= 0) {
-                        infoContainer.className = "slot-info slot-info--full";
-                        infoContainer.innerText = `Hết chỗ (0/${data.maxSlots})`;
-                        document.getElementById("submit-btn").disabled = true;
-                    } else {
-                        infoContainer.className = "slot-info slot-info--ok";
-                        infoContainer.innerText = `Còn ${data.availableSlots}/${data.maxSlots} chỗ`;
-                        document.getElementById("submit-btn").disabled = false;
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        }
-    </script>
-</head>
-<body>
-    <div class="layout">
-        <%- include('partials/sidebar') %>
-        
-        <main class="main-content">
-            <div class="page-header">
-                <h1 class="page-title">Đặt lịch tiêm chủng</h1>
-                <a href="/appointments" class="btn btn--secondary">Quay lại lịch tiêm</a>
-            </div>
+<%- include('layout', { 
+    currentPath: '/client/schedule', 
+    title: 'Đặt lịch tiêm chủng - VaxiCare',
+    body: `
 
-            <div class="modal" style="margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; max-width: 600px;">
-                <form action="/appointments/book" method="POST" class="modal-form">
-                    <div class="form-group">
-                        <label>Chọn bé <span class="required">*</span></label>
-                        <select name="childId" required>
-                            <option value="">-- Chọn hồ sơ trẻ --</option>
-                            <% children.forEach(function(c) { %>
-                                <option value="<%= c.id %>"><%= c.name %></option>
-                            <% }); %>
-                        </select>
-                    </div>
+<% 
+    const safeChildren = locals.children || [];
+    const safeVaccines = locals.vaccines || [];
+    const safeRecommendations = locals.recommendations || [];
+    const safeSelectedChildId = locals.selectedChildId || null;
+    const minDate = new Date().toISOString().slice(0, 16);
+    const isRecommended = (vId) => safeRecommendations.some(r => r.id === vId);
+%>
 
-                    <div class="form-group">
-                        <label>Chọn vaccine <span class="required">*</span></label>
-                        <select name="vaccineId" required>
-                            <option value="">-- Chọn vaccine --</option>
-                            <% vaccines.forEach(function(v) { %>
-                                <option value="<%= v.id %>">
-                                    <%= v.name %> <%= v.ageLabel ? '(' + v.ageLabel + ')' : '' %>
-                                </option>
-                            <% }); %>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Ngày hẹn <span class="required">*</span></label>
-                        <% const minDate = new Date().toISOString().slice(0, 16); %>
-                        <input type="datetime-local" name="date" min="<%= minDate %>" required onchange="checkSlots(event)" />
-                        <span id="slot-info-box" style="display: none; margin-top: 8px;"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Ghi chú (tùy chọn)</label>
-                        <textarea name="notes" placeholder="Nhập ghi chú nếu có" rows="2"></textarea>
-                    </div>
-                    
-                    <% if (locals.error) { %>
-                        <p class="form-error"><%= error %></p>
-                    <% } %>
-
-                    <div class="modal-actions" style="margin-top: 24px;">
-                        <button type="submit" id="submit-btn" class="btn btn--primary">Xác nhận đặt lịch</button>
-                    </div>
-                </form>
-            </div>
-        </main>
+<!-- Page Header -->
+<section class="mb-10 flex items-center gap-4 animate-fade-in">
+    <a href="/client/dashboard" class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface border border-outline text-on-surface-variant hover:text-primary transition-all shadow-sm">
+        <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <div>
+        <h1 class="text-3xl v-title tracking-tight uppercase">Đặt lịch tiêm chủng</h1>
+        <p class="text-on-surface-variant text-sm font-medium opacity-60">Lên kế hoạch bảo vệ bé yêu bằng các mũi tiêm chuẩn xác.</p>
     </div>
-</body>
-</html>
+</section>
+
+<!-- Error Feedbacks -->
+<% if (locals.error) { %>
+    <div class="p-4 bg-error text-white border-transparent rounded-xl mb-8 flex items-center gap-4 shadow-lg shadow-error/20 animate-shake">
+        <span class="material-symbols-outlined text-2xl">report</span>
+        <p class="font-black text-xs uppercase tracking-widest"><%= error %></p>
+    </div>
+<% } %>
+
+<form action="/appointments/book" method="POST" id="booking-form" class="space-y-16 pb-24 animate-fade-in" style="animation-delay: 0.1s">
+    
+    <!-- Step 1: Chọn Bé -->
+    <section>
+        <div class="flex items-center gap-4 mb-8">
+            <span class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-primary/20">01</span>
+            <h2 class="text-xl v-title tracking-tight uppercase">Chọn hồ sơ bé cần tiêm</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% if (safeChildren.length === 0) { %>
+                <div class="md:col-span-3 p-10 v-card !border-dashed text-center">
+                    <p class="text-sm font-black text-error uppercase tracking-widest">Chưa có hồ sơ trẻ trong hệ thống của bạn.</p>
+                    <a href="/client/add-child" class="mt-4 v-btn v-btn-secondary inline-flex">THÊM BÉ NGAY</a>
+                </div>
+            <% } else { %>
+                <% safeChildren.forEach((c) => { 
+                    const birth = new Date(c.dob);
+                    const isSelected = safeSelectedChildId ? safeSelectedChildId == c.id : (safeChildren.length === 1);
+                %>
+                    <label class="v-card !p-6 relative cursor-pointer border-2 transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input type="radio" name="childId" value="<%= c.id %>" class="peer hidden" required 
+                               <%= isSelected ? 'checked' : '' %> 
+                               onchange="window.location.href='/appointments/book?childId=' + this.value">
+                        
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-2xl bg-background border border-outline flex items-center justify-center text-on-surface-variant group-has-[:checked]:text-primary group-has-[:checked]:bg-white group-has-[:checked]:border-primary transition-all shadow-sm">
+                                <span class="material-symbols-outlined text-3xl">child_care</span>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-on-surface uppercase tracking-tight text-lg"><%= c.name %></h3>
+                                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">SINH: <%= birth.toLocaleDateString("vi-VN") %></p>
+                            </div>
+                            <div class="ml-auto opacity-0 group-has-[:checked]:opacity-100 transition-opacity">
+                                <span class="material-symbols-outlined text-primary">check_circle</span>
+                            </div>
+                        </div>
+                    </label>
+                <% }) %>
+            <% } %>
+        </div>
+    </section>
+
+    <!-- Step 2: Chọn Vaccine -->
+    <section>
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div class="flex items-center gap-4">
+                <span class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-primary/20">02</span>
+                <h2 class="text-xl v-title tracking-tight uppercase">Chọn vắc xin đăng ký</h2>
+            </div>
+            <% if (safeRecommendations.length > 0) { %>
+                <span class="v-badge bg-secondary text-white border-transparent px-4 py-2 uppercase tracking-widest">Có <%= safeRecommendations.length %> gợi ý từ bác sĩ</span>
+            <% } %>
+        </div>
+
+        <div class="v-card !p-0 overflow-hidden shadow-xl border-2">
+            <div class="p-4 bg-background border-b-2 border-outline flex items-center gap-4">
+                <span class="material-symbols-outlined text-primary">search</span>
+                <input class="bg-transparent border-none focus:ring-0 text-on-surface w-full font-black text-sm uppercase tracking-widest outline-none placeholder:opacity-30" placeholder="NHẬP TÊN VẮC XIN ĐỂ TÌM KIẾM..." type="text" id="vaccine-search">
+            </div>
+            
+            <div class="max-h-[500px] overflow-y-auto custom-scrollbar p-6 grid grid-cols-1 md:grid-cols-2 gap-4" id="vaccine-list">
+                <% safeVaccines.forEach(v => {
+                    const recommended = isRecommended(v.id);
+                %>
+                    <div class="vaccine-item-container">
+                        <%- include('../partials/vaccine-item', { 
+                            vaccine: v, 
+                            isRecommended: recommended, 
+                            selectable: true 
+                        }) %>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 3: Thời gian -->
+    <section>
+        <div class="flex items-center gap-4 mb-8">
+            <span class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-primary/20">03</span>
+            <h2 class="text-xl v-title tracking-tight uppercase">Thời gian & Ghi chú y tế</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="v-card !p-8 flex flex-col justify-between min-h-[200px]">
+                <label class="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-base">calendar_today</span>
+                    CHỌN NGÀY VÀ GIỜ TIÊM DỰ KIẾN
+                </label>
+                <input type="datetime-local" name="date" min="<%= minDate %>" required onchange="checkSlots(event)" class="w-full bg-background border-2 border-outline rounded-xl px-6 py-4 text-on-surface font-black text-base outline-none focus:border-primary transition-all" />
+                
+                <div id="slot-info-box" class="hidden mt-6 p-4 rounded-xl text-[10px] font-black flex items-center gap-3 uppercase tracking-widest border-2"></div>
+            </div>
+
+            <div class="v-card !p-8">
+                <label class="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-base">sticky_note_2</span>
+                    GHI CHÚ (TIỀN SỬ DỊ ỨNG, TÌNH TRẠNG SỨC KHỎE...)
+                </label>
+                <textarea name="notes" placeholder="NHẬP THÔNG TIN CẦN THIẾT CHO BÁC SĨ..." rows="4" class="w-full bg-background border-2 border-outline rounded-xl px-6 py-4 text-on-surface font-bold text-sm outline-none focus:border-primary transition-all resize-none"></textarea>
+            </div>
+        </div>
+    </section>
+
+    <!-- Submission -->
+    <div class="v-card !p-12 !bg-primary !border-none text-center shadow-2xl shadow-primary/30 group">
+        <p class="text-on-primary font-black text-[10px] uppercase tracking-[0.3em] mb-6 opacity-70">VUI LÒNG KIỂM TRA LẠI THÔNG TIN TRƯỚC KHI XÁC NHẬN</p>
+        <button type="submit" id="submit-btn" class="v-btn v-btn-primary !bg-white !text-primary !py-6 !px-16 !text-lg !rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all">
+            XÁC NHẬN ĐĂNG KÝ TIÊM
+        </button>
+    </div>
+</form>
+
+<script>
+    async function checkSlots(event) {
+        const date = event.target.value;
+        const infoContainer = document.getElementById("slot-info-box");
+        if (!date) return;
+        
+        try {
+            const res = await fetch('/appointments/slots?date=' + date);
+            if (res.ok) {
+                const data = await res.json();
+                infoContainer.classList.remove('hidden');
+                infoContainer.classList.remove('bg-error/10', 'text-error', 'bg-secondary/10', 'text-secondary', 'border-error/20', 'border-secondary/20');
+                
+                if (data.availableSlots <= 0) {
+                    infoContainer.classList.add('bg-error/10', 'text-error', 'border-error/20');
+                    infoContainer.innerHTML = '<span class="material-symbols-outlined text-lg">cancel</span> HẾT CHỖ TRỐNG TRONG KHUNG GIỜ NÀY';
+                    document.getElementById("submit-btn").disabled = true;
+                    document.getElementById("submit-btn").classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    infoContainer.classList.add('bg-secondary/10', 'text-secondary', 'border-secondary/20');
+                    infoContainer.innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span> SẴN SÀNG: CÒN ' + data.availableSlots + ' SUẤT TIÊM CHỐNG';
+                    document.getElementById("submit-btn").disabled = false;
+                    document.getElementById("submit-btn").classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    document.getElementById('vaccine-search').addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase();
+        const containers = document.querySelectorAll('.vaccine-item-container');
+        containers.forEach(container => {
+            const name = container.querySelector('h4').innerText.toLowerCase();
+            container.style.display = name.includes(query) ? 'block' : 'none';
+        });
+    });
+</script>
+
+` }) %>
