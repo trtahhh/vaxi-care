@@ -1,191 +1,109 @@
-<%- include('../layout', { 
-    title: 'Quản lý Nhân Sự - VaxiCare',
-    body: `
+<!-- =====================
+  Admin Users Index
+  Data: users[], search, filterRole, currentPage, totalPages
+===================== -->
 
-<!-- Page Header -->
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 animate-fade-in">
-    <div>
-        <h1 class="text-3xl v-title tracking-tight flex items-center gap-4 uppercase">
-            <span class="material-symbols-outlined text-primary text-4xl">people</span>
-            QUẢN LÝ NHÂN SỰ
-        </h1>
-        <p class="text-on-surface-variant font-medium mt-1 opacity-70">Điều hành tài khoản Admin, Nhân viên y tế và Phụ huynh trong hệ thống.</p>
-    </div>
-    <a href="/admin/users/add" class="v-btn v-btn-primary gap-3 !py-4 !px-8 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
-        <span class="material-symbols-outlined text-xl">person_add</span> 
-        THÊM NGƯỜI DÙNG MỚI
-    </a>
-</div>
+<% const list = users || []; %>
+<% const searchVal = search || ''; %>
+<% const roleVal = filterRole || ''; %>
 
-<!-- Toolbar -->
-<div class="v-card !p-5 mb-8 animate-fade-in border-2" style="animation-delay: 0.1s">
-    <form method="GET" action="/admin/users" class="flex flex-col md:flex-row gap-6 items-center w-full">
-        <!-- Search -->
-        <div class="relative w-full md:flex-1 group">
-            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">search</span>
-            <input type="text" name="search" value="<%= locals.search || '' %>" placeholder="TÌM THEO TÊN, EMAIL HOẶC ID..." 
-                   class="w-full pl-12 pr-4 py-4 bg-background border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-widest placeholder:opacity-30">
-        </div>
-        
-        <!-- Filter Controls -->
-        <div class="flex gap-4 w-full md:w-auto">
-            <div class="relative w-full md:w-64 group">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary pointer-events-none text-xl">filter_alt</span>
-                <select name="role" onchange="this.form.submit()" 
-                        class="w-full pl-12 pr-12 py-4 appearance-none bg-background border-2 border-outline text-on-surface rounded-2xl focus:outline-none focus:border-primary transition-all font-black text-xs uppercase tracking-widest cursor-pointer">
-                    <option value="">TẤT CẢ VAI TRÒ</option>
-                    <option value="admin" <%= locals.filterRole === 'admin' ? 'selected' : '' %>>QUẢN TRỊ VIÊN</option>
-                    <option value="parent" <%= locals.filterRole === 'parent' ? 'selected' : '' %>>PHỤ HUYNH</option>
-                    <option value="staff" <%= locals.filterRole === 'staff' ? 'selected' : '' %>>NHÂN VIÊN Y TẾ</option>
-                </select>
-                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <span class="material-symbols-outlined text-on-surface-variant">keyboard_arrow_down</span>
-                </div>
-            </div>
-            
-            <% if (locals.search || locals.filterRole) { %>
-                <a href="/admin/users" class="v-btn v-btn-secondary !bg-error text-white !border-none !px-5" title="Xóa bộ lọc">
-                    <span class="material-symbols-outlined">filter_alt_off</span>
-                </a>
-            <% } %>
-        </div>
-    </form>
-</div>
+<%- include('../../partials/admin-page-header', {
+    title: 'Quản lý nhân sự',
+    subtitle: 'Điều hành tài khoản Admin, Staff và Phụ huynh',
+    actions: [ { label: 'Thêm người dùng', href: '/admin/users/add', icon: 'person_add', variant: 'primary' } ]
+}) %>
 
-<!-- Users Table Wrapper -->
-<% if (locals.users && users.length > 0) { %>
-<div class="v-card !p-0 overflow-hidden animate-fade-in shadow-xl border-2" style="animation-delay: 0.2s">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-background/80 border-b-2 border-outline text-on-surface-variant text-[10px] font-black uppercase tracking-[0.2em]">
-                    <th class="p-6">Thông tin Tài khoản</th>
-                    <th class="p-6">Thông tin Liên hệ</th>
-                    <th class="p-6">Vai trò Hệ thống</th>
-                    <th class="p-6 hidden md:table-cell">Ngày tham gia</th>
-                    <th class="p-6 text-center">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y-2 divide-outline">
-                <% users.forEach(u => { %>
-                <tr class="hover:bg-primary/5 transition-colors group">
-                    <td class="p-6">
-                        <div class="flex items-center gap-5">
-                            <div class="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-xl border-b-4 border-black/10 shrink-0 shadow-lg shadow-primary/10">
-                                <%= u.username.charAt(0).toUpperCase() %>
-                            </div>
-                            <div>
-                                <h3 class="font-black text-on-surface truncate max-w-[200px] text-base uppercase tracking-tight"><%= u.username %></h3>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-[9px] font-black bg-on-surface/5 text-on-surface-variant px-2 py-0.5 rounded uppercase tracking-widest">UID: <%= u.id %></span>
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="p-6">
-                        <div class="flex flex-col gap-1">
-                            <a href="mailto:<%= u.email %>" class="text-sm font-black text-primary hover:text-on-surface transition-colors truncate max-w-[220px]"><%= u.email.toUpperCase() %></a>
-                            <div class="flex items-center gap-2 text-on-surface-variant">
-                                <span class="material-symbols-outlined text-xs">phone_iphone</span>
-                                <span class="text-[10px] font-black tracking-widest uppercase"><%= u.phone || 'CHƯA CẬP NHẬT' %></span>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="p-6">
-                        <% if (u.role === 'admin') { %>
-                            <span class="v-badge bg-error text-white border-transparent py-1.5 px-3">QUẢN TRỊ VIÊN</span>
-                        <% } else if (u.role === 'staff') { %>
-                            <span class="v-badge bg-secondary text-white border-transparent py-1.5 px-3">NHÂN VIÊN Y TẾ</span>
-                        <% } else { %>
-                            <span class="v-badge bg-primary text-white border-transparent py-1.5 px-3">PHỤ HUYNH</span>
-                        <% } %>
-                    </td>
-                    <td class="p-6 hidden md:table-cell">
-                        <div class="flex items-center gap-2 text-on-surface-variant">
-                            <span class="material-symbols-outlined text-xs">event</span>
-                            <span class="text-[10px] font-black uppercase tracking-widest">
-                                <%= u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '-' %>
-                            </span>
-                        </div>
-                    </td>
-                    <td class="p-6">
-                        <div class="flex items-center justify-center gap-3">
-                            <% if (u.role === 'parent') { %>
-                                <a href="/children/add?parentId=<%= u.id %>" 
-                                   class="w-10 h-10 rounded-xl flex items-center justify-center bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all shadow-sm" title="Thêm hồ sơ trẻ">
-                                    <span class="material-symbols-outlined text-xl font-bold">child_care</span>
-                                </a>
-                                <a href="/client/dashboard?parentId=<%= u.id %>" 
-                                   class="w-10 h-10 rounded-xl flex items-center justify-center bg-white border-2 border-secondary text-secondary hover:bg-secondary hover:text-white transition-all shadow-sm" title="Xem dashboard phụ huynh">
-                                    <span class="material-symbols-outlined text-xl font-bold">dashboard</span>
-                                </a>
-                            <% } %>
-                            <% if (u.role !== 'admin' || (typeof user !== 'undefined' && user.id !== u.id)) { %>
-                                <button class="w-10 h-10 rounded-xl flex items-center justify-center bg-white border-2 border-error text-error hover:bg-error hover:text-white transition-all shadow-sm" title="Khóa tài khoản">
-                                    <span class="material-symbols-outlined text-xl font-bold">lock</span>
-                                </button>
-                            <% } else { %>
-                                <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-background border-2 border-outline text-on-surface-variant opacity-30 cursor-help" title="Tài khoản Hệ thống - Không thể khóa">
-                                    <span class="material-symbols-outlined text-xl font-bold">shield_person</span>
-                                </div>
-                            <% } %>
-                        </div>
-                    </td>
-                </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </div>
+<%- include('../../partials/admin-filter-bar', {
+    action: '/admin/users',
+    searchValue: searchVal,
+    searchPlaceholder: 'Tìm theo tên đăng nhập hoặc email...',
+    selectName: 'role',
+    selectOptions: [
+      { value: 'admin', label: 'Quản trị viên' },
+      { value: 'staff', label: 'Nhân viên y tế' },
+      { value: 'parent', label: 'Phụ huynh' }
+    ],
+    selectValue: roleVal,
+    clearHref: '/admin/users'
+}) %>
 
-    <!-- Pagination System -->
-    <% if (locals.totalPages && totalPages > 1) { %>
-    <div class="p-6 border-t-2 border-outline flex flex-col sm:flex-row items-center justify-between gap-6 bg-background/30">
-        <div class="flex items-center gap-3">
-            <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">
-                TRANG HIỆN TẠI: <span class="text-primary text-base"><%= currentPage %></span> / <%= totalPages %>
-            </span>
-        </div>
-        <div class="flex items-center gap-3">
-            <% if (currentPage > 1) { %>
-                <a href="?page=<%= currentPage - 1 %>&search=<%= locals.search || '' %>&role=<%= locals.filterRole || '' %>" 
-                   class="v-btn v-btn-secondary !bg-white !text-on-surface !p-3 !rounded-xl hover:!bg-primary hover:!text-white transition-all shadow-sm">
-                    <span class="material-symbols-outlined text-2xl font-black">chevron_left</span>
-                </a>
-            <% } else { %>
-                <div class="v-btn v-btn-secondary !bg-background !p-3 !rounded-xl opacity-20 cursor-not-allowed border-none">
-                    <span class="material-symbols-outlined text-2xl font-black">chevron_left</span>
-                </div>
-            <% } %>
-            
-            <div class="px-5 py-3 rounded-xl bg-primary text-white font-black text-sm shadow-lg shadow-primary/20"><%= currentPage %></div>
-
-            <% if (currentPage < totalPages) { %>
-                <a href="?page=<%= currentPage + 1 %>&search=<%= locals.search || '' %>&role=<%= locals.filterRole || '' %>" 
-                   class="v-btn v-btn-secondary !bg-white !text-on-surface !p-3 !rounded-xl hover:!bg-primary hover:!text-white transition-all shadow-sm">
-                    <span class="material-symbols-outlined text-2xl font-black">chevron_right</span>
-                </a>
-            <% } else { %>
-                <div class="v-btn v-btn-secondary !bg-background !p-3 !rounded-xl opacity-20 cursor-not-allowed border-none">
-                    <span class="material-symbols-outlined text-2xl font-black">chevron_right</span>
-                </div>
-            <% } %>
-        </div>
-    </div>
-    <% } %>
-</div>
-<% } else { %>
-<!-- Advanced Empty State -->
-<div class="py-24 px-8 flex flex-col items-center justify-center v-card !border-dashed !border-4 !border-outline text-center">
-    <div class="w-24 h-24 rounded-3xl bg-background border-2 border-outline flex items-center justify-center mb-8 shadow-inner">
-        <span class="material-symbols-outlined text-5xl text-on-surface-variant/20">person_off</span>
-    </div>
-    <h3 class="text-3xl v-title uppercase mb-3 tracking-tighter">Không tìm thấy kết quả</h3>
-    <p class="text-on-surface-variant text-sm font-medium mb-10 max-w-md opacity-60">Chúng tôi không tìm thấy tài khoản nào khớp với từ khóa "<b><%= locals.search %></b>" hoặc bộ lọc hiện tại của bạn.</p>
-    <div class="flex gap-4">
-        <a href="/admin/users" class="v-btn v-btn-secondary !px-8 !py-4 uppercase text-[10px] font-black tracking-widest">XÓA BỘ LỌC</a>
-        <a href="/admin/users/add" class="v-btn v-btn-primary !px-8 !py-4 uppercase text-[10px] font-black tracking-widest">THÊM NGƯỜI DÙNG</a>
-    </div>
-</div>
+<% if (list.length === 0) { %>
+  <%- include('../../partials/empty-state', {
+      icon: 'person_off',
+      title: 'Không tìm thấy tài khoản',
+      message: 'Thử lại với bộ lọc khác hoặc thêm người dùng mới.',
+      actionLabel: 'Thêm người dùng',
+      actionHref: '/admin/users/add',
+      actionIcon: 'person_add'
+  }) %>
 <% } %>
 
-` }) %>
+<% if (list.length > 0) { %>
+  <div class="v-card !p-0 overflow-hidden animate-fade-in">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-background text-on-surface-variant text-[10px] font-black uppercase tracking-widest border-b border-outline">
+            <th class="p-5">Tài khoản</th>
+            <th class="p-5">Liên hệ</th>
+            <th class="p-5">Vai trò</th>
+            <th class="p-5">Ngày tạo</th>
+            <th class="p-5 text-center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline">
+          <% list.forEach(u => { %>
+            <tr class="hover:bg-primary/5 transition-colors">
+              <td class="p-5">
+                <div class="flex items-center gap-4">
+                  <div class="w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center font-black text-lg shadow-sm">
+                    <%= u.username ? u.username.charAt(0).toUpperCase() : 'U' %>
+                  </div>
+                  <div>
+                    <p class="font-black text-sm uppercase tracking-tight text-on-surface"><%= u.username %></p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-0.5">UID: <%= u.id %></p>
+                  </div>
+                </div>
+              </td>
+              <td class="p-5">
+                <p class="font-black text-sm text-primary"><%= u.email %></p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-0.5"><%= u.phone || 'CHƯA CẬP NHẬT' %></p>
+              </td>
+              <td class="p-5">
+                <% if (u.role === 'admin') { %>
+                  <span class="v-badge bg-error text-white border-transparent">ADMIN</span>
+                <% } else if (u.role === 'staff') { %>
+                  <span class="v-badge bg-secondary text-white border-transparent">STAFF</span>
+                <% } else { %>
+                  <span class="v-badge bg-primary text-white border-transparent">PARENT</span>
+                <% } %>
+              </td>
+              <td class="p-5 text-[11px] font-bold text-on-surface-variant">
+                <%= u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '-' %>
+              </td>
+              <td class="p-5">
+                <div class="flex items-center justify-center gap-2">
+                  <% if (u.role === 'parent') { %>
+                    <a href="/children/add?parentId=<%= u.id %>" class="w-9 h-9 rounded-lg border border-primary text-primary bg-white hover:bg-primary hover:text-white flex items-center justify-center transition-all" title="Thêm hồ sơ trẻ">
+                      <span class="material-symbols-outlined text-lg">child_care</span>
+                    </a>
+                  <% } %>
+                  <a href="/admin/users/add?clone=<%= u.id %>" class="w-9 h-9 rounded-lg border border-outline text-on-surface-variant bg-white hover:text-primary hover:border-primary flex items-center justify-center transition-all" title="Sửa thông tin">
+                    <span class="material-symbols-outlined text-lg">edit</span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../../partials/pagination', {
+      currentPage: currentPage,
+      totalPages: totalPages,
+      baseUrl: '?page=',
+      extraParams: '&search=' + encodeURIComponent(searchVal) + '&role=' + encodeURIComponent(roleVal)
+    }) %>
+  </div>
+<% } %>

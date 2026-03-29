@@ -1,140 +1,109 @@
-<%- include('layout', { 
-    title: 'Tổng quan quản trị - VaxiCare',
-    body: `
+<!-- =====================
+  Admin Dashboard
+  Data: userCount, childCount, vaccineCount, todayAppointments, weeklyTrend, stockAlerts
+===================== -->
 
-<!-- Dashboard Header -->
-<div class="mb-10 animate-fade-in">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-            <h2 class="text-3xl v-title tracking-tight">Chào buổi sáng, Quản trị viên</h2>
-            <p class="text-on-surface-variant font-medium mt-1">Hôm nay là ngày <%= new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></p>
-        </div>
-        <div class="flex gap-3">
-            <a href="/admin/appointments/pending" class="v-btn v-btn-secondary gap-2">
-                <span class="material-symbols-outlined text-sm">pending_actions</span>
-                DUYỆT LỊCH HẸN
-            </a>
-            <button class="v-btn v-btn-primary gap-2">
-                <span class="material-symbols-outlined text-sm">download</span>
-                XUẤT BÁO CÁO
-            </button>
-        </div>
+<%- include('../partials/admin-page-header', {
+    title: 'Tổng quan quản trị',
+    subtitle: 'Giám sát nhanh toàn bộ hệ thống VaxiCare',
+    actions: [
+      { label: 'Duyệt lịch hẹn', href: '/admin/appointments/pending', icon: 'pending_actions', variant: 'secondary' }
+    ]
+}) %>
+
+<div class="space-y-8 animate-fade-in">
+
+  <%# Stats cards %>
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <%- include('../partials/stat-card', { icon: 'event_available', label: 'Lịch tiêm hôm nay', value: todayAppointments || 0, iconColor: 'text-primary' }) %>
+    <%- include('../partials/stat-card', { icon: 'child_care', label: 'Hồ sơ trẻ', value: childCount || 0, iconColor: 'text-secondary' }) %>
+    <%- include('../partials/stat-card', { icon: 'vaccines', label: 'Loại vắc xin', value: vaccineCount || 0, iconColor: 'text-warning' }) %>
+    <%- include('../partials/stat-card', { icon: 'group', label: 'Người dùng', value: userCount || 0, iconColor: 'text-error' }) %>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <%# Weekly trend chart %>
+    <div class="lg:col-span-2 v-card !p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-xl font-display font-black tracking-tight text-on-surface flex items-center gap-2 leading-none">
+          <span class="material-symbols-outlined text-primary text-2xl">trending_up</span>
+          Xu hướng lịch hẹn (7 ngày)
+        </h3>
+      </div>
+      <div id="trendChartContainer" class="h-[300px]" data-trend='<%- JSON.stringify(weeklyTrend || []) %>'>
+        <canvas id="trendChart"></canvas>
+      </div>
     </div>
-</div>
 
-<!-- Stats Grid -->
-<div class="v-stat-grid mb-10 animate-fade-in js-delay-init" data-delay="0.1s">
-    <div class="v-card bg-primary text-white border-none flex flex-col justify-between min-h-[140px]">
-        <div class="flex justify-between items-start">
-            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-                <span class="material-symbols-outlined text-white">event_available</span>
+    <%# Stock alerts %>
+    <div class="v-card !p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-display font-black tracking-tight text-on-surface flex items-center gap-2 leading-none">
+          <span class="material-symbols-outlined text-error text-2xl">inventory_2</span>
+          Cảnh báo kho
+        </h3>
+        <a href="/admin/vaccines" class="text-[10px] font-black text-primary uppercase tracking-widest">Xem tất cả</a>
+      </div>
+
+      <% const alerts = stockAlerts || []; %>
+      <% if (alerts.length === 0) { %>
+        <div class="py-8 text-center opacity-50">
+          <span class="material-symbols-outlined text-4xl text-secondary mb-2 block">check_circle</span>
+          <p class="text-xs font-black uppercase tracking-widest text-on-surface-variant">Kho ổn định</p>
+        </div>
+      <% } else { %>
+        <div class="space-y-3 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
+          <% alerts.forEach(v => { %>
+            <div class="p-3 bg-background rounded-xl border border-outline flex items-center justify-between gap-3 hover:border-error/30 transition-colors">
+              <div class="min-w-0">
+                <p class="font-black text-sm text-on-surface truncate"><%= v.name %></p>
+                <p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest"><%= v.type || 'Vaccine' %></p>
+              </div>
+              <span class="v-badge bg-error/10 text-error border-error/20"><%= v.stock %> còn</span>
             </div>
-            <span class="v-badge bg-white/20">Hôm nay</span>
+          <% }) %>
         </div>
-        <div class="mt-4">
-            <p class="text-white/80 v-subtitle !text-white">Lịch tiêm</p>
-            <h3 class="text-4xl font-black tracking-tighter"><%= locals.todayAppointments || 0 %></h3>
-        </div>
+      <% } %>
     </div>
+  </div>
 
-    <%- include('../partials/stat-card', { icon: 'child_care', label: 'Trẻ em quản lý', value: locals.childCount || 0, iconColor: 'text-secondary' }) %>
-    <%- include('../partials/stat-card', { icon: 'vaccines', label: 'Loại Vắc xin', value: locals.vaccineCount || 0, iconColor: 'text-primary' }) %>
-    <%- include('../partials/stat-card', { icon: 'group', label: 'Người dùng', value: locals.userCount || 0, iconColor: 'text-warning' }) %>
-</div>
-
-<!-- Main Insights Section -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10 animate-fade-in js-delay-init" data-delay="0.2s">
-    
-    <!-- Weekly Trend Chart -->
-    <div class="lg:col-span-2 v-card">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="v-subtitle flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-sm">trending_up</span>
-                Xu hướng lịch hẹn (7 ngày qua)
-            </h3>
-        </div>
-        <div class="h-[300px] w-full relative" id="trendChartContainer" data-trend='<%- JSON.stringify(locals.weeklyTrend || []) %>'>
-            <canvas id="trendChart"></canvas>
-        </div>
-    </div>
-
-    <!-- Vaccine Stock Alerts -->
-    <div class="v-card flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="v-subtitle flex items-center gap-2">
-                <span class="material-symbols-outlined text-error text-sm">inventory_2</span>
-                Cảnh báo kho
-            </h3>
-            <a href="/admin/vaccines" class="text-[10px] font-bold text-primary hover:underline">TẤT CẢ</a>
-        </div>
-        <div class="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-            <% if (locals.stockAlerts && stockAlerts.length > 0) { %>
-                <% stockAlerts.forEach(vaccine => { %>
-                    <div class="flex items-center justify-between p-3 bg-background rounded-lg border border-outline/50 hover:border-error/30 transition-colors">
-                        <div>
-                            <p class="text-sm font-bold text-on-surface truncate w-32"><%= vaccine.name %></p>
-                            <p class="v-subtitle opacity-60"><%= vaccine.type %></p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-sm font-black text-error"><%= vaccine.quantity %></span>
-                            <p class="text-[10px] text-error font-bold uppercase">Còn lại</p>
-                        </div>
-                    </div>
-                <% }) %>
-            <% } else { %>
-                <div class="text-center py-10 opacity-40">
-                    <span class="material-symbols-outlined text-secondary text-4xl mb-2">check_circle</span>
-                    <p class="v-subtitle">Kho hàng ổn định</p>
-                </div>
-            <% } %>
-        </div>
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const container = document.getElementById('trendChartContainer');
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        const trendData = JSON.parse(container.dataset.trend || '[]');
-        
-        if (!trendData || trendData.length === 0) return;
+  document.addEventListener('DOMContentLoaded', function () {
+    const container = document.getElementById('trendChartContainer');
+    if (!container) return;
+    const trend = JSON.parse(container.dataset.trend || '[]');
+    if (!trend || trend.length === 0) return;
+    const ctx = document.getElementById('trendChart').getContext('2d');
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: trendData.map(item => item.date),
-                datasets: [{
-                    label: 'Số lịch hẹn',
-                    data: trendData.map(item => item.count),
-                    borderColor: '#3182CE',
-                    backgroundColor: 'rgba(49, 130, 206, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.3,
-                    fill: true,
-                    pointBackgroundColor: '#FFFFFF',
-                    pointBorderColor: '#3182CE',
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#E2E8F0' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: trend.map(i => i.date),
+        datasets: [{
+          label: 'Lịch hẹn',
+          data: trend.map(i => i.count),
+          borderColor: '#3182CE',
+          backgroundColor: 'rgba(49,130,206,0.1)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: true,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#3182CE',
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#E2E8F0' } },
+          x: { grid: { display: false } }
+        }
+      }
     });
+  });
 </script>
-`,
-extraCss: `
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
-</style>
-`
-}) %>

@@ -1,0 +1,19 @@
+<!-- Breadcrumb Navigation -->
+<%
+/**
+ * @param {Array<{label: string, href?: string}>} items - Breadcrumb items
+ *   e.g. [{label: 'Admin', href: '/admin/dashboard'}, {label: 'Vaccines', href: '/admin/vaccines'}, {label: 'Chi tiết'}]
+ */
+%>
+<nav class="v-breadcrumb" aria-label="Breadcrumb">
+    <% items.forEach((item, i) => { %>
+        <% if (i > 0) { %>
+            <span class="v-breadcrumb-sep material-symbols-outlined v-icon-16">chevron_right</span>
+        <% } %>
+        <% if (item.href && i < items.length - 1) { %>
+            <a href="<%= item.href %>" class="v-breadcrumb-item"><%= item.label %></a>
+        <% } else { %>
+            <span class="v-breadcrumb-current"><%= item.label %></span>
+        <% } %>
+    <% }) %>
+</nav>

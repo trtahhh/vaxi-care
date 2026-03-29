@@ -1,0 +1,65 @@
+<!-- Confirm Dialog (Modal) -->
+<%
+/**
+ * @param {string} id          - Dialog DOM id
+ * @param {string} title       - Dialog title
+ * @param {string} message     - Confirmation message
+ * @param {string} confirmLabel - Confirm button label (default: 'Xác nhận')
+ * @param {string} confirmVariant - 'primary' | 'danger' (default: 'primary')
+ * @param {string} cancelLabel - Cancel button label (default: 'Hủy')
+ * @param {string} formAction  - Form action URL
+ * @param {string} formMethod  - Form method (default: 'POST')
+ * @param {string} csrfToken   - CSRF token value
+ */
+%>
+<div id="<%= id %>"
+     class="v-modal-backdrop"
+     style="display:none"
+     onclick="if(event.target===this)this.querySelector('.v-modal-cancel').click()"
+     data-dialog>
+    <div class="v-modal" onclick="event.stopPropagation()">
+        <div class="v-modal-header">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center
+                    <%= confirmVariant === 'danger' ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary' %>">
+                    <span class="material-symbols-outlined v-icon-22">
+                        <%= confirmVariant === 'danger' ? 'warning' : 'help' %>
+                    </span>
+                </div>
+                <h3 class="v-modal-title"><%= title %></h3>
+            </div>
+        </div>
+        <div class="v-modal-body">
+            <p class="text-sm text-on-surface-variant leading-relaxed"><%= message %></p>
+        </div>
+        <div class="v-modal-footer">
+            <button type="button" class="v-btn v-btn-secondary v-btn-sm v-modal-cancel"
+                    onclick="document.getElementById('<%= id %>').style.display='none'">
+                <%= cancelLabel || 'Hủy' %>
+            </button>
+            <% if (formAction) { %>
+                <form action="<%= formAction %>" method="POST" class="m-0">
+                    <% if (csrfToken) { %>
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <% } %>
+                    <button type="submit"
+                            class="v-btn v-btn-sm <%= confirmVariant === 'danger' ? 'v-btn-danger' : 'v-btn-primary' %>">
+                        <%= confirmLabel || 'Xác nhận' %>
+                    </button>
+                </form>
+            <% } else { %>
+                <button type="button"
+                        class="v-btn v-btn-sm <%= confirmVariant === 'danger' ? 'v-btn-danger' : 'v-btn-primary' %>"
+                        id="<%= id %>-confirm-btn">
+                    <%= confirmLabel || 'Xác nhận' %>
+                </button>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script>
+function openConfirm_<%= id.replace(/-/g, '_') %>() {
+    document.getElementById('<%= id %>').style.display = 'flex';
+}
+</script>

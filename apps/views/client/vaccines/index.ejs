@@ -1,0 +1,170 @@
+<%#
+  Client Vaccine Listing Page
+  Data: vaccines[], notificationCount
+%>
+
+<% const vaccineList = vaccines || []; %>
+
+<!-- Page Header -->
+<div class="v-anim-fade-in">
+    <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-3xl sm:text-4xl font-display font-black tracking-tight text-on-surface uppercase leading-none">Danh sách Vaccine</h1>
+            <p class="text-sm text-on-surface-variant font-medium mt-2">
+                <%= vaccineList.length %> loại vaccine đang có sẵn
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="v-card v-anim-fade-in mb-6">
+    <div class="flex flex-col sm:flex-row gap-4">
+        <!-- Search -->
+        <div class="v-search-bar flex-1">
+            <span class="material-symbols-outlined v-input-icon text-on-surface-variant">search</span>
+            <input type="text"
+                   id="vaccineSearch"
+                   class="v-input"
+                   placeholder="Tìm kiếm vaccine..."
+                   oninput="filterVaccines()">
+        </div>
+        <!-- Age filter -->
+        <div class="w-full sm:w-48">
+            <select id="ageFilter"
+                    class="v-input v-select"
+                    onchange="filterVaccines()">
+                <option value="">Tất cả độ tuổi</option>
+                <option value="0">Mới sinh (0 tháng)</option>
+                <option value="2">2 tháng</option>
+                <option value="4">4 tháng</option>
+                <option value="6">6 tháng</option>
+                <option value="9">9 tháng</option>
+                <option value="12">12 tháng (1 tuổi)</option>
+                <option value="18">18 tháng</option>
+                <option value="24">24 tháng (2 tuổi)</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Vaccine Grid -->
+<% if (vaccineList.length === 0) { %>
+    <%- include('../../partials/empty-state', {
+        icon: 'vaccines',
+        title: 'Chưa có vaccine nào',
+        message: 'Danh sách vaccine đang được cập nhật. Vui lòng quay lại sau.',
+        actionLabel: ' Quay lại dashboard',
+        actionHref: '/client/dashboard',
+        actionIcon: 'arrow_back'
+    }) %>
+<% } else { %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="vaccineGrid">
+        <% vaccineList.forEach((vaccine, i) => { %>
+            <% const stockOk = vaccine.stock > 10; %>
+            <% const stockLow = vaccine.stock > 0 && vaccine.stock <= 10; %>
+            <% const stockOut = vaccine.stock <= 0; %>
+            <div class="v-vaccine-card v-card-interactive v-anim-fade-in"
+                 data-name="<%= vaccine.name.toLowerCase() %>"
+                 data-age="<%= vaccine.recommendedAgeMonths || '' %>"
+                 style="animation-delay: <%= (i % 6) * 0.06 %>s">
+
+                <!-- Card Header -->
+                <div class="flex items-start justify-between gap-3 mb-3">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0
+                        <%= stockOut ? 'bg-error/10 text-error' : stockLow ? 'bg-warning/10 text-warning' : 'bg-primary/10 text-primary' %>">
+                        <span class="material-symbols-outlined v-icon-24">vaccines</span>
+                    </div>
+                    <!-- Stock badge -->
+                    <% if (stockOut) { %>
+                        <span class="v-badge v-badge-error">Hết hàng</span>
+                    <% } else if (stockLow) { %>
+                        <span class="v-badge v-badge-warning">Còn <%= vaccine.stock %></span>
+                    <% } else { %>
+                        <span class="v-badge v-badge-secondary">Còn hàng</span>
+                    <% } %>
+                </div>
+
+                <!-- Info -->
+                <h3 class="text-xl font-display font-black text-on-surface tracking-tight leading-none truncate"><%= vaccine.name %></h3>
+                <% if (vaccine.ageLabel) { %>
+                    <p class="v-vaccine-card-type mt-1">
+                        <span class="material-symbols-outlined v-icon-14 align-middle mr-1">schedule</span>
+                        <%= vaccine.ageLabel %>
+                    </p>
+                <% } %>
+
+                <!-- Price -->
+                <div class="flex items-end justify-between mt-4">
+                    <div>
+                        <p class="v-vaccine-card-price">
+                            <%= vaccine.price ? vaccine.price.toLocaleString('vi-VN') + ' đ' : 'Liên hệ' %>
+                        </p>
+                        <% if (vaccine.description) { %>
+                            <p class="v-vaccine-stock v-vaccine-stock-ok text-xs mt-1 line-clamp-2 text-on-surface-variant">
+                                <%= vaccine.description %>
+                            </p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2 mt-4 pt-4 border-t border-outline">
+                    <a href="/client/vaccines/<%= vaccine.id %>"
+                       class="v-btn v-btn-secondary v-btn-sm flex-1 no-underline">
+                        <span class="material-symbols-outlined v-icon-14">info</span>
+                        Chi tiết
+                    </a>
+                    <a href="/appointments/book?vaccineId=<%= vaccine.id %>"
+                       class="v-btn v-btn-primary v-btn-sm flex-1 no-underline <%= stockOut ? 'opacity-50 pointer-events-none' : '' %>">
+                        <span class="material-symbols-outlined v-icon-14">event_available</span>
+                        Đặt lịch
+                    </a>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+<% } %>
+
+<!-- No results message (hidden by default) -->
+<div id="noResults" class="hidden">
+    <%- include('../../partials/empty-state', {
+        icon: 'search_off',
+        title: 'Không tìm thấy vaccine',
+        message: 'Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc độ tuổi.',
+        variant: 'compact'
+    }) %>
+</div>
+
+<script>
+function filterVaccines() {
+    const search = document.getElementById('vaccineSearch').value.toLowerCase();
+    const ageFilter = document.getElementById('ageFilter').value;
+    const cards = document.querySelectorAll('#vaccineGrid .v-vaccine-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const name = card.dataset.name || '';
+        const age = card.dataset.age || '';
+        const matchesSearch = name.includes(search);
+        const matchesAge = !ageFilter || age === ageFilter;
+
+        if (matchesSearch && matchesAge) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const noResults = document.getElementById('noResults');
+    const grid = document.getElementById('vaccineGrid');
+    if (visibleCount === 0) {
+        grid.style.display = 'none';
+        noResults.classList.remove('hidden');
+    } else {
+        grid.style.display = '';
+        noResults.classList.add('hidden');
+    }
+}
+</script>

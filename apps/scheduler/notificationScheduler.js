@@ -25,9 +25,20 @@ const startNotificationScheduler = () => {
             const notificationService = new NotificationService();
 
             for (const appointment of appointments) {
+                // Guard: skip if child or parent is missing
+                if (!appointment.child || !appointment.child.parent) {
+                    console.warn(`[Scheduler] Bỏ qua appointment ${appointment.id}: thiếu thông tin trẻ hoặc phụ huynh.`);
+                    continue;
+                }
                 const parent = appointment.child.parent;
                 const childName = appointment.child.name;
-                const vaccineName = appointment.vaccine.name;
+                const vaccineName = appointment.vaccine ? appointment.vaccine.name : 'vắc xin';
+
+                // Guard: skip if parent email is missing
+                if (!parent.email) {
+                    console.warn(`[Scheduler] Bỏ qua appointment ${appointment.id}: phụ huynh không có email.`);
+                    continue;
+                }
 
                 // Send email reminder
                 try {

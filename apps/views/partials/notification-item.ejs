@@ -1,0 +1,43 @@
+<%#
+  locals:
+    notification: object { id, title, message, isRead, createdAt }
+    csrfToken: string (optional)
+%>
+<% const n = locals.notification; %>
+<% const isRead = n.isRead || false; %>
+
+<div class="v-card !p-6 flex items-start gap-4 hover:border-primary/30 transition-all
+    <%= isRead ? 'opacity-60' : 'border-l-4 border-l-primary' %> animate-fade-in">
+  <%# Icon %>
+  <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+      <%= isRead ? 'bg-background text-on-surface-variant' : 'bg-primary/10 text-primary' %>">
+    <span class="material-symbols-outlined text-xl">
+      <%= isRead ? 'notifications' : 'notifications_active' %>
+    </span>
+  </div>
+
+  <%# Content %>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-start justify-between gap-2 mb-1">
+      <h4 class="font-black text-sm text-on-surface uppercase tracking-tight
+          <%= isRead ? '' : 'text-primary' %> truncate"><%= n.title %></h4>
+      <span class="text-[9px] font-black text-on-surface-variant uppercase tracking-widest shrink-0">
+        <%= n.createdAt ? new Date(n.createdAt).toLocaleDateString('vi-VN') : '' %>
+      </span>
+    </div>
+    <p class="text-xs font-medium text-on-surface-variant leading-relaxed"><%= n.message %></p>
+
+    <%# Mark as read action %>
+    <% if (!isRead) { %>
+      <form method="POST" action="/notifications/<%= n.id %>/read" class="mt-3">
+        <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <% } %>
+        <button type="submit" class="v-btn v-btn-secondary !py-1.5 !px-4 !text-[9px] uppercase tracking-widest gap-1">
+          <span class="material-symbols-outlined text-sm">check</span>
+          ĐÁNH DẤU ĐÃ ĐỌC
+        </button>
+      </form>
+    <% } %>
+  </div>
+</div>

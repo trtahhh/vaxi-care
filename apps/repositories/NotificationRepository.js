@@ -37,14 +37,19 @@ class NotificationRepository {
     return await repo.save(entity);
   }
 
-  async markAsRead(id) {
+  async markAsRead(id, userId) {
     const repo = this.context.getRepository("Notification");
-    const entity = await repo.findOne({ where: { id } });
+    const entity = await repo.findOne({ where: { id, user: { id: userId } } });
     if (entity) {
       entity.isRead = true;
       return await repo.save(entity);
     }
     return null;
+  }
+
+  async markAllAsRead(userId) {
+    const repo = this.context.getRepository("Notification");
+    await repo.update({ user: { id: userId }, isRead: false }, { isRead: true });
   }
 
   async delete(id) {

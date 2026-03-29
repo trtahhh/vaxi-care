@@ -14,6 +14,11 @@ const sendEmail = async (to, subject, html) => {
 
 class NotificationService {
   async sendAppointmentReminder(parent, childName, vaccineName, appointmentDate) {
+    if (!parent || !parent.email) {
+      console.warn("[NotificationService] Không thể gửi email: parent hoặc email không tồn tại.");
+      return;
+    }
+
     const formattedDate = new Date(appointmentDate).toLocaleString("vi-VN");
 
     // Send email

@@ -27,3 +27,20 @@ exports.authorizeRoles = (...roles) => {
         next();
     };
 };
+
+const NotificationRepository = require("../../repositories/NotificationRepository");
+
+exports.loadNotificationCount = async (req, res, next) => {
+    if (req.user) {
+        try {
+            const notifRepo = new NotificationRepository();
+            res.locals.notificationCount = await notifRepo.countUnreadByUserId(req.user.id);
+        } catch (error) {
+            console.error("Error loading notification count:", error);
+            res.locals.notificationCount = 0;
+        }
+    } else {
+        res.locals.notificationCount = 0;
+    }
+    next();
+};

@@ -1,0 +1,126 @@
+<!-- =====================
+  Client Settings
+  Data: user
+===================== -->
+
+<%- include('../partials/client-page-header', {
+    title: 'Cài đặt tài khoản',
+    subtitle: 'Quản lý thông tin & thiết lập cá nhân của bạn.',
+    backHref: '/client/dashboard'
+}) %>
+
+<% const u = user || {}; %>
+
+<div class="max-w-4xl mx-auto space-y-10 animate-fade-in pb-20">
+
+  <%# Profile Header Area %>
+  <div class="flex flex-col md:flex-row items-center gap-8 v-card !p-10 !bg-white/50 relative overflow-hidden">
+    <!-- Decorative abstract shape -->
+    <div class="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative shrink-0">
+      <div class="w-32 h-32 rounded-[2rem] bg-gradient-to-br from-primary to-primary-dark text-white flex items-center justify-center font-black text-6xl shadow-2xl shadow-primary/30 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+        <%= (u.username) ? u.username.charAt(0).toUpperCase() : 'U' %>
+      </div>
+      <div class="absolute -bottom-3 -right-3 w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+        <span class="material-symbols-outlined text-primary text-xl">verified</span>
+      </div>
+    </div>
+    
+    <div class="text-center md:text-left space-y-3 z-10 mt-6 md:mt-0">
+      <h2 class="text-3xl sm:text-4xl font-display font-black text-on-surface uppercase tracking-tight leading-none"><%= u.fullName || u.username || 'Người dùng VaxiCare' %></h2>
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-background border-2 border-outline rounded-xl shadow-sm">
+        <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
+        <span class="text-xs font-black uppercase tracking-widest text-on-surface-variant">
+          <%= u.role === 'admin' ? 'Quản trị viên hệ thống' 
+             : (u.role === 'staff' ? 'Nhân viên y tế' 
+             : 'Phụ huynh uy tín') %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <%# Account Information Section - List View Style %>
+  <div class="space-y-4">
+    <h3 class="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2">Thông tin liên lạc bảo mật</h3>
+    
+    <div class="v-card !p-0 overflow-hidden divide-y-2 divide-outline">
+      
+      <!-- Username Row -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between p-6 hover:bg-primary/5 transition-colors cursor-default group">
+        <div class="flex items-center gap-5">
+          <div class="w-12 h-12 rounded-xl bg-background border-2 border-outline flex items-center justify-center text-on-surface-variant group-hover:border-primary group-hover:text-primary transition-colors">
+            <span class="material-symbols-outlined">badge</span>
+          </div>
+          <p class="font-bold text-sm text-on-surface-variant uppercase tracking-widest">Tên đăng nhập</p>
+        </div>
+        <p class="font-black text-on-surface text-lg mt-3 md:mt-0 text-right"><%= u.username || 'N/A' %></p>
+      </div>
+
+      <!-- Email Row -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between p-6 hover:bg-primary/5 transition-colors cursor-default group">
+        <div class="flex items-center gap-5">
+          <div class="w-12 h-12 rounded-xl bg-background border-2 border-outline flex items-center justify-center text-on-surface-variant group-hover:border-primary group-hover:text-primary transition-colors">
+            <span class="material-symbols-outlined">mail</span>
+          </div>
+          <p class="font-bold text-sm text-on-surface-variant uppercase tracking-widest">Địa chỉ Email</p>
+        </div>
+        <p class="font-black text-on-surface text-lg mt-3 md:mt-0 text-right"><%= u.email || 'N/A' %></p>
+      </div>
+
+      <!-- Phone Row -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between p-6 hover:bg-primary/5 transition-colors cursor-default group">
+        <div class="flex items-center gap-5">
+          <div class="w-12 h-12 rounded-xl bg-background border-2 border-outline flex items-center justify-center text-on-surface-variant group-hover:border-primary group-hover:text-primary transition-colors">
+            <span class="material-symbols-outlined">smartphone</span>
+          </div>
+          <p class="font-bold text-sm text-on-surface-variant uppercase tracking-widest">Điện thoại</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 mt-3 md:mt-0">
+          <p class="font-black <%= u.phone ? 'text-on-surface' : 'text-error' %> text-lg text-right">
+            <%= u.phone || 'Chưa thiết lập' %>
+          </p>
+          <% if (!u.phone) { %>
+            <span class="material-symbols-outlined text-error">error</span>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Password Row -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between p-6 hover:bg-primary/5 transition-colors cursor-pointer group">
+        <div class="flex items-center gap-5">
+          <div class="w-12 h-12 rounded-xl bg-background border-2 border-outline flex items-center justify-center text-on-surface-variant group-hover:border-primary group-hover:text-primary transition-colors">
+            <span class="material-symbols-outlined">password</span>
+          </div>
+          <p class="font-bold text-sm text-on-surface-variant uppercase tracking-widest">Mật khẩu</p>
+        </div>
+        <div class="flex flex-col items-end mt-3 md:mt-0">
+            <p class="font-black text-on-surface text-2xl tracking-[0.3em] leading-none mt-1">••••••••</p>
+            <p class="text-[9px] font-bold text-primary uppercase tracking-widest mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Nhấn để thay đổi</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <%# Action Area %>
+  <div class="flex justify-end gap-4 mt-10">
+      <form action="/auth/logout" method="POST" class="inline">
+        <% if (typeof csrfToken !== 'undefined') { %>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <% } %>
+        <button type="submit" class="v-btn !bg-error/10 !text-error !border-error/20 hover:!bg-error hover:!text-white hover:shadow-xl hover:shadow-error/30 transition-all font-black uppercase text-sm tracking-widest gap-2">
+            <span class="material-symbols-outlined">logout</span>
+            ĐĂNG XUẤT
+        </button>
+      </form>
+  </div>
+
+  <%# About App Version %>
+  <div class="mt-16 flex flex-col items-center text-center opacity-40 hover:opacity-100 transition-opacity">
+    <span class="material-symbols-outlined text-4xl mb-2 text-on-surface">diversity_2</span>
+    <h3 class="font-black text-base uppercase tracking-widest text-on-surface">Hệ thống VaxiCare</h3>
+    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mt-1">Phiên bản 1.0.0 (Build 50A)</p>
+  </div>
+
+</div>

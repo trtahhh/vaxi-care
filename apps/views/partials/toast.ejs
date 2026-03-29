@@ -1,0 +1,47 @@
+<!-- Toast Notification (flash messages) -->
+<%
+/**
+ * Usage: include('partials/toast', { messages: [
+ *   { type: 'success', title: 'Thành công', message: '...' },
+ *   { type: 'error',   title: 'Lỗi',       message: '...' }
+ * ]})
+ */
+%>
+<% if (typeof messages !== 'undefined' && messages && messages.length > 0) { %>
+    <div class="v-toast-container" id="toastContainer">
+        <% messages.forEach((msg, i) => { %>
+            <div class="v-toast v-toast-<%= msg.type || 'info' %> v-anim-fade-in"
+                 role="alert"
+                 style="animation-delay: <%= i * 0.1 %>s"
+                 data-toast>
+                <span class="material-symbols-outlined v-icon-20 flex-shrink-0 mt-0.5">
+                    <%= msg.type === 'success' ? 'check_circle' :
+                        msg.type === 'error' ? 'error' :
+                        msg.type === 'warning' ? 'warning' : 'info' %>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <% if (msg.title) { %>
+                        <p class="font-black text-sm"><%= msg.title %></p>
+                    <% } %>
+                    <% if (msg.message) { %>
+                        <p class="text-sm opacity-80 mt-0.5"><%= msg.message %></p>
+                    <% } %>
+                </div>
+                <button type="button"
+                        class="v-toast-close flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+                        onclick="this.closest('[data-toast]').remove()"
+                        aria-label="Đóng">
+                    <span class="material-symbols-outlined v-icon-16">close</span>
+                </button>
+            </div>
+        <% }) %>
+    </div>
+    <script>
+    // Auto-dismiss after 5 seconds
+    document.querySelectorAll('[data-toast]').forEach(el => {
+        setTimeout(() => {
+            if (el.parentElement) el.remove();
+        }, 5000);
+    });
+    </script>
+<% } %>

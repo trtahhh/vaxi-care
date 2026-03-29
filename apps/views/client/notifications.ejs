@@ -1,0 +1,40 @@
+<!-- =====================
+  Client Notifications
+  Data: notifications[], unreadCount, error
+===================== -->
+
+<%- include('../partials/client-page-header', {
+    title: 'Thông báo',
+    subtitle: locals.unreadCount > 0 ? locals.unreadCount + ' thông báo chưa đọc' : 'Tất cả đã đọc',
+    backHref: '/client/dashboard'
+}) %>
+
+<%# Error alert %>
+<% if (locals.error) { %>
+  <div class="mb-6 p-4 rounded-xl bg-error/10 border border-error/20 flex items-center gap-3 shadow-lg animate-shake">
+    <span class="material-symbols-outlined text-error text-xl">report</span>
+    <p class="text-xs font-black uppercase tracking-tight text-error flex-1"><%= error %></p>
+  </div>
+<% } %>
+
+<% const notifs = notifications || []; %>
+
+<%# Empty state %>
+<% if (notifs.length === 0) { %>
+  <%- include('../partials/empty-state', {
+      icon: 'notifications_off',
+      title: 'Không có thông báo',
+      message: 'Hệ thống sẽ thông báo khi có lịch tiêm chủng.',
+      actionLabel: 'Quay lại Dashboard',
+      actionHref: '/client/dashboard'
+  }) %>
+<% } %>
+
+<%# Notification list %>
+<% if (notifs.length > 0) { %>
+  <div class="space-y-4 animate-fade-in">
+    <% notifs.forEach(n => { %>
+      <%- include('../partials/notification-item', { notification: n, csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : null }) %>
+    <% }) %>
+  </div>
+<% } %>

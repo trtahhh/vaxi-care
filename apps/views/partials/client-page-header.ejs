@@ -1,0 +1,35 @@
+<%#
+  locals:
+    title: string
+    subtitle: string (optional)
+    backHref: string (optional)
+    backIcon: string (optional) — defaults to 'arrow_back'
+    badge: string (optional)
+    badgeColor: string (optional) — Tailwind text color class
+%>
+<% const pTitle = locals.title || ''; %>
+<% const pSubtitle = locals.subtitle || ''; %>
+<% const pBackHref = locals.backHref || ''; %>
+<% const pBackIcon = locals.backIcon || 'arrow_back'; %>
+<% const pBadge = locals.badge || ''; %>
+<% const pBadgeColor = locals.badgeColor || 'text-primary'; %>
+
+<section class="mb-8 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 animate-fade-in">
+  <% if (pBackHref) { %>
+    <a href="<%= pBackHref %>"
+       class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-outline/50 text-on-surface-variant hover:text-primary hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 shrink-0 no-underline group/back">
+      <span class="material-symbols-outlined text-[24px] group-hover/back:-translate-x-1 transition-transform duration-300"><%= pBackIcon %></span>
+    </a>
+  <% } %>
+  <div class="flex-1">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl sm:text-3xl font-display font-black tracking-tight text-on-surface leading-tight"><%= pTitle %></h1>
+      <% if (pBadge) { %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20"><%= pBadge %></span>
+      <% } %>
+    </div>
+    <% if (pSubtitle) { %>
+      <p class="text-sm font-medium text-on-surface-variant mt-1.5 opacity-80 max-w-2xl leading-relaxed"><%= pSubtitle %></p>
+    <% } %>
+  </div>
+</section>

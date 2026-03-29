@@ -1,0 +1,84 @@
+<%#
+  locals:
+    currentPage: number
+    totalPages: number
+    baseUrl: string (optional, e.g. "?page=")
+    extraParams: string (optional, e.g. "&search=foo&role=admin")
+%>
+<% const pCurrent = typeof currentPage !== 'undefined' ? currentPage : 1; %>
+<% const pTotal = typeof totalPages !== 'undefined' ? totalPages : 1; %>
+<% if (pTotal <= 1) return; %>
+<% const pBase = typeof baseUrl !== 'undefined' ? baseUrl : '?page='; %>
+<% const pExtra = typeof extraParams !== 'undefined' ? extraParams : ''; %>
+
+<div class="flex items-center justify-center gap-2 pt-6 pb-4">
+  <%# Previous button %>
+  <% if (pCurrent > 1) { %>
+    <a href="<%= pBase %><%= pCurrent - 1 %><%= pExtra %>"
+       class="v-btn v-btn-secondary !p-3 !rounded-xl hover:!bg-primary hover:!text-white transition-all shadow-sm">
+      <span class="material-symbols-outlined text-xl">chevron_left</span>
+    </a>
+  <% } else { %>
+    <span class="v-btn v-btn-secondary !p-3 !rounded-xl opacity-30 cursor-not-allowed">
+      <span class="material-symbols-outlined text-xl">chevron_left</span>
+    </span>
+  <% } %>
+
+  <%# Page numbers %>
+  <%
+    const delta = 2;
+    const range = [];
+    for (let i = Math.max(1, pCurrent - delta); i <= Math.min(pTotal, pCurrent + delta); i++) {
+      range.push(i);
+    }
+  %>
+
+  <% if (range[0] > 1) { %>
+    <a href="<%= pBase %>1<%= pExtra %>"
+       class="w-10 h-10 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm border
+              <%= pCurrent === 1 ? 'bg-primary text-white border-primary shadow-lg' : 'bg-white border-outline text-on-surface-variant hover:border-primary hover:text-primary' %>">
+      1
+    </a>
+    <% if (range[0] > 2) { %>
+      <span class="px-1 text-on-surface-variant">…</span>
+    <% } %>
+  <% } %>
+
+  <% range.forEach(page => { %>
+    <a href="<%= pBase %><%= page %><%= pExtra %>"
+       class="w-10 h-10 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm border
+              <%= pCurrent === page ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-white border-outline text-on-surface-variant hover:border-primary hover:text-primary' %>">
+      <%= page %>
+    </a>
+  <% }) %>
+
+  <% if (range[range.length - 1] < pTotal) { %>
+    <% if (range[range.length - 1] < pTotal - 1) { %>
+      <span class="px-1 text-on-surface-variant">…</span>
+    <% } %>
+    <a href="<%= pBase %><%= pTotal %><%= pExtra %>"
+       class="w-10 h-10 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm border
+              <%= pCurrent === pTotal ? 'bg-primary text-white border-primary shadow-lg' : 'bg-white border-outline text-on-surface-variant hover:border-primary hover:text-primary' %>">
+      <%= pTotal %>
+    </a>
+  <% } %>
+
+  <%# Next button %>
+  <% if (pCurrent < pTotal) { %>
+    <a href="<%= pBase %><%= pCurrent + 1 %><%= pExtra %>"
+       class="v-btn v-btn-secondary !p-3 !rounded-xl hover:!bg-primary hover:!text-white transition-all shadow-sm">
+      <span class="material-symbols-outlined text-xl">chevron_right</span>
+    </a>
+  <% } else { %>
+    <span class="v-btn v-btn-secondary !p-3 !rounded-xl opacity-30 cursor-not-allowed">
+      <span class="material-symbols-outlined text-xl">chevron_right</span>
+    </span>
+  <% } %>
+</div>
+
+<%# Page info %>
+<div class="text-center pb-6">
+  <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">
+    Trang <span class="text-primary"><%= pCurrent %></span> / <%= pTotal %>
+  </span>
+</div>

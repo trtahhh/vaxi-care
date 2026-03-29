@@ -6,6 +6,7 @@ const ChildRepository = require("../repositories/ChildRepository");
 const VaccineRepository = require("../repositories/VaccineRepository");
 const AppointmentRepository = require("../repositories/AppointmentRepository");
 const DailySlotConfigRepository = require("../repositories/DailySlotConfigRepository");
+const NotificationService = require("./NotificationService");
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -74,8 +75,58 @@ class AdminService {
     const validStatuses = ["pending", "confirmed", "completed", "cancelled"];
     if (!validStatuses.includes(status)) throw new Error("Trạng thái không hợp lệ");
 
+    const oldStatus = appointment.status;
     appointment.status = status;
-    return await appointmentRepo.update(appointment);
+    const updated = await appointmentRepo.update(appointment);
+
+    // Send notification to parent on status change
+    try {
+      const notificationService = new NotificationService();
+      // Load parent relation if not loaded
+      if (!appointment.child || !appointment.child.parent) {
+        const childRepo = new ChildRepository();
+        const child = await childRepo.findById(appointment.child.id);
+        appointment.child = child;
+      }
+      const parent = appointment.child.parent;
+      if (parent) {
+        const vaccineRepo = new VaccineRepository();
+        const vaccine = appointment.vaccine && appointment.vaccine.id
+          ? await vaccineRepo.findById(appointment.vaccine.id)
+          : null;
+        const vaccineName = vaccine ? vaccine.name : 'vắc xin';
+        const childName = appointment.child.name;
+        const dateStr = new Date(appointment.date).toLocaleString('vi-VN');
+
+        if (status === 'confirmed') {
+          await notificationService.sendAppointmentReminder(
+            parent, childName, vaccineName, appointment.date
+          );
+          await notificationService.createInAppNotification(
+            parent.id,
+            "Lịch tiêm chủng đã được xác nhận!",
+            `Lịch tiêm ${vaccineName} cho bé ${childName} ngày ${dateStr} đã được xác nhận. Vui lòng đưa bé đến đúng giờ.`
+          );
+        } else if (status === 'cancelled') {
+          await notificationService.createInAppNotification(
+            parent.id,
+            "Lịch tiêm chủng đã bị hủy",
+            `Lịch tiêm ${vaccineName} cho bé ${childName} ngày ${dateStr} đã bị hủy. Vui lòng đặt lịch lại nếu cần.`
+          );
+        } else if (status === 'completed') {
+          await notificationService.createInAppNotification(
+            parent.id,
+            "Mũi tiêm đã hoàn thành!",
+            `Bé ${childName} đã hoàn thành mũi tiêm ${vaccineName} ngày ${dateStr}. Cảm ơn bạn đã tin tưởng VaxiCare!`
+          );
+        }
+      }
+    } catch (notifError) {
+      console.error('[AdminService] Lỗi gửi thông báo khi cập nhật trạng thái:', notifError.message);
+      // Don't throw - notification failure shouldn't block the status update
+    }
+
+    return updated;
   }
 
   // Vaccines

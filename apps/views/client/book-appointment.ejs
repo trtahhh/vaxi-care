@@ -1,186 +1,197 @@
-<%- include('layout', { 
-    currentPath: '/client/schedule', 
-    title: 'Đặt lịch tiêm chủng - VaxiCare',
-    body: `
+<!-- =====================
+  Book Appointment
+  Data: children[], vaccines[], recommendations[], selectedChildId, error
+===================== -->
 
-<% 
-    const safeChildren = locals.children || [];
-    const safeVaccines = locals.vaccines || [];
-    const safeRecommendations = locals.recommendations || [];
-    const safeSelectedChildId = locals.selectedChildId || null;
-    const minDate = new Date().toISOString().slice(0, 16);
-    const isRecommended = (vId) => safeRecommendations.some(r => r.id === vId);
-%>
+<%- include('../partials/client-page-header', {
+    title: 'Đặt lịch tiêm chủng',
+    subtitle: 'Lên kế hoạch bảo vệ bé yêu.',
+    backHref: '/client/dashboard'
+}) %>
 
-<!-- Page Header -->
-<section class="mb-10 flex items-center gap-4 animate-fade-in">
-    <a href="/client/dashboard" class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface border border-outline text-on-surface-variant hover:text-primary transition-all shadow-sm">
-        <span class="material-symbols-outlined">arrow_back</span>
-    </a>
-    <div>
-        <h1 class="text-3xl v-title tracking-tight uppercase">Đặt lịch tiêm chủng</h1>
-        <p class="text-on-surface-variant text-sm font-medium opacity-60">Lên kế hoạch bảo vệ bé yêu bằng các mũi tiêm chuẩn xác.</p>
-    </div>
-</section>
+<% const safeChildren = children || []; %>
+<% const safeVaccines = vaccines || []; %>
+<% const safeRecs = recommendations || []; %>
+<% const selId = selectedChildId; %>
+<% const minDate = new Date().toISOString().slice(0, 16); %>
 
-<!-- Error Feedbacks -->
+<%# Error alert %>
 <% if (locals.error) { %>
-    <div class="p-4 bg-error text-white border-transparent rounded-xl mb-8 flex items-center gap-4 shadow-lg shadow-error/20 animate-shake">
-        <span class="material-symbols-outlined text-2xl">report</span>
-        <p class="font-black text-xs uppercase tracking-widest"><%= error %></p>
-    </div>
+  <div class="mb-6 p-4 rounded-xl bg-error text-white flex items-center gap-3 shadow-lg shadow-error/20 animate-shake">
+    <span class="material-symbols-outlined text-xl">report</span>
+    <p class="font-black text-xs uppercase tracking-widest flex-1"><%= error %></p>
+  </div>
 <% } %>
 
-<form action="/appointments/book" method="POST" id="booking-form" class="space-y-16 pb-24 animate-fade-in" style="animation-delay: 0.1s">
-    
-    <!-- Step 1: Chọn Bé -->
-    <section>
-        <div class="flex items-center gap-4 mb-8">
-            <span class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-primary/20">01</span>
-            <h2 class="text-xl v-title tracking-tight uppercase">Chọn hồ sơ bé cần tiêm</h2>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <% if (safeChildren.length === 0) { %>
-                <div class="md:col-span-3 p-10 v-card !border-dashed text-center">
-                    <p class="text-sm font-black text-error uppercase tracking-widest">Chưa có hồ sơ trẻ trong hệ thống của bạn.</p>
-                    <a href="/client/add-child" class="mt-4 v-btn v-btn-secondary inline-flex">THÊM BÉ NGAY</a>
-                </div>
-            <% } else { %>
-                <% safeChildren.forEach((c) => { 
-                    const birth = new Date(c.dob);
-                    const isSelected = safeSelectedChildId ? safeSelectedChildId == c.id : (safeChildren.length === 1);
-                %>
-                    <label class="v-card !p-6 relative cursor-pointer border-2 transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                        <input type="radio" name="childId" value="<%= c.id %>" class="peer hidden" required 
-                               <%= isSelected ? 'checked' : '' %> 
-                               onchange="window.location.href='/appointments/book?childId=' + this.value">
-                        
-                        <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 rounded-2xl bg-background border border-outline flex items-center justify-center text-on-surface-variant group-has-[:checked]:text-primary group-has-[:checked]:bg-white group-has-[:checked]:border-primary transition-all shadow-sm">
-                                <span class="material-symbols-outlined text-3xl">child_care</span>
-                            </div>
-                            <div>
-                                <h3 class="font-black text-on-surface uppercase tracking-tight text-lg"><%= c.name %></h3>
-                                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">SINH: <%= birth.toLocaleDateString("vi-VN") %></p>
-                            </div>
-                            <div class="ml-auto opacity-0 group-has-[:checked]:opacity-100 transition-opacity">
-                                <span class="material-symbols-outlined text-primary">check_circle</span>
-                            </div>
-                        </div>
-                    </label>
-                <% }) %>
-            <% } %>
-        </div>
-    </section>
+<form action="/appointments/book" method="POST" id="booking-form" class="space-y-12 pb-24 animate-fade-in">
 
-    <!-- Step 2: Chọn Vaccine -->
-    <section>
-        <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-            <div class="flex items-center gap-4">
-                <span class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-primary/20">02</span>
-                <h2 class="text-xl v-title tracking-tight uppercase">Chọn vắc xin đăng ký</h2>
-            </div>
-            <% if (safeRecommendations.length > 0) { %>
-                <span class="v-badge bg-secondary text-white border-transparent px-4 py-2 uppercase tracking-widest">Có <%= safeRecommendations.length %> gợi ý từ bác sĩ</span>
-            <% } %>
-        </div>
+  <%# Hidden fields %>
+  <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <% } %>
 
-        <div class="v-card !p-0 overflow-hidden shadow-xl border-2">
-            <div class="p-4 bg-background border-b-2 border-outline flex items-center gap-4">
-                <span class="material-symbols-outlined text-primary">search</span>
-                <input class="bg-transparent border-none focus:ring-0 text-on-surface w-full font-black text-sm uppercase tracking-widest outline-none placeholder:opacity-30" placeholder="NHẬP TÊN VẮC XIN ĐỂ TÌM KIẾM..." type="text" id="vaccine-search">
-            </div>
-            
-            <div class="max-h-[500px] overflow-y-auto custom-scrollbar p-6 grid grid-cols-1 md:grid-cols-2 gap-4" id="vaccine-list">
-                <% safeVaccines.forEach(v => {
-                    const recommended = isRecommended(v.id);
-                %>
-                    <div class="vaccine-item-container">
-                        <%- include('../partials/vaccine-item', { 
-                            vaccine: v, 
-                            isRecommended: recommended, 
-                            selectable: true 
-                        }) %>
-                    </div>
-                <% }) %>
-            </div>
-        </div>
-    </section>
-
-    <!-- Step 3: Thời gian -->
-    <section>
-        <div class="flex items-center gap-4 mb-8">
-            <span class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg shadow-primary/20">03</span>
-            <h2 class="text-xl v-title tracking-tight uppercase">Thời gian & Ghi chú y tế</h2>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="v-card !p-8 flex flex-col justify-between min-h-[200px]">
-                <label class="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary text-base">calendar_today</span>
-                    CHỌN NGÀY VÀ GIỜ TIÊM DỰ KIẾN
-                </label>
-                <input type="datetime-local" name="date" min="<%= minDate %>" required onchange="checkSlots(event)" class="w-full bg-background border-2 border-outline rounded-xl px-6 py-4 text-on-surface font-black text-base outline-none focus:border-primary transition-all" />
-                
-                <div id="slot-info-box" class="hidden mt-6 p-4 rounded-xl text-[10px] font-black flex items-center gap-3 uppercase tracking-widest border-2"></div>
-            </div>
-
-            <div class="v-card !p-8">
-                <label class="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary text-base">sticky_note_2</span>
-                    GHI CHÚ (TIỀN SỬ DỊ ỨNG, TÌNH TRẠNG SỨC KHỎE...)
-                </label>
-                <textarea name="notes" placeholder="NHẬP THÔNG TIN CẦN THIẾT CHO BÁC SĨ..." rows="4" class="w-full bg-background border-2 border-outline rounded-xl px-6 py-4 text-on-surface font-bold text-sm outline-none focus:border-primary transition-all resize-none"></textarea>
-            </div>
-        </div>
-    </section>
-
-    <!-- Submission -->
-    <div class="v-card !p-12 !bg-primary !border-none text-center shadow-2xl shadow-primary/30 group">
-        <p class="text-on-primary font-black text-[10px] uppercase tracking-[0.3em] mb-6 opacity-70">VUI LÒNG KIỂM TRA LẠI THÔNG TIN TRƯỚC KHI XÁC NHẬN</p>
-        <button type="submit" id="submit-btn" class="v-btn v-btn-primary !bg-white !text-primary !py-6 !px-16 !text-lg !rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all">
-            XÁC NHẬN ĐĂNG KÝ TIÊM
-        </button>
+  <%# ---- Step 1: Select child ---- %>
+  <div>
+    <div class="flex items-center gap-4 mb-8">
+      <span class="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center font-display font-black text-xl shadow-lg shadow-primary/20">01</span>
+      <h2 class="text-2xl font-display font-black uppercase tracking-tight text-on-surface leading-none">Chọn hồ sơ bé</h2>
     </div>
+
+    <% if (safeChildren.length === 0) { %>
+      <div class="v-card !border-dashed !p-10 text-center">
+        <p class="text-xs font-black text-error uppercase tracking-widest mb-4">Chưa có hồ sơ trẻ trong hệ thống.</p>
+        <% if (locals.user && (locals.user.role === 'admin' || locals.user.role === 'staff')) { %>
+          <a href="/children/add" class="v-btn v-btn-secondary inline-flex">THÊM BÉ NGAY</a>
+        <% } else { %>
+          <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-2">Vui lòng đến trung tâm tiêm chủng để tạo hồ sơ cho bé.</p>
+        <% } %>
+      </div>
+    <% } else { %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <% safeChildren.forEach((c) => {
+            const birth = new Date(c.dob);
+            const isSelected = selId ? selId == c.id : (safeChildren.length === 1);
+        %>
+          <label class="v-card !p-6 relative cursor-pointer border-2 transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5
+              <%= isSelected ? 'border-primary' : 'border-outline' %>">
+            <input type="radio" name="childId" value="<%= c.id %>" class="peer hidden" required <%= isSelected ? 'checked' : '' %>>
+            <div class="flex items-center gap-5">
+              <div class="w-12 h-12 rounded-xl bg-background border-2 flex items-center justify-center
+                  <%= isSelected ? 'border-primary text-primary' : 'border-outline text-on-surface-variant' %>">
+                <span class="material-symbols-outlined text-3xl">child_care</span>
+              </div>
+              <div class="flex-1">
+                <p class="font-black text-base text-on-surface uppercase tracking-tight"><%= c.name %></p>
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase mt-0.5 tracking-widest">
+                  SINH: <%= birth.toLocaleDateString('vi-VN') %>
+                </p>
+              </div>
+              <div class="opacity-0 group-has-[:checked]:opacity-100 transition-opacity">
+                <span class="material-symbols-outlined text-primary">check_circle</span>
+              </div>
+            </div>
+          </label>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <%# ---- Step 2: Select vaccine ---- %>
+  <div>
+    <div class="flex items-center gap-4 mb-8">
+      <span class="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center font-display font-black text-xl shadow-lg shadow-primary/20">02</span>
+      <h2 class="text-2xl font-display font-black uppercase tracking-tight text-on-surface leading-none">Chọn vắc xin</h2>
+      <% if (safeRecs.length > 0) { %>
+        <span class="v-badge bg-secondary text-white border-transparent ml-auto"><%= safeRecs.length %> gợi ý</span>
+      <% } %>
+    </div>
+
+    <div class="v-card !p-0 overflow-hidden border-2 shadow-lg">
+      <div class="p-4 bg-background border-b-2 border-outline flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary">search</span>
+        <input id="vaccine-search" type="text" placeholder="NHẬP TÊN VẮC XIN..."
+               class="bg-transparent border-none focus:ring-0 text-on-surface w-full font-black text-sm uppercase tracking-widest outline-none placeholder:opacity-30">
+      </div>
+      <div id="vaccine-list" class="max-h-[400px] overflow-y-auto p-5 grid grid-cols-1 md:grid-cols-2 gap-3 custom-scrollbar">
+        <% safeVaccines.forEach(v => {
+            const rec = safeRecs.some(r => r.id === v.id);
+        %>
+          <div class="vaccine-item" data-name="<%= v.name.toLowerCase() %>">
+            <label class="v-card !p-4 flex items-center justify-between cursor-pointer border-2 transition-all group
+                <%= rec ? 'border-secondary/40' : 'border-outline/50' %>
+                has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input type="radio" name="vaccineId" value="<%= v.id %>" class="peer hidden" required>
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center border transition-all
+                    <%= rec ? 'bg-secondary text-white border-secondary' : 'bg-background text-on-surface-variant border-outline' %>">
+                  <span class="material-symbols-outlined text-lg"><%= rec ? 'verified' : 'vaccines' %></span>
+                </div>
+                <div>
+                  <p class="font-black text-sm text-on-surface uppercase tracking-tight"><%= v.name %></p>
+                  <p class="text-[9px] font-bold text-on-surface-variant uppercase mt-0.5 tracking-widest">
+                    <%= v.ageLabel || (v.recommendedAgeMonths ? 'Từ ' + v.recommendedAgeMonths + ' tháng' : '') %>
+                  </p>
+                </div>
+              </div>
+              <span class="text-xs font-black text-primary bg-primary/5 px-2 py-1 rounded border border-primary/10 shrink-0">
+                <%= new Intl.NumberFormat('vi-VN').format(v.price) %>đ
+              </span>
+            </label>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- Step 3: Date & Notes ---- %>
+  <div>
+    <div class="flex items-center gap-4 mb-8">
+      <span class="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center font-display font-black text-xl shadow-lg shadow-primary/20">03</span>
+      <h2 class="text-2xl font-display font-black uppercase tracking-tight text-on-surface leading-none">Thời gian & Ghi chú</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="v-card !p-8">
+        <label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-base text-primary">calendar_today</span>
+          NGÀY VÀ GIỜ TIÊM
+        </label>
+        <input type="datetime-local" name="date" min="<%= minDate %>" required
+               onchange="checkSlots(event)"
+               class="w-full bg-background border-2 border-outline rounded-xl px-6 py-4 text-on-surface font-black text-base outline-none focus:border-primary transition-all">
+        <div id="slot-info-box" class="hidden mt-4 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest"></div>
+      </div>
+
+      <div class="v-card !p-8">
+        <label class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-base text-primary">sticky_note_2</span>
+          GHI CHÚ (DỊ ỨNG, BỆNH NỀN...)
+        </label>
+        <textarea name="notes" rows="4" placeholder="VD: Dị ứng hải sản..."
+                  class="w-full bg-background border-2 border-outline rounded-xl px-6 py-4 text-on-surface font-bold text-sm outline-none focus:border-primary transition-all resize-none"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- CTA ---- %>
+  <div class="v-card !p-12 !bg-primary !border-none text-center shadow-2xl shadow-primary/30 rounded-3xl">
+    <p class="text-white/80 font-bold text-xs uppercase tracking-widest mb-6 border-b border-white/20 pb-4 inline-block">BƯỚC CUỐI CÙNG</p>
+    <button type="submit" id="submit-btn"
+            class="v-btn !bg-white !text-primary !py-5 !px-16 !text-lg !font-black !rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all uppercase tracking-widest gap-3 mx-auto w-full sm:w-auto"
+            <%= safeChildren.length === 0 ? 'disabled' : '' %>>
+      <span class="material-symbols-outlined text-2xl">event_available</span>
+      XÁC NHẬN ĐĂNG KÝ TIÊM
+    </button>
+  </div>
 </form>
 
 <script>
-    async function checkSlots(event) {
-        const date = event.target.value;
-        const infoContainer = document.getElementById("slot-info-box");
-        if (!date) return;
-        
-        try {
-            const res = await fetch('/appointments/slots?date=' + date);
-            if (res.ok) {
-                const data = await res.json();
-                infoContainer.classList.remove('hidden');
-                infoContainer.classList.remove('bg-error/10', 'text-error', 'bg-secondary/10', 'text-secondary', 'border-error/20', 'border-secondary/20');
-                
-                if (data.availableSlots <= 0) {
-                    infoContainer.classList.add('bg-error/10', 'text-error', 'border-error/20');
-                    infoContainer.innerHTML = '<span class="material-symbols-outlined text-lg">cancel</span> HẾT CHỖ TRỐNG TRONG KHUNG GIỜ NÀY';
-                    document.getElementById("submit-btn").disabled = true;
-                    document.getElementById("submit-btn").classList.add('opacity-50', 'cursor-not-allowed');
-                } else {
-                    infoContainer.classList.add('bg-secondary/10', 'text-secondary', 'border-secondary/20');
-                    infoContainer.innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span> SẴN SÀNG: CÒN ' + data.availableSlots + ' SUẤT TIÊM CHỐNG';
-                    document.getElementById("submit-btn").disabled = false;
-                    document.getElementById("submit-btn").classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-            }
-        } catch (err) { console.error(err); }
-    }
+  async function checkSlots(e) {
+    const box = document.getElementById('slot-info-box');
+    const btn = document.getElementById('submit-btn');
+    const date = e.target.value;
+    if (!date) return;
+    try {
+      const r = await fetch('/appointments/slots?date=' + date);
+      const d = await r.json();
+      box.classList.remove('hidden', 'bg-secondary/10', 'text-secondary', 'border-secondary/20', 'bg-error/10', 'text-error', 'border-error/20');
+      if (d.availableSlots > 0) {
+        box.classList.add('bg-secondary/10', 'text-secondary', 'border-secondary/20');
+        box.innerHTML = '<span class="material-symbols-outlined text-sm">check_circle</span> CÒN ' + d.availableSlots + ' SUẤT';
+        btn.disabled = false;
+      } else {
+        box.classList.add('bg-error/10', 'text-error', 'border-error/20');
+        box.innerHTML = '<span class="material-symbols-outlined text-sm">cancel</span> HẾT CHỖ';
+        btn.disabled = true;
+      }
+    } catch(err) { console.error(err); }
+  }
 
-    document.getElementById('vaccine-search').addEventListener('input', function(e) {
-        const query = e.target.value.toLowerCase();
-        const containers = document.querySelectorAll('.vaccine-item-container');
-        containers.forEach(container => {
-            const name = container.querySelector('h4').innerText.toLowerCase();
-            container.style.display = name.includes(query) ? 'block' : 'none';
-        });
+  document.getElementById('vaccine-search').addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.vaccine-item').forEach(el => {
+      const name = el.getAttribute('data-name');
+      el.style.display = name && name.includes(q) ? '' : 'none';
     });
+  });
 </script>
-
-` }) %>

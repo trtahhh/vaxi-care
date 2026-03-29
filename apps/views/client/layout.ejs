@@ -1,114 +1,262 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= typeof title !== 'undefined' ? title : 'VaxiCare' %></title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/css/style.css">
-    <script id="tailwind-config">
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              "primary": "#3182CE",     /* Base Vaxi Blue */
-              "secondary": "#2F855A",   /* Emerald Green */
-              "background": "#F8FAFC",
-              "surface": "#FFFFFF",
-              "on-surface": "#1A202C",
-              "on-surface-variant": "#64748B",
-              "outline": "#E2E8F0",
-              "error": "#E53E3E",
-              "warning": "#DD6B20"
-            },
-            fontFamily: {
-              "headline": ["Inter", "sans-serif"],
-              "body": ["Inter", "sans-serif"]
-            }
-          }
-        }
-      }
-    </script>
-    <style>
-      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-      body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1A202C; min-height: 100vh; }
-      
-      /* Clean Solid Styles */
-      .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 1rem; padding: 1.5rem; }
-      .btn-primary { background: #3182CE; color: #FFFFFF; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; transition: all 0.2s; }
-      .btn-primary:active { transform: scale(0.98); }
-    </style>
-    <%- typeof extraCss !== 'undefined' ? extraCss : '' %>
-</head>
-<body class="bg-surface text-on-surface min-h-screen pb-32">
-    <!-- TopAppBar -->
-    <header class="fixed top-0 w-full z-50 bg-surface border-b border-outline">
-        <div class="flex items-center justify-between px-6 h-16 max-w-4xl mx-auto">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-primary/10 overflow-hidden border border-primary/20 flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined">child_care</span>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-xl font-black text-primary tracking-tighter uppercase">VaxiCare</span>
-                </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <form action="/auth/logout" method="POST" class="m-0">
-                    <button type="submit" class="text-on-surface-variant hover:bg-error/10 hover:text-error transition-colors p-2 rounded-lg active:scale-95 duration-200">
-                        <span class="material-symbols-outlined">logout</span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </header>
+<% const cp=typeof currentPath !=='undefined' ? currentPath : '' ; const isDashboard=cp==='/client/dashboard' ||
+    cp.startsWith('/client/children') || cp==='/children/add' ; const isSchedule=cp==='/client/schedule' ||
+    cp.startsWith('/appointments/book'); const isVaccines=cp==='/client/vaccines' ; const isGrowth=cp==='/client/growth'
+    ; const isSettings=cp==='/client/settings' || cp==='/client/notifications' ; const unreadCount=typeof
+    notificationCount !=='undefined' ? notificationCount : 0; %>
+    <!DOCTYPE html>
+    <html lang="vi">
 
-    <main class="pt-24 px-6 max-w-4xl mx-auto space-y-10">
-        <%- body %>
-    </main>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+        <title>
+            <%= typeof title !=='undefined' ? title + ' — VaxiCare' : 'VaxiCare' %>
+        </title>
 
-    <!-- BottomNavBar -->
-    <nav class="fixed bottom-0 left-0 w-full flex justify-center items-center pointer-events-none z-50">
-        <div class="w-full max-w-4xl flex justify-around items-center px-4 pb-6 pt-3 bg-surface border-t border-outline pointer-events-auto">
-            <a href="/client/dashboard" class="flex flex-col items-center justify-center <%= (typeof currentPath !== 'undefined' && currentPath === '/client/dashboard') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' %> w-16 h-12 transition-all active:scale-90 duration-200">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span class="text-[10px] font-bold uppercase tracking-widest mt-1">Hồ sơ</span>
-            </a>
-            <a href="/client/schedule" class="flex flex-col items-center justify-center <%= (typeof currentPath !== 'undefined' && currentPath === '/client/schedule') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' %> w-16 h-12 transition-all active:scale-90 duration-200">
-                <span class="material-symbols-outlined">event_upcoming</span>
-                <span class="text-[10px] font-bold uppercase tracking-widest mt-1">Lịch</span>
-            </a>
-            
-            <% if (typeof user !== 'undefined' && user.role === 'admin') { %>
-                <a href="/children/add" class="flex flex-col items-center justify-center bg-primary text-white rounded-full w-12 h-12 hover:shadow-lg transition-all active:scale-90 duration-200">
-                    <span class="material-symbols-outlined">add</span>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+            rel="stylesheet">
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+            rel="stylesheet" />
+        <link rel="stylesheet" href="/css/tailwind-compiled.css?v=2">
+        <link rel="stylesheet" href="/css/style.css?v=2">
+        <%- typeof extraCss !=='undefined' ? extraCss : '' %>
+    </head>
+
+    <body class="v-page-root v-min-h-screen v-safe-main-client">
+        <!-- Premium Top Header -->
+        <header
+            class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-outline/50 transition-all duration-300">
+            <div class="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+                <!-- Brand -->
+                <a href="/client/dashboard" class="flex items-center gap-3 no-underline group">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark shadow-sm flex items-center justify-center transform group-hover:rotate-6 transition-all duration-300">
+                        <span class="material-symbols-outlined text-white text-[20px]">child_care</span>
+                    </div>
+                    <span
+                        class="font-display font-black text-xl tracking-tight text-on-surface group-hover:text-primary transition-colors">VaxiCare</span>
                 </a>
-            <% } %>
 
-            <a href="/client/growth" class="flex flex-col items-center justify-center <%= (typeof currentPath !== 'undefined' && currentPath === '/client/growth') ? 'text-primary' : 'text-[#dee5ff]/50 hover:text-primary' %> w-16 h-12 transition-all active:scale-90 duration-200">
-                <span class="material-symbols-outlined">monitoring</span>
-                <span class="text-[10px] font-bold uppercase tracking-widest mt-1">Theo dõi</span>
-            </a>
-            <a href="/client/settings" class="flex flex-col items-center justify-center <%= (typeof currentPath !== 'undefined' && currentPath === '/client/settings') ? 'text-primary' : 'text-[#dee5ff]/50 hover:text-primary' %> w-16 h-12 transition-all active:scale-90 duration-200">
-                <span class="material-symbols-outlined">settings</span>
-                <span class="text-[10px] font-bold uppercase tracking-widest mt-1">Cài đặt</span>
-            </a>
-        </div>
-    </nav>
+                <!-- Right: notification + user -->
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <!-- Notification Bell -->
+                    <a href="/client/notifications"
+                        class="relative w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors"
+                        title="Thông báo" aria-label="Thông báo">
+                        <% if (unreadCount> 0) { %>
+                            <span class="material-symbols-outlined text-[24px]">notifications_active</span>
+                            <span
+                                class="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-error px-1 text-[9px] font-black text-white outline outline-2 outline-white">
+                                <%= unreadCount> 99 ? '99+' : unreadCount %>
+                            </span>
+                            <% } else { %>
+                                <span class="material-symbols-outlined text-[24px]">notifications_none</span>
+                                <% } %>
+                    </a>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize progress bars
-            document.querySelectorAll('.js-progress-bar').forEach(el => {
-                if (el.dataset.width) el.style.width = el.dataset.width;
+                    <!-- User profile Dropdown -->
+                    <div class="relative group">
+                        <button
+                            class="flex items-center gap-3 pl-1 pr-3 py-1 bg-background hover:bg-outline/30 border border-outline/50 rounded-full transition-all duration-200 focus:outline-none"
+                            aria-label="Tài khoản">
+                            <div
+                                class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[18px]">person</span>
+                            </div>
+                            <span
+                                class="hidden sm:block font-bold text-sm text-on-surface tracking-tight max-w-[100px] truncate">
+                                <%= locals.user ? (user.fullName || user.username) : 'Khách' %>
+                            </span>
+                            <span
+                                class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:translate-y-0.5 transition-transform">expand_more</span>
+                        </button>
+                        <!-- Dropdown Content -->
+                        <div
+                            class="absolute right-0 top-[calc(100%+8px)] w-60 bg-white/95 backdrop-blur-xl rounded-2xl border border-outline shadow-2xl z-60 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300">
+                            <div class="px-5 py-4 border-b border-outline/50 bg-background/50 rounded-t-2xl">
+                                <p class="font-black text-base text-on-surface truncate">
+                                    <%= locals.user ? (user.fullName || user.username) : '' %>
+                                </p>
+                                <p class="text-xs font-medium text-on-surface-variant truncate mt-0.5">
+                                    <%= locals.user ? user.email : '' %>
+                                </p>
+                            </div>
+                            <div class="p-2">
+                                <form action="/auth/logout" method="POST" class="m-0">
+                                    <% if (typeof csrfToken !=='undefined' && csrfToken) { %>
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                        <% } %>
+                                            <button type="submit"
+                                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-error/10 text-error transition-colors group/item">
+                                                <span
+                                                    class="material-symbols-outlined text-[20px] group-hover/item:translate-x-1 transition-transform">logout</span>
+                                                <span class="font-bold text-sm">Đăng xuất ngay</span>
+                                            </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="v-shell-main v-main-offset v-content-wrap v-content-wrap-client v-main-gap">
+            <%- body %>
+        </main>
+
+        <!-- Premium Floating Bottom Navigation -->
+        <nav class="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-lg pointer-events-none">
+            <div
+                class="bg-surface/90 backdrop-blur-xl border border-outline/50 shadow-2xl rounded-3xl px-5 py-2 flex justify-between items-center gap-3 pointer-events-auto">
+
+                <!-- Hồ sơ -->
+                <a href="/client/dashboard"
+                    class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isDashboard ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-background' %>">
+                    <span
+                        class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300 <%= isDashboard ? 'text-primary' : '' %>">
+                        <%= isDashboard ? 'child_care' : 'child_care' %>
+                    </span>
+                    <span
+                        class="text-[9px] font-black uppercase tracking-widest leading-none <%= isDashboard ? 'text-primary' : '' %>">Hồ
+                        sơ</span>
+                    <% if (isDashboard) { %>
+                        <div
+                            class="absolute -bottom-1 w-1/2 h-1 bg-primary rounded-t-full shadow-[0_0_8px_rgba(49,130,206,0.6)]">
+                        </div>
+                        <% } %>
+                </a>
+
+                <!-- Lịch hẹn -->
+                <a href="/client/schedule"
+                    class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isSchedule ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-background' %>">
+                    <span
+                        class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300 <%= isSchedule ? 'text-primary' : '' %>">
+                        <%= isSchedule ? 'event_available' : 'event_upcoming' %>
+                    </span>
+                    <span
+                        class="text-[9px] font-black uppercase tracking-widest leading-none <%= isSchedule ? 'text-primary' : '' %>">Lịch
+                        hẹn</span>
+                    <% if (isSchedule) { %>
+                        <div
+                            class="absolute -bottom-1 w-1/2 h-1 bg-primary rounded-t-full shadow-[0_0_8px_rgba(49,130,206,0.6)]">
+                        </div>
+                        <% } %>
+                </a>
+
+                <!-- Center FAB (Premium Edition) -->
+                <% if (locals.user && (user.role==='admin' || user.role==='staff' )) { %>
+                    <div class="relative -mt-6">
+                        <a href="/children/add"
+                            class="w-14 h-14 bg-gradient-to-tr from-primary to-primary-dark text-white rounded-full flex items-center justify-center shadow-primary hover:scale-105 hover:rotate-90 transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]">
+                            <span class="material-symbols-outlined text-[28px]">add</span>
+                        </a>
+                    </div>
+                    <% } %>
+
+                        <!-- Vaccine -->
+                        <a href="/client/vaccines"
+                            class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isVaccines ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-background' %>">
+                            <span
+                                class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300 <%= isVaccines ? 'text-primary' : '' %>">
+                                vaccines
+                            </span>
+                            <span
+                                class="text-[9px] font-black uppercase tracking-widest leading-none <%= isVaccines ? 'text-primary' : '' %>">Vaccine</span>
+                            <% if (isVaccines) { %>
+                                <div
+                                    class="absolute -bottom-1 w-1/2 h-1 bg-primary rounded-t-full shadow-[0_0_8px_rgba(49,130,206,0.6)]">
+                                </div>
+                                <% } %>
+                        </a>
+
+                        <!-- Cài đặt -->
+                        <a href="/client/settings"
+                            class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isSettings ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-background' %>">
+                            <span
+                                class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300 <%= isSettings ? 'text-primary' : '' %>">
+                                settings
+                            </span>
+                            <span
+                                class="text-[9px] font-black uppercase tracking-widest leading-none <%= isSettings ? 'text-primary' : '' %>">Cài
+                                đặt</span>
+                            <% if (isSettings) { %>
+                                <div
+                                    class="absolute -bottom-1 w-1/2 h-1 bg-primary rounded-t-full shadow-[0_0_8px_rgba(49,130,206,0.6)]">
+                                </div>
+                                <% } %>
+                        </a>
+
+            </div>
+        </nav>
+
+        <!-- Toast Container -->
+        <div id="toastContainer"></div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Progress bars
+                document.querySelectorAll('.v-progress-bar[data-width]').forEach(el => {
+                    requestAnimationFrame(() => {
+                        el.style.width = el.dataset.width;
+                    });
+                });
+
+                // Entrance animations
+                document.querySelectorAll('[data-anim]').forEach((el, i) => {
+                    el.style.animationDelay = (i * 0.08) + 's';
+                    el.classList.add('v-anim-fade-in');
+                });
+
+                // Toast auto-dismiss
+                const toasts = document.querySelectorAll('[data-toast]');
+                toasts.forEach(t => {
+                    setTimeout(() => t.remove(), 5000);
+                });
             });
+        </script>
 
-            // Initialize animation delays
-            document.querySelectorAll('.js-delay-init').forEach(el => {
-                if (el.dataset.delay) el.style.animationDelay = el.dataset.delay;
-            });
-        });
-    </script>
-</body>
-</html>
+        <%- typeof extraJs !=='undefined' ? extraJs : '' %>
+    </body>
+
+    </html>
+
+    <style>
+        .v-notif-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 1.125rem;
+            height: 1.125rem;
+            background: #E53E3E;
+            color: white;
+            font-size: 0.5rem;
+            font-weight: 900;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+            border: 2px solid white;
+            line-height: 1;
+        }
+
+        .v-nav-active-dot {
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1.5rem;
+            height: 3px;
+            background: #3182CE;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .v-link-chip.active {
+            color: #3182CE;
+        }
+    </style>

@@ -4,8 +4,11 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>VaxiCare - Bảo vệ mầm xanh Việt</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <meta name="description" content="VaxiCare là nền tảng đáng tin cậy giúp phụ huynh theo dõi lịch tiêm chủng, quản lý hồ sơ y tế điện tử và nhận thông báo nhắc hẹn hoàn toàn tự động." />
+    <link rel="stylesheet" href="/css/tailwind-compiled.css?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/style.css">
     <style>
@@ -38,27 +41,29 @@
 
 <div class="v-hero-bg"></div>
 
-<!-- TopAppBar -->
-<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 h-20 bg-white/95 border-b border-outline shadow-sm">
-    <div class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary text-3xl">child_care</span>
-        <span class="text-2xl md:text-3xl font-black text-on-surface tracking-tighter uppercase">VaxiCare</span>
-    </div>
-    <nav class="hidden md:flex items-center gap-10">
-        <a class="text-primary font-black uppercase text-xs tracking-widest" href="#">Trang chủ</a>
-        <a class="text-on-surface-variant font-bold uppercase text-xs tracking-widest hover:text-primary transition-all" href="#features">Tính năng</a>
-        <a class="text-on-surface-variant font-bold uppercase text-xs tracking-widest hover:text-primary transition-all" href="#how-it-works">Cách hoạt động</a>
-    </nav>
-    <div class="flex items-center gap-4">
-        <% if (locals.user) { %>
-            <a href="<%= user.role === 'admin' ? '/admin/dashboard' : '/client/dashboard' %>" class="v-btn v-btn-primary !px-6 !py-2.5 !text-[10px] shadow-lg shadow-primary/20">
-                BẢNG ĐIỀU KHIỂN
-            </a>
-        <% } else { %>
-            <a href="/auth/login" class="v-btn v-btn-primary !px-6 !py-2.5 !text-[10px] shadow-lg shadow-primary/20">
-                ĐĂNG NHẬP
-            </a>
-        <% } %>
+<!-- Premium Floating TopAppBar -->
+<header class="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 transition-all duration-300">
+    <div class="bg-white/90 backdrop-blur-2xl border border-outline/50 shadow-xl rounded-full px-6 md:px-8 h-16 flex justify-between items-center">
+        <div class="flex items-center gap-3 group">
+            <span class="material-symbols-outlined text-primary text-[28px] group-hover:rotate-12 transition-transform duration-300">child_care</span>
+            <span class="font-display font-black text-2xl tracking-tight text-on-surface group-hover:text-primary transition-colors">VaxiCare</span>
+        </div>
+        <nav class="hidden md:flex items-center gap-8">
+            <a class="text-primary font-bold text-sm tracking-wide transition-colors" href="#">Trang chủ</a>
+            <a class="text-on-surface-variant font-bold text-sm tracking-wide hover:text-primary transition-colors" href="#features">Tính năng</a>
+            <a class="text-on-surface-variant font-bold text-sm tracking-wide hover:text-primary transition-colors" href="#how-it-works">Cách hoạt động</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <% if (locals.user) { %>
+                <a href="<%= user.role === 'admin' ? '/admin/dashboard' : '/client/dashboard' %>" class="bg-primary hover:bg-primary-dark text-white font-bold text-sm tracking-wide px-6 py-2 rounded-full shadow-primary transition-all duration-300 hover:shadow-primary/50 hover:-translate-y-0.5 whitespace-nowrap">
+                    BẢNG ĐIỀU KHIỂN
+                </a>
+            <% } else { %>
+                <a href="/auth/login" class="bg-primary hover:bg-primary-dark text-white font-bold text-sm tracking-wide px-6 py-2 rounded-full shadow-primary transition-all duration-300 hover:shadow-primary/50 hover:-translate-y-0.5 whitespace-nowrap">
+                    ĐĂNG NHẬP
+                </a>
+            <% } %>
+        </div>
     </div>
 </header>
 
@@ -79,15 +84,15 @@
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 pt-4">
                     <% if (!locals.user) { %>
-                        <a href="/auth/register" class="v-btn v-btn-primary !px-10 !py-5 !text-sm tracking-[0.2em] shadow-xl shadow-primary/30">
+                        <a href="/auth/register" class="flex items-center justify-center bg-primary hover:bg-primary-dark text-white font-bold text-sm tracking-widest uppercase px-10 py-4 rounded-full shadow-primary transition-all duration-300 transform hover:-translate-y-1 hover:shadow-primary/50">
                             ĐĂNG KÝ NGAY
                         </a>
                     <% } else { %>
-                        <a href="<%= user.role === 'admin' ? '/admin/dashboard' : '/client/dashboard' %>" class="v-btn v-btn-primary !px-10 !py-5 !text-sm tracking-[0.2em] shadow-xl shadow-primary/30">
+                        <a href="<%= user.role === 'admin' ? '/admin/dashboard' : '/client/dashboard' %>" class="flex items-center justify-center bg-primary hover:bg-primary-dark text-white font-bold text-sm tracking-widest uppercase px-10 py-4 rounded-full shadow-primary transition-all duration-300 transform hover:-translate-y-1 hover:shadow-primary/50">
                             VÀO HỆ THỐNG
                         </a>
                     <% } %>
-                    <a href="#features" class="v-btn v-btn-secondary !px-10 !py-5 !text-sm tracking-[0.2em]">
+                    <a href="#features" class="flex items-center justify-center bg-white text-on-surface border border-outline hover:border-primary hover:text-primary font-bold text-sm tracking-widest uppercase px-10 py-4 rounded-full transition-all duration-300 transform hover:-translate-y-1">
                         TÌM HIỂU THÊM
                     </a>
                 </div>

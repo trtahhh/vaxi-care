@@ -1,15 +1,65 @@
-<% 
-    const sIcon = locals.icon || 'analytics';
-    const sLabel = locals.label || 'Metric';
-    const sValue = locals.value || '0';
-    const sIconColor = locals.iconColor || 'text-primary';
+<%#
+  locals:
+    icon: string (material-symbols icon name)
+    label: string
+    value: string | number
+    iconColor: string (bg/text class)
+    trend: string (optional, e.g. '+12%')
+    trendDir: 'up' | 'down' | 'neutral'
+    href: string (optional link)
 %>
-<div class="v-card !p-6 flex flex-col gap-4 hover:border-primary transition-all group">
-    <div class="w-12 h-12 bg-background border border-outline rounded-xl flex items-center justify-center <%= sIconColor %> group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all shadow-sm">
-        <span class="material-symbols-outlined text-2xl"><%= sIcon %></span>
+<%
+const sIcon = locals.icon || 'analytics';
+const sLabel = locals.label || 'Metric';
+const sValue = locals.value || '0';
+const sIconColor = locals.iconColor || 'text-primary';
+const colorMap = {
+    'text-primary': 'bg-primary/10 text-primary',
+    'text-secondary': 'bg-secondary/10 text-secondary',
+    'text-error': 'bg-error/10 text-error',
+    'text-warning': 'bg-warning/10 text-warning',
+    'text-info': 'bg-primary/10 text-primary',
+};
+const bgClass = colorMap[sIconColor] || colorMap['text-primary'];
+%>
+<% if (locals.href) { %>
+<a href="<%= locals.href %>" class="group relative block bg-white border border-outline/50 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-1 overflow-hidden no-underline" style="text-decoration:none">
+<% } else { %>
+<div class="group relative bg-white border border-outline/50 rounded-3xl p-6 shadow-sm overflow-hidden transition-all duration-300">
+<% } %>
+    <!-- Watermark Icon -->
+    <span class="material-symbols-outlined absolute -bottom-6 -right-6 text-[140px] opacity-[0.03] group-hover:scale-110 group-hover:opacity-[0.05] transition-all duration-500 pointer-events-none text-on-surface-variant"><%= sIcon %></span>
+    
+    <div class="relative z-10 flex flex-col h-full justify-between">
+        <div class="flex items-start justify-between mb-4">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300 <%= bgClass %>">
+                <span class="material-symbols-outlined text-[24px]"><%= sIcon %></span>
+            </div>
+            <% if (locals.href) { %>
+                <span class="material-symbols-outlined text-[20px] text-on-surface-variant opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">app_shortcut</span>
+            <% } %>
+        </div>
+        
+        <div class="space-y-1">
+            <p class="text-3xl sm:text-4xl font-display font-black tracking-tighter text-on-surface group-hover:text-primary transition-colors duration-300"><%= sValue %></p>
+            <p class="text-sm font-bold text-on-surface-variant uppercase tracking-widest"><%= sLabel %></p>
+            
+            <% if (locals.trend) { %>
+                <div class="pt-3 mt-3 border-t border-outline/30 flex items-center gap-1">
+                    <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider 
+                        <%= locals.trendDir === 'up' ? 'bg-secondary/10 text-secondary' : locals.trendDir === 'down' ? 'bg-error/10 text-error' : 'bg-outline/50 text-on-surface-variant' %>">
+                        <span class="material-symbols-outlined text-[12px]">
+                            <%= locals.trendDir === 'up' ? 'trending_up' : locals.trendDir === 'down' ? 'trending_down' : 'trending_flat' %>
+                        </span>
+                        <%= locals.trend %>
+                    </span>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase ml-1 opacity-70">So với tháng trước</span>
+                </div>
+            <% } %>
+        </div>
     </div>
-    <div class="space-y-1">
-        <span class="text-[10px] font-black uppercase text-on-surface-variant tracking-widest block"><%= sLabel %></span>
-        <span class="text-lg font-black text-on-surface tracking-tight block uppercase"><%= sValue %></span>
-    </div>
+<% if (locals.href) { %>
+</a>
+<% } else { %>
 </div>
+<% } %>

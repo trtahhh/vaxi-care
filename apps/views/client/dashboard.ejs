@@ -1,128 +1,414 @@
-<%- include('layout', { 
-    currentPath: '/client/dashboard', 
-    title: 'Hồ sơ của bé - VaxiCare',
-    body: `
+<%# Client Dashboard - Parent View Data: children[], upcomingAppointments[], notificationCount, error %>
 
-<!-- Dashboard Header -->
-<div class="mb-10 animate-fade-in">
-    <h2 class="text-3xl v-title tracking-tight uppercase">Xin chào, <%= locals.user ? user.username : 'PHỤ HUYNH' %></h2>
-    <p class="text-on-surface-variant font-medium mt-1">Hôm nay bé có khỏe không? Hãy theo dõi lịch tiêm để bảo vệ bé nhé.</p>
-</div>
+    <% const hasChildren=children && children.length> 0; %>
 
-<% if (!locals.children || children.length === 0) { %>
-    <!-- Empty State -->
-    <div class="flex flex-col items-center justify-center py-24 text-center v-card border-dashed">
-        <div class="w-20 h-20 bg-background border border-outline rounded-2xl flex items-center justify-center mb-6 text-on-surface-variant opacity-30 shadow-inner">
-            <span class="material-symbols-outlined text-5xl">child_friendly</span>
-        </div>
-        <h2 class="text-xl v-title uppercase mb-2">Chưa có hồ sơ trẻ</h2>
-        <p class="text-on-surface-variant text-sm font-medium mb-8 max-w-sm px-8">Vui lòng thêm hồ sơ để hệ thống có thể lập phác đồ tiêm chủng chuẩn WHO cho bé.</p>
-        <a href="/client/add-child" class="v-btn v-btn-primary gap-2 !px-8 !py-4 shadow-lg shadow-primary/20">
-            <span class="material-symbols-outlined text-xl">add_circle</span>
-            LẬP HỒ SƠ BÉ NGAY
-        </a>
-    </div>
-<% } else { %>
-    <div class="space-y-16">
-        <% children.forEach((child, index) => { 
-            const birth = new Date(child.dob);
-            const now = new Date();
-            const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
-            let ageStr = months < 12 ? months + " tháng tuổi" : Math.floor(months/12) + " tuổi " + (months%12 > 0 ? (months%12 + " tháng") : "");
-            const progress = child.vaccinationProgress || 0;
-            const milestone = child.nextMilestone || "Đang cập nhật...";
-            const completedCount = child.appointments ? child.appointments.filter(a => a.status === 'completed').length : 0;
-        %>
-            <div class="<%= index > 0 ? 'pt-16 border-t border-outline' : '' %> animate-fade-in group">
-                <!-- Child Header & Progress -->
-                <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-4">
-                            <h1 class="text-4xl v-title tracking-tighter uppercase text-on-surface"><%= child.name %></h1>
-                            <span class="v-badge <%= child.gender === 'male' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-error/10 text-error border-error/20' %>">
-                                <%= child.gender === 'male' ? 'NAM' : 'NỮ' %>
-                            </span>
-                        </div>
-                        <p class="text-sm font-black text-on-surface-variant uppercase tracking-widest opacity-60">
-                            Phác đồ hiện tại: <span class="text-primary opacity-100"><%= ageStr.toUpperCase() %></span>
-                        </p>
-                    </div>
-                    
-                    <!-- Progress Section -->
-                    <div class="v-card !p-6 min-w-[320px] bg-white shadow-sm hover:border-primary transition-all">
-                        <%- include('../partials/progress-bar', { width: progress, label: 'Tiến độ bao phủ vắc xin' }) %>
-                    </div>
-                </div>
-
-                <!-- Next Milestone Action Card -->
-                <div class="v-card !bg-primary !border-none !p-6 mb-10 flex flex-col md:flex-row items-center gap-6 shadow-xl shadow-primary/20 group-hover:shadow-primary/30 transition-all">
-                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-white shrink-0">
-                        <span class="material-symbols-outlined text-3xl">notification_important</span>
-                    </div>
-                    <div class="text-center md:text-left flex-1">
-                        <p class="text-[10px] font-black uppercase text-on-primary-container tracking-widest opacity-70">Mũi tiêm quan trọng sắp tới</p>
-                        <p class="text-xl font-black text-white uppercase tracking-tight mt-1"><%= milestone %></p>
-                    </div>
-                    <a href="/appointments/book?childId=<%= child.id %>" class="v-btn v-btn-primary !bg-white !text-primary !py-3 !px-8 !text-[10px] hover:!bg-on-primary hover:!text-white shadow-lg transition-all">ĐẶT LỊCH NGAY</a>
-                </div>
-
-                <!-- Metrics Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    <%- include('../partials/stat-card', { icon: 'history_edu', label: 'Tình trạng', value: completedCount + ' mũi đã tiêm', iconColor: 'text-secondary' }) %>
-                    <%- include('../partials/stat-card', { icon: 'scale', label: 'Cân nặng', value: '-- kg' }) %>
-                    <%- include('../partials/stat-card', { icon: 'straighten', label: 'Chiều cao', value: '-- cm' }) %>
-                    <%- include('../partials/stat-card', { icon: 'cake', label: 'Khai sinh', value: birth.toLocaleDateString("vi-VN"), iconColor: 'text-error' }) %>
-                </div>
-                
-                <!-- History & Growth Link -->
-                <div class="mt-6 flex gap-4">
-                     <a href="/admin/children/<%= child.id %>" class="v-btn v-btn-secondary !text-[10px] !py-2 !px-4 uppercase gap-2">
-                        <span class="material-symbols-outlined text-sm">visibility</span>
-                        Xem chi tiết sổ tiêm
-                    </a>
-                </div>
-            </div>
-        <% }) %>
-    </div>
-<% } %>
-
-<!-- Upcoming Section -->
-<div class="mt-20 animate-fade-in" style="animation-delay: 0.3s">
-    <h2 class="text-2xl v-title uppercase tracking-tighter text-on-surface mb-8 flex items-center gap-3">
-        <span class="material-symbols-outlined text-primary text-3xl">event_upcoming</span>
-        Lịch hẹn đã xác nhận
-    </h2>
-    
-    <% if (!locals.upcomingAppointments || upcomingAppointments.length === 0) { %>
-        <div class="p-16 v-card !border-dashed text-center opacity-40">
-            <span class="material-symbols-outlined text-5xl mb-4 text-on-surface-variant">event_busy</span>
-            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Chưa có lịch hẹn nào sắp tới</p>
-        </div>
-    <% } else { %>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <% upcomingAppointments.forEach((appt) => { %>
-                <div class="v-card !p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-lg transition-all group/appt">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg shadow-primary/10 group-hover/appt:rotate-6 transition-transform">
-                            <span class="material-symbols-outlined text-2xl">vaccines</span>
+        <!-- =================== EMPTY STATE =================== -->
+        <% if (!hasChildren) { %>
+            <div class="v-anim-fade-in">
+                <!-- Welcome Hero -->
+                <div class="v-card !bg-gradient-to-br !from-primary !to-[#2B6CB0] !border-none !p-8 mb-6">
+                    <div class="flex items-center gap-5">
+                        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined v-icon-40 text-white">child_care</span>
                         </div>
                         <div>
-                            <h3 class="text-sm font-black text-on-surface uppercase tracking-tight"><%= appt.vaccine ? appt.vaccine.name : 'VẮC XIN' %></h3>
-                            <p class="text-[10px] font-bold text-on-surface-variant uppercase mt-1">BÉ: <span class="text-primary"><%= appt.child ? appt.child.name : 'N/A' %></span></p>
+                            <p class="text-white text-xs font-bold uppercase tracking-widest">Chào mừng</p>
+                            <h1 class="text-3xl font-display font-black text-white mt-1 tracking-tight leading-none">
+                                <%= locals.user ? (user.fullName || user.username) : 'Phụ huynh' %>
+                            </h1>
+                            <p class="text-white/80 text-sm mt-1">Hãy bắt đầu bằng việc thêm hồ sơ cho bé yêu của bạn
+                            </p>
                         </div>
-                    </div>
-                    
-                    <div class="flex flex-col md:items-end gap-1.5 p-3 rounded-lg bg-background border border-outline">
-                        <div class="flex items-center gap-2 text-primary">
-                            <span class="material-symbols-outlined text-sm">calendar_month</span>
-                            <span class="text-[11px] font-black uppercase"><%= new Date(appt.appointmentDate).toLocaleDateString("vi-VN") %></span>
-                        </div>
-                        <span class="text-[10px] font-black text-on-surface-variant uppercase ml-6">Giờ hẹn: <%= appt.appointmentTime || '--:--' %></span>
                     </div>
                 </div>
-            <% }) %>
-        </div>
-    <% } %>
-</div>
 
-` }) %>
+                <!-- Empty State Card -->
+                <div class="v-card !border-dashed !border-2 text-center py-16 v-anim-fade-in"
+                    style="animation-delay:0.1s">
+                    <div class="v-empty-icon mx-auto mb-6">
+                        <span class="material-symbols-outlined v-icon-56 text-primary">add_circle</span>
+                    </div>
+                    <h2 class="v-empty-title text-on-surface">Chưa có hồ sơ trẻ</h2>
+                    <p class="v-empty-desc max-w-sm mx-auto">
+                        <% if (locals.user && locals.user.role==='parent' ) { %>
+                            Vui lòng đến trung tâm tiêm chủng để tạo hồ sơ và lập phác đồ tiêm cho bé yêu.
+                            <% } else { %>
+                                Thêm hồ sơ để hệ thống lập phác đồ tiêm chủng chuẩn WHO cho bé yêu.
+                                <% } %>
+                    </p>
+                    <% if (locals.user && (locals.user.role==='admin' || locals.user.role==='staff' )) { %>
+                        <a href="/children/add" class="v-btn v-btn-primary v-btn-lg mt-6 inline-flex no-underline">
+                            <span class="material-symbols-outlined v-icon-20">add</span>
+                            Thêm hồ sơ bé ngay
+                        </a>
+                        <% } %>
+                </div>
+            </div>
+            <% } %>
+
+                <!-- =================== DASHBOARD =================== -->
+                <% if (hasChildren) { %>
+
+                    <!-- Welcome Bar -->
+                    <div class="v-anim-fade-in flex items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h1 class="text-3xl font-display font-black text-on-surface tracking-tight leading-none">
+                                Xin chào, <span class="text-primary">
+                                    <%= locals.user ? (user.fullName || user.username) : '' %>
+                                </span> 👋
+                            </h1>
+                            <p class="text-sm text-on-surface-variant mt-0.5">
+                                <%= children.length %> hồ sơ được theo dõi
+                            </p>
+                        </div>
+                        <% if (unreadCount> 0) { %>
+                            <a href="/client/notifications"
+                                class="v-btn v-btn-secondary v-btn-sm flex items-center gap-2 no-underline relative">
+                                <span class="material-symbols-outlined v-icon-16">notifications</span>
+                                <span class="hidden sm:inline">Thông báo</span>
+                                <span
+                                    class="absolute -top-1 -right-1 w-4 h-4 bg-error text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                                    <%= unreadCount> 9 ? '9+' : unreadCount %>
+                                </span>
+                            </a>
+                            <% } %>
+                    </div>
+
+                    <!-- =================== CHILDREN SECTION =================== -->
+                    <section class="mb-8">
+                        <!-- Section Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <h2
+                                class="text-xl font-display font-black text-on-surface tracking-tight flex items-center gap-3">
+                                <span class="material-symbols-outlined v-icon-24 text-primary">family_restroom</span>
+                                Hồ sơ trẻ em
+                            </h2>
+                            <% if (locals.user && (locals.user.role==='admin' || locals.user.role==='staff' )) { %>
+                                <a href="/children/add" class="v-btn v-btn-primary v-btn-sm no-underline">
+                                    <span class="material-symbols-outlined v-icon-14">add</span>
+                                    Thêm bé
+                                </a>
+                                <% } %>
+                        </div>
+
+                        <!-- Child Cards Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <% children.forEach((child, idx)=> {
+                                const dob = new Date(child.dob);
+                                const now = new Date();
+                                const months = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() -
+                                dob.getMonth());
+                                const ageStr = months < 12 ? months + ' tháng' : Math.floor(months / 12) + ' tuổi' +
+                                    (months % 12> 0 ? ', ' + (months % 12) + ' tháng' : '');
+                                    const progress = typeof child.progress !== 'undefined' ? child.progress : 0;
+                                    const completedCount = child.appointments
+                                    ? child.appointments.filter(a => a.status === 'completed').length
+                                    : 0;
+                                    const milestone = child.nextMilestone || null;
+                                    const genderClass = child.gender === 'male' ? 'v-avatar-male' : 'v-avatar-female';
+                                    const genderIcon = child.gender === 'male' ? 'boy' : 'girl';
+                                    %>
+                                    <div class="v-card v-anim-fade-in" style="animation-delay:<%= idx * 0.06 %>s">
+
+                                        <!-- Child Header -->
+                                        <div class="flex items-start gap-4 mb-5">
+                                            <!-- Avatar -->
+                                            <div class="v-avatar v-avatar-lg <%= genderClass %> shrink-0">
+                                                <span class="material-symbols-outlined v-icon-32">person</span>
+                                            </div>
+
+                                            <!-- Info -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <div>
+                                                        <h3 class="text-2xl font-display font-black text-on-surface tracking-tight leading-none">
+                                                            <%= child.name %>
+                                                        </h3>
+                                                        <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                                            <span
+                                                                class="v-badge <%= child.gender === 'male' ? 'v-badge-primary' : 'bg-error/10 text-error border-error/20' %>">
+                                                                <%= child.gender==='male' ? 'Nam' : 'Nữ' %>
+                                                            </span>
+                                                            <span class="text-xs font-semibold text-on-surface-variant">
+                                                                <span
+                                                                    class="material-symbols-outlined v-icon-12 align-text-bottom">cake</span>
+                                                                <%= dob.toLocaleDateString('vi-VN') %>
+                                                            </span>
+                                                            <span class="text-xs font-bold text-primary">
+                                                                <%= ageStr %>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Progress circle -->
+                                                    <div class="relative shrink-0" title="<%= progress %>% hoàn thành">
+                                                        <svg width="48" height="48" viewBox="0 0 48 48">
+                                                            <circle cx="24" cy="24" r="20" fill="none" stroke="#E2E8F0"
+                                                                stroke-width="4" />
+                                                            <circle cx="24" cy="24" r="20" fill="none"
+                                                                stroke="<%= progress >= 80 ? '#2F855A' : '#3182CE' %>"
+                                                                stroke-width="4" stroke-linecap="round"
+                                                                stroke-dasharray="<%= (progress / 100) * 125.66 %> 125.66"
+                                                                transform="rotate(-90 24 24)" />
+                                                        </svg>
+                                                        <span
+                                                            class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-on-surface">
+                                                            <%= progress %>%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Stats Row -->
+                                        <div class="grid grid-cols-3 gap-3 mb-4">
+                                            <div class="text-center p-2 rounded-xl bg-background">
+                                                <p class="text-lg font-black text-primary">
+                                                    <%= completedCount %>
+                                                </p>
+                                                <p
+                                                    class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
+                                                    Đã tiêm</p>
+                                            </div>
+                                            <div class="text-center p-2 rounded-xl bg-background">
+                                                <p class="text-lg font-black text-on-surface">
+                                                    <%= child.weight ? child.weight + ' kg' : '--' %>
+                                                </p>
+                                                <p
+                                                    class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
+                                                    Cân nặng</p>
+                                            </div>
+                                            <div class="text-center p-2 rounded-xl bg-background">
+                                                <p class="text-lg font-black text-on-surface">
+                                                    <%= child.height ? child.height + ' cm' : '--' %>
+                                                </p>
+                                                <p
+                                                    class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
+                                                    Chiều cao</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Next Vaccine Alert -->
+                                        <% if (milestone) { %>
+                                            <div
+                                                class="v-card !p-3 !bg-primary/5 !border-primary/20 !mb-4 flex items-center gap-3">
+                                                <div
+                                                    class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
+                                                    <span
+                                                        class="material-symbols-outlined v-icon-18 text-primary">vaccines</span>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p
+                                                        class="text-[10px] font-bold text-primary uppercase tracking-widest">
+                                                        Mũi tiếp theo</p>
+                                                    <p class="text-sm font-black text-on-surface truncate mt-0.5">
+                                                        <%= milestone %>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <% } %>
+
+                                                <!-- Actions -->
+                                                <div class="flex gap-2">
+                                                    <a href="/client/children/<%= child.id %>"
+                                                        class="v-btn v-btn-secondary v-btn-sm flex-1 no-underline text-center">
+                                                        <span
+                                                            class="material-symbols-outlined v-icon-14">visibility</span>
+                                                        Chi tiết
+                                                    </a>
+                                                    <a href="/appointments/book?childId=<%= child.id %>"
+                                                        class="v-btn v-btn-primary v-btn-sm flex-1 no-underline text-center">
+                                                        <span
+                                                            class="material-symbols-outlined v-icon-14">event_available</span>
+                                                        Đặt lịch
+                                                    </a>
+                                                </div>
+                                    </div>
+                                    <% }) %>
+                        </div>
+                    </section>
+
+                    <!-- =================== QUICK ACTIONS =================== -->
+                    <section class="mb-8">
+                            <h2
+                                class="text-xl font-display font-black text-on-surface tracking-tight mb-6 flex items-center gap-3">
+                                <span class="material-symbols-outlined v-icon-24 text-secondary">bolt</span>
+                                Thao tác nhanh
+                            </h2>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <% if (locals.user && (locals.user.role==='admin' || locals.user.role==='staff' )) { %>
+                                <a href="/children/add"
+                                    class="v-card !p-4 flex flex-col items-center gap-2 text-center v-card-interactive no-underline">
+                                    <div
+                                        class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined v-icon-22">person_add</span>
+                                    </div>
+                                    <span class="text-xs font-bold text-on-surface">Thêm hồ sơ</span>
+                                </a>
+                                <% } else { %>
+                                    <div class="v-card !p-4 flex flex-col items-center gap-2 text-center opacity-60 cursor-not-allowed"
+                                        title="Vui lòng đến trung tâm để thêm hồ sơ">
+                                        <div
+                                            class="w-10 h-10 bg-on-surface-variant/10 rounded-xl flex items-center justify-center text-on-surface-variant">
+                                            <span class="material-symbols-outlined v-icon-22">person_add_disabled</span>
+                                        </div>
+                                        <span class="text-xs font-bold text-on-surface-variant">Thêm hồ sơ</span>
+                                    </div>
+                                    <% } %>
+                                        <a href="/appointments/book"
+                                            class="v-card !p-4 flex flex-col items-center gap-2 text-center v-card-interactive no-underline">
+                                            <div
+                                                class="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary">
+                                                <span class="material-symbols-outlined v-icon-22">event_available</span>
+                                            </div>
+                                            <span class="text-xs font-bold text-on-surface">Đặt lịch tiêm</span>
+                                        </a>
+                                        <a href="/client/vaccines"
+                                            class="v-card !p-4 flex flex-col items-center gap-2 text-center v-card-interactive no-underline">
+                                            <div
+                                                class="w-10 h-10 bg-warning/10 rounded-xl flex items-center justify-center text-warning">
+                                                <span class="material-symbols-outlined v-icon-22">vaccines</span>
+                                            </div>
+                                            <span class="text-xs font-bold text-on-surface">Xem vaccine</span>
+                                        </a>
+                                        <a href="/client/growth"
+                                            class="v-card !p-4 flex flex-col items-center gap-2 text-center v-card-interactive no-underline">
+                                            <div
+                                                class="w-10 h-10 bg-[#805AD5]/10 rounded-xl flex items-center justify-center text-[#805AD5]">
+                                                <span class="material-symbols-outlined v-icon-22">monitoring</span>
+                                            </div>
+                                            <span class="text-xs font-bold text-on-surface">Theo dõi tăng trưởng</span>
+                                        </a>
+                        </div>
+                    </section>
+
+                    <!-- =================== UPCOMING APPOINTMENTS =================== -->
+                    <section>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2
+                                class="text-xl font-display font-black text-on-surface tracking-tight flex items-center gap-3">
+                                <span class="material-symbols-outlined v-icon-24 text-primary">event_upcoming</span>
+                                Lịch hẹn sắp tới
+                                <% if (upcomingAppointments && upcomingAppointments.length> 0) { %>
+                                    <span class="v-badge v-badge-primary ml-1">
+                                        <%= upcomingAppointments.length %>
+                                    </span>
+                                    <% } %>
+                            </h2>
+                            <a href="/client/schedule" class="v-btn v-btn-ghost v-btn-sm no-underline text-xs">
+                                Xem tất cả
+                                <span class="material-symbols-outlined v-icon-14">chevron_right</span>
+                            </a>
+                        </div>
+
+                        <% if (!upcomingAppointments || upcomingAppointments.length===0) { %>
+                            <div class="v-card !border-dashed !py-12 text-center">
+                                <span
+                                    class="material-symbols-outlined v-icon-48 text-on-surface-variant opacity-30 mb-3 block">event_busy</span>
+                                <p class="text-sm font-bold text-on-surface-variant">Chưa có lịch hẹn nào sắp tới</p>
+                                <a href="/appointments/book"
+                                    class="v-btn v-btn-primary v-btn-sm mt-4 inline-flex no-underline">
+                                    <span class="material-symbols-outlined v-icon-14">add</span>
+                                    Đặt lịch tiêm đầu tiên
+                                </a>
+                            </div>
+                            <% } else { %>
+                                <div class="space-y-3">
+                                    <% upcomingAppointments.slice(0, 5).forEach((appt, i)=> { %>
+                                        <% const apptDate=new Date(appt.date); %>
+                                            <% const isToday=apptDate.toDateString()===new Date().toDateString(); %>
+                                                <% const isTomorrow=apptDate.toDateString()===new Date(Date.now() +
+                                                    86400000).toDateString(); %>
+                                                    <% const dateLabel=isToday ? 'Hôm nay' : isTomorrow ? 'Ngày mai' :
+                                                        apptDate.toLocaleDateString('vi-VN', { weekday: 'short' ,
+                                                        day: 'numeric' , month: 'short' }); %>
+
+                                                        <div class="v-appt-card v-anim-fade-in <%= isToday ? 'v-appt-card-urgent' : '' %>"
+                                                            style="animation-delay:<%= (i + 2) * 0.06 %>s">
+                                                            <!-- Date indicator -->
+                                                            <div class="flex flex-col items-center shrink-0 w-12">
+                                                                <span
+                                                                    class="text-[10px] font-bold text-on-surface-variant uppercase">
+                                                                    <%= dateLabel %>
+                                                                </span>
+                                                                <span
+                                                                    class="text-lg font-black text-primary leading-none">
+                                                                    <%= apptDate.getDate() %>
+                                                                </span>
+                                                            </div>
+
+                                                            <!-- Vaccine info -->
+                                                            <div
+                                                                class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                                                <span
+                                                                    class="material-symbols-outlined v-icon-20 text-primary">vaccines</span>
+                                                            </div>
+
+                                                            <div class="flex-1 min-w-0">
+                                                                <p class="font-black text-sm text-on-surface truncate">
+                                                                    <%= appt.vaccine && appt.vaccine.name ?
+                                                                        appt.vaccine.name : 'Vaccine' %>
+                                                                </p>
+                                                                <p class="text-xs text-on-surface-variant mt-0.5">
+                                                                    Bé: <span class="font-semibold text-on-surface">
+                                                                        <%= appt.child && appt.child.name ?
+                                                                            appt.child.name : 'N/A' %>
+                                                                    </span>
+                                                                    <span class="mx-1 opacity-50">•</span>
+                                                                    <span class="font-semibold">
+                                                                        <%= appt.appointmentTime || '--:--' %>
+                                                                    </span>
+                                                                </p>
+                                                            </div>
+
+                                                            <!-- Status -->
+                                                            <div class="flex items-center gap-2 shrink-0">
+                                                                <% if (appt.status==='pending' ) { %>
+                                                                    <span class="v-badge v-status-pending">Chờ
+                                                                        duyệt</span>
+                                                                    <% } else if (appt.status==='confirmed' ) { %>
+                                                                        <span class="v-badge v-status-confirmed">Đã xác
+                                                                            nhận</span>
+                                                                        <% } else { %>
+                                                                            <span class="v-badge v-status-cancelled">
+                                                                                <%= appt.status %>
+                                                                            </span>
+                                                                            <% } %>
+
+                                                                                <% if (appt.status !=='cancelled' &&
+                                                                                    appt.status !=='completed' ) { %>
+                                                                                    <form
+                                                                                        action="/appointments/<%= appt.id %>/cancel"
+                                                                                        method="POST" class="m-0"
+                                                                                        onsubmit="return confirm('Hủy lịch hẹn này?')">
+                                                                                        <% if (typeof csrfToken
+                                                                                            !=='undefined' && csrfToken)
+                                                                                            { %>
+                                                                                            <input type="hidden"
+                                                                                                name="_csrf"
+                                                                                                value="<%= csrfToken %>">
+                                                                                            <% } %>
+                                                                                                <button type="submit"
+                                                                                                    class="v-btn-icon-sm v-btn-ghost text-on-surface-variant hover:text-error"
+                                                                                                    title="Hủy lịch">
+                                                                                                    <span
+                                                                                                        class="material-symbols-outlined v-icon-16">close</span>
+                                                                                                </button>
+                                                                                    </form>
+                                                                                    <% } %>
+                                                            </div>
+                                                        </div>
+                                                        <% }) %>
+                                </div>
+                                <% } %>
+                    </section>
+
+                    <% } %>
+
+                        <% if (error) { %>
+                            <div class="v-toast v-toast-error mt-4 flex items-center gap-3">
+                                <span class="material-symbols-outlined v-icon-20">error</span>
+                                <p class="font-bold text-sm">
+                                    <%= error %>
+                                </p>
+                            </div>
+                            <% } %>

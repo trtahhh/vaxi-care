@@ -1,131 +1,106 @@
-<%- include('../layout', { 
-    title: 'Chi tiết Hồ sơ Bé - VaxiCare',
-    body: `
+<!-- =====================
+  Admin Child Detail
+  Data: child, appointments[]
+===================== -->
 
-<!-- Page Header -->
-<div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-fade-in">
-    <div class="flex items-center gap-4">
-        <a href="/admin/children" class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface border border-outline text-on-surface-variant hover:text-primary transition-all shadow-sm">
-            <span class="material-symbols-outlined">arrow_back</span>
-        </a>
-        <div>
-            <h1 class="text-3xl v-title tracking-tight uppercase">Hồ sơ: <%= child.name %></h1>
-            <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-60 mt-1">ID hệ thống: #<%= child.id %></p>
+<% if (!locals.child) { %>
+  <%- include('../../partials/empty-state', {
+      icon: 'child_care',
+      title: 'Không tìm thấy hồ sơ trẻ',
+      message: 'Vui lòng quay lại danh sách để kiểm tra.',
+      actionLabel: 'Quay lại danh sách',
+      actionHref: '/admin/children'
+  }) %>
+  <% return; %>
+<% } %>
+
+<%- include('../../partials/admin-page-header', {
+    title: 'Chi tiết hồ sơ: ' + child.name,
+    subtitle: 'Thông tin trẻ và lịch sử tiêm chủng',
+    backHref: '/admin/children',
+    actions: [ { label: 'Đặt lịch tiêm', href: '/appointments/book?childId=' + child.id, icon: 'event_available', variant: 'primary' } ]
+}) %>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+
+  <%# Left column — profile %>
+  <div class="lg:col-span-1">
+    <div class="v-card !p-8 sticky top-24">
+      <div class="text-center mb-8 pb-8 border-b border-outline">
+        <div class="w-24 h-24 rounded-2xl mx-auto mb-5 flex items-center justify-center text-white shadow-lg
+            <%= child.gender === 'male' ? 'bg-primary' : 'bg-error' %>">
+          <span class="material-symbols-outlined text-5xl"><%= child.gender === 'male' ? 'boy' : 'girl' %></span>
         </div>
+        <h2 class="text-3xl font-display font-black uppercase tracking-tight text-on-surface leading-none mt-2"><%= child.name %></h2>
+        <span class="v-badge mt-3 <%= child.gender === 'male' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-error/10 text-error border-error/20' %>">
+          <%= child.gender === 'male' ? 'NAM' : 'NỮ' %>
+        </span>
+      </div>
+
+      <div class="space-y-4">
+        <div class="p-4 rounded-xl bg-background border border-outline">
+          <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Ngày sinh</p>
+          <p class="text-sm font-black text-on-surface"><%= child.dob ? new Date(child.dob).toLocaleDateString('vi-VN') : '-' %></p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-background border border-outline">
+          <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-1">Phụ huynh quản lý</p>
+          <% if (child.parent) { %>
+            <p class="text-sm font-black uppercase tracking-tight text-on-surface"><%= child.parent.fullName || child.parent.username %></p>
+            <p class="text-[10px] font-bold text-on-surface-variant mt-1"><%= child.parent.phone || child.parent.email || '' %></p>
+          <% } else { %>
+            <p class="text-xs font-black uppercase text-error">Chưa gán phụ huynh</p>
+          <% } %>
+        </div>
+      </div>
     </div>
-    
-    <div class="flex gap-3">
-        <a href="/appointments/book?childId=<%= child.id %>" class="v-btn v-btn-primary gap-2 !py-3 !px-6">
-            <span class="material-symbols-outlined text-[20px]">event_available</span>
-            ĐẶT LỊCH TIÊM
-        </a>
+  </div>
+
+  <%# Right column — appointments %>
+  <div class="lg:col-span-2">
+    <div class="v-card !p-0 overflow-hidden">
+      <div class="px-8 py-6 border-b border-outline/50 bg-background/50 flex items-center justify-between">
+        <h3 class="text-xl font-display font-black uppercase tracking-tight text-on-surface">Lịch sử tiêm chủng</h3>
+        <span class="v-badge bg-primary/10 text-primary border-primary/20"><%= (appointments || []).length %> bản ghi</span>
+      </div>
+
+      <% if ((appointments || []).length === 0) { %>
+        <div class="p-16 text-center opacity-60">
+          <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-3 block">event_busy</span>
+          <p class="text-xs font-black uppercase tracking-widest text-on-surface-variant">Chưa có lịch sử tiêm</p>
+        </div>
+      <% } else { %>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-background text-on-surface-variant text-[10px] font-black uppercase tracking-widest border-b border-outline">
+                <th class="p-5">Thời gian</th>
+                <th class="p-5">Vắc xin</th>
+                <th class="p-5">Trạng thái</th>
+                <th class="p-5">Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline">
+              <% appointments.forEach(a => { %>
+                <tr class="hover:bg-primary/5 transition-colors">
+                  <td class="p-5">
+                    <p class="font-black text-sm uppercase text-on-surface"><%= new Date(a.date).toLocaleDateString('vi-VN') %></p>
+                    <p class="text-[10px] font-bold uppercase text-on-surface-variant mt-0.5"><%= a.appointmentTime || '--:--' %></p>
+                  </td>
+                  <td class="p-5">
+                    <p class="font-black text-sm uppercase tracking-tight text-on-surface"><%= a.vaccine && a.vaccine.name ? a.vaccine.name : 'Vắc xin' %></p>
+                  </td>
+                  <td class="p-5">
+                    <%- include('../../partials/status-badge', { status: a.status }) %>
+                  </td>
+                  <td class="p-5 text-xs font-medium text-on-surface-variant italic"><%= a.notes || 'Không có ghi chú' %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
     </div>
+  </div>
+
 </div>
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Left Column: Child Info Card -->
-    <div class="lg:col-span-1 space-y-6">
-        <div class="v-card !p-8 sticky top-24 animate-fade-in" style="animation-delay: 0.1s">
-            <div class="flex flex-col items-center text-center mb-8 pb-8 border-b border-outline">
-                <div class="w-28 h-28 rounded-2xl <%= child.gender === 'male' ? 'bg-primary text-white shadow-primary/20' : (child.gender === 'female' ? 'bg-error text-white shadow-error/20' : 'bg-background text-on-surface-variant') %> flex items-center justify-center mb-6 border border-current/10 shadow-sm transition-transform hover:scale-105 duration-300">
-                    <span class="material-symbols-outlined text-6xl"><%= child.gender === 'male' ? 'boy' : (child.gender === 'female' ? 'girl' : 'child_care') %></span>
-                </div>
-                <h2 class="text-2xl v-title uppercase tracking-tighter text-on-surface"><%= child.name %></h2>
-                <span class="v-badge mt-4 <%= child.gender === 'male' ? 'bg-primary/10 text-primary border-primary/20' : (child.gender === 'female' ? 'bg-error/10 text-error border-error/20' : 'bg-background text-on-surface-variant border-outline') %>">
-                    <%= child.gender === 'male' ? 'NAM' : (child.gender === 'female' ? 'NỮ' : 'KHÁC') %>
-                </span>
-            </div>
-
-            <div class="space-y-6">
-                <div class="flex items-start gap-4 p-4 rounded-xl bg-background border border-outline hover:border-primary transition-colors">
-                    <span class="material-symbols-outlined text-primary bg-primary/5 p-2 rounded-lg text-xl">cake</span>
-                    <div>
-                        <p class="text-[10px] uppercase font-black text-on-surface-variant tracking-widest">Ngày sinh</p>
-                        <p class="font-black text-on-surface text-sm"><%= child.dob ? new Date(child.dob).toLocaleDateString('vi-VN') : '-' %></p>
-                    </div>
-                </div>
-
-                <div class="flex items-start gap-4 p-4 rounded-xl bg-background border border-outline hover:border-secondary transition-colors">
-                    <span class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg text-xl">family_restroom</span>
-                    <div>
-                        <p class="text-[10px] uppercase font-black text-on-surface-variant tracking-widest">Phụ huynh quản lý</p>
-                        <% if (child.parent) { %>
-                            <p class="font-black text-on-surface text-sm uppercase"><%= child.parent.fullName || child.parent.username %></p>
-                            <p class="text-[10px] font-bold text-on-surface-variant mt-1"><%= child.parent.phone || child.parent.email %></p>
-                        <% } else { %>
-                            <p class="text-error font-black text-[10px] uppercase italic">Chưa gán thông tin</p>
-                        <% } %>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Right Column: Vaccination History -->
-    <div class="lg:col-span-2 space-y-8">
-        <div class="v-card !p-0 overflow-hidden animate-fade-in" style="animation-delay: 0.2s">
-            <div class="p-8 border-b border-outline flex items-center justify-between bg-background/30">
-                <h3 class="v-title text-[15px] uppercase flex items-center gap-3">
-                    <span class="material-symbols-outlined text-primary">history</span>
-                    Lịch sử tiêm chủng
-                </h3>
-                <span class="v-badge bg-background text-on-surface-variant border-outline">
-                    <%= appointments.length %> BẢN GHI
-                </span>
-            </div>
-
-            <% if (appointments.length > 0) { %>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-background text-on-surface-variant text-[10px] font-black uppercase tracking-widest border-b border-outline">
-                            <th class="p-6">Thời gian</th>
-                            <th class="p-6">Vaccine đã tiêm</th>
-                            <th class="p-6">Trạng thái</th>
-                            <th class="p-6">Ghi chú lâm sàng</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-outline">
-                        <% appointments.forEach(a => { 
-                            const statusMap = {
-                                'completed': { color: 'text-secondary', bg: 'bg-secondary/10', border: 'border-secondary/20', label: 'Xong', icon: 'check_circle' },
-                                'confirmed': { color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20', label: 'Chờ tiêm', icon: 'verified' },
-                                'cancelled': { color: 'text-error', bg: 'bg-error/10', border: 'border-error/20', label: 'Đã hủy', icon: 'cancel' }
-                            };
-                            const status = statusMap[a.status] || { color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20', label: 'Mới', icon: 'pending' };
-                        %>
-                        <tr class="hover:bg-primary/5 transition-colors group">
-                            <td class="p-6">
-                                <p class="font-black text-on-surface text-sm uppercase"><%= new Date(a.date).toLocaleDateString('vi-VN') %></p>
-                                <p class="text-[10px] font-bold text-on-surface-variant uppercase mt-0.5"><%= new Date(a.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) %></p>
-                            </td>
-                            <td class="p-6">
-                                <p class="font-black text-on-surface text-sm uppercase tracking-tight"><%= a.vaccine ? a.vaccine.name : '-' %></p>
-                            </td>
-                            <td class="p-6">
-                                <span class="v-badge <%= status.bg %> <%= status.color %> <%= status.border %> gap-1.5">
-                                    <span class="material-symbols-outlined text-[14px]"><%= status.icon %></span>
-                                    <%= status.label.toUpperCase() %>
-                                </span>
-                            </td>
-                            <td class="p-6 text-xs font-medium text-on-surface-variant italic truncate max-w-[200px]">
-                                <%= a.notes || 'Không có ghi chú' %>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div>
-            <% } else { %>
-            <div class="p-20 text-center opacity-40 flex flex-col items-center">
-                <div class="w-16 h-16 rounded-full bg-background flex items-center justify-center mb-4 border border-outline">
-                    <span class="material-symbols-outlined text-4xl">event_busy</span>
-                </div>
-                <p class="font-black text-[10px] uppercase tracking-widest">Chưa có lịch sử tiêm chủng</p>
-            </div>
-            <% } %>
-        </div>
-    </div>
-</div>
-
-` }) %>

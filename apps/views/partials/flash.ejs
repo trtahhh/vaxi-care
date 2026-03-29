@@ -1,0 +1,20 @@
+<%
+// Render a dismissible flash message (success or error)
+// Usage: include partial flash with { message, type }.
+const flashType = locals.type || 'success';
+const flashMessage = locals.message || '';
+%>
+<% if (flashMessage) { %>
+<div id="flash-message" class="p-4 rounded-xl flex items-center gap-4 shadow-lg animate-fade-in
+    <%= flashType === 'success' ? 'bg-secondary/10 border border-secondary/20 text-secondary' : '' %>
+    <%= flashType === 'error' ? 'bg-error/10 border border-error/20 text-error' : '' %>
+    <%= flashType === 'warning' ? 'bg-warning/10 border border-warning/20 text-warning' : '' %>">
+    <span class="material-symbols-outlined text-xl shrink-0">
+        <%= flashType === 'success' ? 'check_circle' : (flashType === 'error' ? 'report' : 'warning') %>
+    </span>
+    <p class="text-xs font-black uppercase tracking-tight flex-1"><%= flashMessage %></p>
+    <button onclick="document.getElementById('flash-message').remove()" class="opacity-60 hover:opacity-100 transition-opacity">
+        <span class="material-symbols-outlined text-sm">close</span>
+    </button>
+</div>
+<% } %>

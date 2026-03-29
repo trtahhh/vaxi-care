@@ -1,5 +1,5 @@
-<% 
-    const v = locals.vaccine;
+<%
+    const v = locals.vaccine || {};
     const vIsRecommended = locals.isRecommended || false;
     const vShowPrice = locals.showPrice !== false;
     const vSelectable = locals.selectable || false;
@@ -16,12 +16,12 @@
         </div>
         <div>
             <div class="flex items-center gap-3">
-                <h4 class="text-sm font-black text-on-surface uppercase tracking-tight"><%= v.name %></h4>
+                <h4 class="text-sm font-black text-on-surface uppercase tracking-tight"><%= v.name || 'Vắc xin' %></h4>
                 <% if (vIsRecommended) { %>
                     <span class="v-badge bg-secondary text-white border-transparent text-[8px]">GỢI Ý</span>
                 <% } %>
             </div>
-            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-0.5"><%= v.type %></p>
+            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-0.5"><%= v.ageLabel || (v.recommendedAgeMonths ? 'Từ ' + v.recommendedAgeMonths + ' tháng tuổi' : '') %></p>
         </div>
     </div>
     

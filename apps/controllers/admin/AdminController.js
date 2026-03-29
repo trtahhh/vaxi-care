@@ -14,10 +14,22 @@ router.use((req, res, next) => {
     next();
 });
 
+// Apply CSRF validation to all state-changing routes
+router.use((req, res, next) => {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+    const cookieToken = req.cookies['csrf-token'];
+    const sentToken = req.body._csrf || req.headers['x-csrf-token'] || req.query._csrf;
+    if (!cookieToken || !sentToken || cookieToken !== sentToken) {
+        return res.status(403).send("Yêu cầu không hợp lệ (CSRF token không khớp). Vui lòng tải lại trang.");
+    }
+    next();
+});
+
 router.get("/dashboard", async (req, res) => {
     try {
         const stats = await adminService.getDashboardStats();
         res.render("admin/dashboard", {
+            currentPath: '/admin/dashboard',
             userCount: stats.userCount,
             childCount: stats.childCount,
             vaccineCount: stats.vaccineCount,
@@ -30,6 +42,7 @@ router.get("/dashboard", async (req, res) => {
     } catch (error) {
         console.error('Dashboard error:', error);
         res.render("admin/dashboard", {
+            currentPath: '/admin/dashboard',
             userCount: 0, childCount: 0, vaccineCount: 0, todayAppointments: 0,
             weeklyTrend: [], stockAlerts: [],
             error: "Lỗi tải dữ liệu", success: null
@@ -42,6 +55,7 @@ router.get("/appointments/pending", async (req, res) => {
         const { page = 1 } = req.query;
         const result = await adminService.getPendingAppointments(page);
         res.render("admin/appointments/pending", {
+            currentPath: '/admin/appointments/pending',
             appointments: result.appointments,
             currentPage: result.pageNum,
             totalPages: result.totalPages,
@@ -51,6 +65,7 @@ router.get("/appointments/pending", async (req, res) => {
     } catch (error) {
         console.error('Pending appointments error:', error);
         res.render("admin/appointments/pending", {
+            currentPath: '/admin/appointments/pending',
             appointments: [], currentPage: 1, totalPages: 1,
             error: "Lỗi tải dữ liệu", success: null
         });
@@ -73,6 +88,7 @@ router.get("/vaccines", async (req, res) => {
         const { search, page = 1 } = req.query;
         const result = await adminService.getVaccineList(search, page);
         res.render("admin/vaccines/index", {
+            currentPath: '/admin/vaccines',
             vaccines: result.vaccines,
             search: result.search,
             currentPage: result.pageNum,
@@ -83,6 +99,7 @@ router.get("/vaccines", async (req, res) => {
     } catch (error) {
         console.error('Vaccines list error:', error);
         res.render("admin/vaccines/index", {
+            currentPath: '/admin/vaccines',
             vaccines: [], search: "", currentPage: 1, totalPages: 1,
             error: "Lỗi tải dữ liệu", success: null
         });
@@ -90,7 +107,7 @@ router.get("/vaccines", async (req, res) => {
 });
 
 router.get("/vaccines/add", (req, res) => {
-    res.render("admin/vaccines/form", { vaccine: null, error: null, success: null });
+    res.render("admin/vaccines/form", { currentPath: '/admin/vaccines', vaccine: null, error: null, success: null, csrfToken: res.locals.csrfToken });
 });
 
 router.post("/vaccines/add", async (req, res) => {
@@ -98,6 +115,7 @@ router.post("/vaccines/add", async (req, res) => {
         const { name, description, price, stock, recommendedAgeMonths, ageLabel } = req.body;
         if (!name || !price) {
             return res.render("admin/vaccines/form", {
+                currentPath: '/admin/vaccines',
                 vaccine: req.body,
                 error: "Tên và giá vaccine là bắt buộc",
                 success: null
@@ -106,6 +124,7 @@ router.post("/vaccines/add", async (req, res) => {
         const priceNum = parseFloat(price);
         if (isNaN(priceNum) || priceNum < 0) {
             return res.render("admin/vaccines/form", {
+                currentPath: '/admin/vaccines',
                 vaccine: req.body,
                 error: "Giá vaccine phải là số dương",
                 success: null
@@ -114,6 +133,7 @@ router.post("/vaccines/add", async (req, res) => {
         const stockNum = parseInt(stock) || 0;
         if (stockNum < 0) {
             return res.render("admin/vaccines/form", {
+                currentPath: '/admin/vaccines',
                 vaccine: req.body,
                 error: "Số lượng tồn kho không được âm",
                 success: null
@@ -124,6 +144,7 @@ router.post("/vaccines/add", async (req, res) => {
     } catch (error) {
         console.error('Add vaccine error:', error);
         res.render("admin/vaccines/form", {
+            currentPath: '/admin/vaccines',
             vaccine: req.body, error: "Lỗi lưu dữ liệu", success: null
         });
     }
@@ -135,7 +156,7 @@ router.get("/vaccines/edit/:id", async (req, res) => {
         if (!vaccine) {
             return res.redirect("/admin/vaccines?error=Không%20tìm%20thấy%20vaccine");
         }
-        res.render("admin/vaccines/form", { vaccine, error: null, success: null });
+        res.render("admin/vaccines/form", { currentPath: '/admin/vaccines', vaccine, error: null, success: null, csrfToken: res.locals.csrfToken });
     } catch (error) {
         res.redirect("/admin/vaccines?error=Lỗi%20tải%20dữ%ệu");
     }
@@ -154,6 +175,7 @@ router.post("/vaccines/edit/:id", async (req, res) => {
         const { name, description, price, stock, recommendedAgeMonths, ageLabel } = req.body;
         if (!name || !price) {
             return res.render("admin/vaccines/form", {
+                currentPath: '/admin/vaccines',
                 vaccine: { ...vaccine, ...req.body },
                 error: "Tên và giá vaccine là bắt buộc",
                 success: null
@@ -162,6 +184,7 @@ router.post("/vaccines/edit/:id", async (req, res) => {
         const priceNum = parseFloat(price);
         if (isNaN(priceNum) || priceNum < 0) {
             return res.render("admin/vaccines/form", {
+                currentPath: '/admin/vaccines',
                 vaccine: { ...vaccine, ...req.body },
                 error: "Giá vaccine phải là số dương",
                 success: null
@@ -170,6 +193,7 @@ router.post("/vaccines/edit/:id", async (req, res) => {
         const stockNum = parseInt(stock) || 0;
         if (stockNum < 0) {
             return res.render("admin/vaccines/form", {
+                currentPath: '/admin/vaccines',
                 vaccine: { ...vaccine, ...req.body },
                 error: "Số lượng tồn kho không được âm",
                 success: null
@@ -180,6 +204,7 @@ router.post("/vaccines/edit/:id", async (req, res) => {
     } catch (error) {
         console.error('Edit vaccine error:', error);
         res.render("admin/vaccines/form", {
+            currentPath: '/admin/vaccines',
             vaccine: { ...req.body, id: req.params.id },
             error: "Lỗi lưu dữ liệu",
             success: null
@@ -202,6 +227,7 @@ router.get("/schedule", async (req, res) => {
         const { month, year } = req.query;
         const result = await adminService.getScheduleMonth(month, year);
         res.render("admin/schedule/index", {
+            currentPath: '/admin/schedule',
             daysInMonth: result.daysInMonth,
             currentMonth: result.currentMonth,
             currentYear: result.currentYear,
@@ -211,6 +237,7 @@ router.get("/schedule", async (req, res) => {
     } catch (error) {
         console.error('Schedule error:', error);
         res.render("admin/schedule/index", {
+            currentPath: '/admin/schedule',
             daysInMonth: [],
             currentMonth: new Date().getMonth() + 1,
             currentYear: new Date().getFullYear(),
@@ -239,6 +266,7 @@ router.get("/users", async (req, res) => {
         const { role, search, page = 1 } = req.query;
         const result = await adminService.getUserList(role, search, page);
         res.render("admin/users/index", {
+            currentPath: '/admin/users',
             users: result.users,
             search: result.search,
             filterRole: result.filterRole,
@@ -250,6 +278,7 @@ router.get("/users", async (req, res) => {
     } catch (error) {
         console.error('Users list error:', error);
         res.render("admin/users/index", {
+            currentPath: '/admin/users',
             users: [], search: "", filterRole: "", currentPage: 1, totalPages: 1,
             error: "Lỗi tải dữ liệu", success: null
         });
@@ -257,7 +286,7 @@ router.get("/users", async (req, res) => {
 });
 
 router.get("/users/add", (req, res) => {
-    res.render("admin/users/form", { user: null, error: null, success: null });
+    res.render("admin/users/form", { currentPath: '/admin/users', user: null, error: null, success: null });
 });
 
 router.post("/users/add", async (req, res) => {
@@ -265,6 +294,7 @@ router.post("/users/add", async (req, res) => {
         const { username, email, password, fullName, phone, role } = req.body;
         if (!username || !email || !password) {
             return res.render("admin/users/form", {
+                currentPath: '/admin/users',
                 user: req.body,
                 error: "Tên đăng nhập, email và mật khẩu là bắt buộc",
                 success: null
@@ -273,6 +303,7 @@ router.post("/users/add", async (req, res) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.render("admin/users/form", {
+                currentPath: '/admin/users',
                 user: req.body,
                 error: "Email không hợp lệ",
                 success: null
@@ -280,6 +311,7 @@ router.post("/users/add", async (req, res) => {
         }
         if (password.length < 6) {
             return res.render("admin/users/form", {
+                currentPath: '/admin/users',
                 user: req.body,
                 error: "Mật khẩu phải có ít nhất 6 ký tự",
                 success: null
@@ -287,6 +319,7 @@ router.post("/users/add", async (req, res) => {
         }
         if (phone && !/^0\d{9}$/.test(phone)) {
             return res.render("admin/users/form", {
+                currentPath: '/admin/users',
                 user: req.body,
                 error: "Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số",
                 success: null
@@ -297,6 +330,7 @@ router.post("/users/add", async (req, res) => {
     } catch (error) {
         console.error('Add user error:', error);
         res.render("admin/users/form", {
+            currentPath: '/admin/users',
             user: req.body,
             error: error.message || "Lỗi lưu dữ liệu",
             success: null
@@ -309,6 +343,7 @@ router.get("/children", async (req, res) => {
         const { search, page = 1 } = req.query;
         const result = await adminService.getChildList(search, page);
         res.render("admin/children/index", {
+            currentPath: '/admin/children',
             children: result.children,
             search: result.search,
             currentPage: result.pageNum,
@@ -319,6 +354,7 @@ router.get("/children", async (req, res) => {
     } catch (error) {
         console.error('Children list error:', error);
         res.render("admin/children/index", {
+            currentPath: '/admin/children',
             children: [], search: "", currentPage: 1, totalPages: 1,
             error: "Lỗi tải dữ liệu", success: null
         });
@@ -336,6 +372,7 @@ router.get("/children/:id", async (req, res) => {
             return res.redirect("/admin/children?error=Không%20tìm%20thấy%20hồ%20sơ%20trẻ");
         }
         res.render("admin/children/detail", {
+            currentPath: '/admin/children',
             child: result.child,
             appointments: result.appointments,
             error: null,

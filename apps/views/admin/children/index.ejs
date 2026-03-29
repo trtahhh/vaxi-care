@@ -1,135 +1,94 @@
-<%- include('../layout', { 
-    title: 'Quản lý Trẻ em - VaxiCare',
-    body: `
+<!-- =====================
+  Admin Children Index
+  Data: children[], search, currentPage, totalPages
+===================== -->
 
-<!-- Page Header -->
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 animate-fade-in">
-    <div>
-        <h1 class="text-3xl v-title tracking-tight flex items-center gap-3 uppercase">
-            <span class="material-symbols-outlined text-primary text-3xl">child_care</span>
-            Quản lý Trình Trẻ
-        </h1>
-        <p class="text-on-surface-variant font-medium mt-1">Danh sách hồ sơ trẻ em được quản lý tập trung trong hệ thống.</p>
-    </div>
-    <a href="/children/add" class="v-btn v-btn-primary gap-2 !py-3 !px-6">
-        <span class="material-symbols-outlined text-[20px]">add_circle</span> 
-        LẬP HỒ SƠ MỚI
-    </a>
-</div>
+<% const list = children || []; %>
+<% const searchVal = search || ''; %>
 
-<!-- Toolbar -->
-<div class="v-card !p-4 mb-6 animate-fade-in" style="animation-delay: 0.1s">
-    <form method="GET" action="/admin/children" class="flex flex-col md:flex-row gap-4 items-center w-full">
-        <!-- Search -->
-        <div class="relative w-full md:flex-1 group">
-            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors text-xl">search</span>
-            <input type="text" name="search" value="<%= locals.search || '' %>" placeholder="Tìm tên trẻ..." 
-                   class="w-full pl-12 pr-4 py-3 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm">
-        </div>
-        
-        <% if (locals.search) { %>
-            <a href="/admin/children" class="v-btn v-btn-secondary !bg-error/5 !text-error !border-error/20 !px-4" title="Xóa tìm kiếm">
-                <span class="material-symbols-outlined">close</span>
-            </a>
-        <% } %>
-    </form>
-</div>
+<%- include('../../partials/admin-page-header', {
+    title: 'Quản lý hồ sơ trẻ',
+    subtitle: 'Theo dõi toàn bộ hồ sơ trẻ em trong hệ thống',
+    actions: [ { label: 'Lập hồ sơ mới', href: '/children/add', icon: 'add_circle', variant: 'primary' } ]
+}) %>
 
-<!-- Children Content -->
-<% if (locals.children && children.length > 0) { %>
-<div class="v-card !p-0 overflow-hidden animate-fade-in" style="animation-delay: 0.2s">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-background border-b border-outline text-on-surface-variant text-[10px] font-black uppercase tracking-widest">
-                    <th class="p-5">Bé & Hồ sơ</th>
-                    <th class="p-5">Ngày sinh</th>
-                    <th class="p-5 text-center">Giới tính</th>
-                    <th class="p-5">Phụ huynh quản lý</th>
-                    <th class="p-5 text-center">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-outline">
-                <% children.forEach(c => { %>
-                <tr class="hover:bg-primary/5 transition-colors group text-sm">
-                    <td class="p-5">
-                        <div class="flex items-center gap-4">
-                            <div class="w-11 h-11 rounded-xl <%= c.gender === 'male' ? 'bg-primary text-white shadow-primary/20' : (c.gender === 'female' ? 'bg-error text-white shadow-error/20' : 'bg-on-surface-variant/10 text-on-surface-variant') %> flex items-center justify-center border border-current/10 shrink-0 shadow-sm">
-                                <span class="material-symbols-outlined text-2xl"><%= c.gender === 'male' ? 'boy' : (c.gender === 'female' ? 'girl' : 'child_care') %></span>
-                            </div>
-                            <div>
-                                <h3 class="font-black text-on-surface uppercase tracking-tight"><%= c.name %></h3>
-                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter opacity-70">ID: #<%= c.id %></span>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="p-5 font-bold text-on-surface-variant">
-                        <%= c.dob ? new Date(c.dob).toLocaleDateString('vi-VN') : '-' %>
-                    </td>
-                    <td class="p-5 text-center">
-                        <span class="v-badge <%= c.gender === 'male' ? 'bg-primary/10 text-primary border-primary/20' : (c.gender === 'female' ? 'bg-error/10 text-error border-error/20' : 'bg-background text-on-surface-variant border-outline') %>">
-                            <%= c.gender === 'male' ? 'NAM' : (c.gender === 'female' ? 'NỮ' : 'KHÁC') %>
-                        </span>
-                    </td>
-                    <td class="p-5">
-                        <% if (c.parent) { %>
-                        <div class="flex flex-col">
-                            <span class="font-black text-on-surface text-[13px] uppercase tracking-tight"><%= c.parent.fullName || c.parent.username %></span>
-                            <span class="text-[10px] font-bold text-on-surface-variant uppercase"><%= c.parent.phone || c.parent.email %></span>
-                        </div>
-                        <% } else { %>
-                        <span class="text-error text-[10px] font-black uppercase tracking-widest italic opacity-50">CHƯA GÁN PH</span>
-                        <% } %>
-                    </td>
-                    <td class="p-5">
-                        <div class="flex items-center justify-center gap-2">
-                            <a href="/admin/children/<%= c.id %>" 
-                               class="w-9 h-9 rounded-lg flex items-center justify-center bg-background border border-outline text-primary hover:bg-primary hover:text-white transition-all shadow-sm" title="Xem chi tiết">
-                                <span class="material-symbols-outlined text-xl">visibility</span>
-                            </a>
-                            <a href="/appointments/book?childId=<%= c.id %>" 
-                               class="w-9 h-9 rounded-lg flex items-center justify-center bg-background border border-outline text-secondary hover:bg-secondary hover:text-white transition-all shadow-sm" title="Đặt lịch tiêm">
-                                <span class="material-symbols-outlined text-xl">event_available</span>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </div>
+<%- include('../../partials/admin-filter-bar', {
+    action: '/admin/children',
+    searchValue: searchVal,
+    searchPlaceholder: 'Tìm tên trẻ...',
+    clearHref: '/admin/children'
+}) %>
 
-    <!-- Pagination -->
-    <% if (locals.totalPages && totalPages > 1) { %>
-    <div class="p-8 bg-background/50 flex items-center justify-center gap-3 border-t border-outline">
-        <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>&search=<%= locals.search || '' %>" class="v-btn v-btn-secondary uppercase !text-[10px] !py-2">Trước</a>
-        <% } %>
-        
-        <div class="flex gap-1">
-            <% for(let i=1; i<=totalPages; i++) { %>
-                <a href="?page=<%= i %>&search=<%= locals.search || '' %>" 
-                   class="w-10 h-10 flex items-center justify-center rounded-xl font-black text-xs transition-all <%= currentPage === i ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white border border-outline text-on-surface-variant hover:border-primary hover:text-primary' %>">
-                    <%= i %>
-                </a>
-            <% } %>
-        </div>
-
-        <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>&search=<%= locals.search || '' %>" class="v-btn v-btn-secondary uppercase !text-[10px] !py-2">Tiếp</a>
-        <% } %>
-    </div>
-    <% } %>
-</div>
-<% } else { %>
-<!-- Empty State -->
-<div class="py-20 px-6 flex flex-col items-center justify-center v-card border-dashed text-center opacity-60">
-    <div class="w-20 h-20 rounded-2xl bg-background border border-outline flex items-center justify-center mb-6">
-        <span class="material-symbols-outlined text-4xl text-on-surface-variant/30">person_search</span>
-    </div>
-    <h3 class="text-xl v-title uppercase mb-2 tracking-tight">Không tìm thấy hồ sơ</h3>
-    <p class="text-on-surface-variant text-sm font-medium mb-8 max-w-sm">Dữ liệu hồ sơ trẻ em trống hoặc không khớp với bộ lọc.</p>
-</div>
+<% if (list.length === 0) { %>
+  <%- include('../../partials/empty-state', {
+      icon: 'person_search',
+      title: 'Không tìm thấy hồ sơ trẻ',
+      message: 'Thử lại với từ khóa khác hoặc thêm hồ sơ mới.'
+  }) %>
 <% } %>
 
-` }) %>
+<% if (list.length > 0) { %>
+  <div class="v-card !p-0 overflow-hidden animate-fade-in">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-background text-on-surface-variant text-[10px] font-black uppercase tracking-widest border-b border-outline">
+            <th class="p-5">Trẻ</th>
+            <th class="p-5">Ngày sinh</th>
+            <th class="p-5">Giới tính</th>
+            <th class="p-5">Phụ huynh</th>
+            <th class="p-5 text-center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline">
+          <% list.forEach(c => { %>
+            <tr class="hover:bg-primary/5 transition-colors">
+              <td class="p-5">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl <%= c.gender === 'male' ? 'bg-primary text-white' : 'bg-error text-white' %> flex items-center justify-center shadow-sm">
+                    <span class="material-symbols-outlined text-xl"><%= c.gender === 'male' ? 'boy' : 'girl' %></span>
+                  </div>
+                  <div>
+                    <p class="font-black text-sm uppercase tracking-tight text-on-surface"><%= c.name %></p>
+                    <p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-0.5">ID: #<%= c.id %></p>
+                  </div>
+                </div>
+              </td>
+              <td class="p-5 text-sm font-bold text-on-surface-variant"><%= c.dob ? new Date(c.dob).toLocaleDateString('vi-VN') : '-' %></td>
+              <td class="p-5">
+                <span class="v-badge <%= c.gender === 'male' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-error/10 text-error border-error/20' %>">
+                  <%= c.gender === 'male' ? 'NAM' : 'NỮ' %>
+                </span>
+              </td>
+              <td class="p-5">
+                <% if (c.parent) { %>
+                  <p class="font-black text-sm uppercase tracking-tight text-on-surface"><%= c.parent.fullName || c.parent.username %></p>
+                  <p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mt-0.5"><%= c.parent.phone || c.parent.email || '' %></p>
+                <% } else { %>
+                  <span class="text-xs font-black uppercase text-error/70 tracking-widest">Chưa gán PH</span>
+                <% } %>
+              </td>
+              <td class="p-5">
+                <div class="flex items-center justify-center gap-2">
+                  <a href="/admin/children/<%= c.id %>" class="w-9 h-9 rounded-lg border border-outline text-primary bg-white hover:bg-primary hover:text-white flex items-center justify-center transition-all" title="Xem chi tiết">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                  </a>
+                  <a href="/appointments/book?childId=<%= c.id %>" class="w-9 h-9 rounded-lg border border-outline text-secondary bg-white hover:bg-secondary hover:text-white flex items-center justify-center transition-all" title="Đặt lịch tiêm">
+                    <span class="material-symbols-outlined text-lg">event_available</span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../../partials/pagination', {
+      currentPage: currentPage,
+      totalPages: totalPages,
+      baseUrl: '?page=',
+      extraParams: '&search=' + encodeURIComponent(searchVal)
+    }) %>
+  </div>
+<% } %>

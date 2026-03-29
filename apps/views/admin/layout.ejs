@@ -1,126 +1,205 @@
+<%
+const cp = typeof currentPath !== 'undefined' ? currentPath : '';
+const isDashboard  = cp.startsWith('/admin/dashboard');
+const isVaccines  = cp.startsWith('/admin/vaccines');
+const isAppointments = cp.startsWith('/admin/appointments');
+const isSchedule  = cp.startsWith('/admin/schedule');
+const isChildren  = cp.startsWith('/admin/children');
+const isUsers     = cp.startsWith('/admin/users');
+
+// Breadcrumb items (can be overridden per page via `breadcrumbs` local)
+const defaultBreadcrumbs = [
+    { label: 'Admin', href: '/admin/dashboard' }
+];
+
+const crumbs = typeof breadcrumbs !== 'undefined' ? breadcrumbs : defaultBreadcrumbs;
+%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= typeof title !== 'undefined' ? title : 'Admin - VaxiCare' %></title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <title><%= typeof title !== 'undefined' ? title + ' — VaxiCare Admin' : 'Admin — VaxiCare' %></title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="/css/style.css">
-    <script id="tailwind-config">
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              "primary": "#3182CE",
-              "secondary": "#2F855A",
-              "background": "#F8FAFC",
-              "surface": "#FFFFFF",
-              "on-surface": "#1A202C",
-              "on-surface-variant": "#64748B",
-              "outline": "#E2E8F0",
-              "error": "#E53E3E",
-              "warning": "#DD6B20"
-            },
-            fontFamily: {
-              "headline": ["Inter", "sans-serif"],
-              "body": ["Inter", "sans-serif"]
-            }
-          }
-        }
-      }
-    </script>
-    <style>
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        body { background-color: #F8FAFC; font-family: 'Inter', sans-serif; color: #1A202C; }
-        
-        /* Clean Solid Styles */
-        .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .btn-primary { background: #3182CE; color: #FFFFFF; padding: 0.625rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: background 0.2s; }
-        .btn-primary:hover { background: #2C5282; }
-        
-        .table { width: 100%; border-collapse: collapse; }
-        .table th { border-bottom: 2px solid #E2E8F0; padding: 1rem; color: #4A5568; font-weight: 600; }
-        .table td { border-bottom: 1px solid #E2E8F0; padding: 1rem; color: #2D3748; }
-        
-        .form-control { background: #FFFFFF; border: 1px solid #E2E8F0; color: #1A202C; padding: 0.625rem; border-radius: 0.5rem; width: 100%; }
-        .form-control:focus { outline: none; border-color: #3182CE; }
-    </style>
+    <link rel="stylesheet" href="/css/tailwind-compiled.css?v=2">
+    <link rel="stylesheet" href="/css/style.css?v=2">
     <%- typeof extraCss !== 'undefined' ? extraCss : '' %>
 </head>
-<body class="min-h-screen">
 
-    <!-- Top Navigation -->
-    <header class="fixed top-0 w-full z-50 bg-[#060e20]/80 backdrop-blur-3xl shadow-[0_32px_64px_rgba(59,130,246,0.06)] border-b border-outline-variant/20">
-        <div class="flex justify-between items-center px-6 h-16 w-full max-w-7xl mx-auto">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/20">
-                    <span class="material-symbols-outlined text-primary text-xl">admin_panel_settings</span>
+<body class="v-page-root v-min-h-screen">
+    <!-- Premium Admin Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-outline/50 transition-all duration-300">
+        <div class="h-16 max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <!-- Brand -->
+            <a href="/admin/dashboard" class="flex items-center gap-3 no-underline group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-on-surface to-on-surface-variant shadow-sm flex items-center justify-center transform group-hover:rotate-6 transition-all duration-300">
+                    <span class="material-symbols-outlined text-white text-[20px]">admin_panel_settings</span>
                 </div>
-                <h1 class="text-xl font-extrabold text-[#85adff] font-headline tracking-tight">VaxiCare</h1>
-            </div>
-            
-            <nav class="hidden md:flex items-center gap-6 text-sm font-bold tracking-wide uppercase text-on-surface-variant">
-                <a href="/admin/dashboard" class="hover:text-primary transition-colors">Tổng quan</a>
-                <a href="/admin/vaccines" class="hover:text-primary transition-colors">Kho Vaccine</a>
-                <a href="/admin/schedule" class="hover:text-primary transition-colors">Lịch Hẹn</a>
-                <a href="/admin/children" class="hover:text-primary transition-colors">Hồ sơ trẻ</a>
-                <a href="/admin/users" class="hover:text-primary transition-colors">Nhân Sự</a>
+                <div class="flex flex-col">
+                    <span class="font-display font-black text-xl tracking-tight text-on-surface group-hover:text-primary transition-colors leading-none mt-1">VaxiCare</span>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none mt-0.5">Admin Workspace</span>
+                </div>
+            </a>
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden lg:flex items-center gap-2 bg-background/50 p-1.5 rounded-2xl border border-outline/50">
+                <a href="/admin/dashboard" class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 <%= isDashboard ? 'bg-white shadow-sm text-on-surface font-black' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/50' %>">
+                    Tổng quan
+                </a>
+                <a href="/admin/appointments/pending" class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 <%= isAppointments ? 'bg-white shadow-sm text-on-surface font-black' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/50' %>">
+                    Lịch hẹn
+                </a>
+                <a href="/admin/vaccines" class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 <%= isVaccines ? 'bg-white shadow-sm text-on-surface font-black' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/50' %>">
+                    Kho vaccine
+                </a>
+                <a href="/admin/schedule" class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 <%= isSchedule ? 'bg-white shadow-sm text-on-surface font-black' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/50' %>">
+                    Lịch trình
+                </a>
+                <a href="/admin/children" class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 <%= isChildren ? 'bg-white shadow-sm text-on-surface font-black' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/50' %>">
+                    Hồ sơ trẻ
+                </a>
+                <a href="/admin/users" class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 <%= isUsers ? 'bg-white shadow-sm text-on-surface font-black' : 'text-on-surface-variant hover:text-on-surface hover:bg-white/50' %>">
+                    Nhân sự
+                </a>
             </nav>
 
-            <div class="flex items-center gap-4">
-                <span class="text-sm font-medium text-on-surface hidden md:block">
-                    <%= locals.user ? user.username : 'Admin Staff' %>
-                </span>
-                <form action="/auth/logout" method="POST" class="m-0 cursor-pointer">
-                    <button type="submit" class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-high hover:bg-error/20 hover:text-error transition-colors active:scale-95 duration-200 text-[#dee5ff]">
-                        <span class="material-symbols-outlined text-[20px]">logout</span>
+            <!-- Right: user + logout -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- Back to site -->
+                <a href="/" target="_blank"
+                   class="hidden md:flex w-10 h-10 rounded-xl items-center justify-center text-on-surface-variant hover:bg-background hover:text-primary transition-colors"
+                   title="Xem trang chủ">
+                    <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+                </a>
+
+                <!-- User Dropdown -->
+                <div class="relative group">
+                    <button class="flex items-center gap-3 pl-1 pr-3 py-1 bg-on-surface text-white border border-on-surface-variant rounded-full transition-all duration-200 hover:bg-on-surface-variant focus:outline-none" aria-label="Tài khoản admin">
+                        <div class="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px]">shield_person</span>
+                        </div>
+                        <span class="hidden sm:block font-bold text-sm tracking-tight max-w-[100px] truncate">
+                            <%= locals.user ? (user.fullName || user.username) : 'Admin' %>
+                        </span>
+                        <span class="material-symbols-outlined text-[16px] text-white/70 group-hover:translate-y-0.5 transition-transform">expand_more</span>
                     </button>
-                </form>
+                    <!-- Dropdown Content -->
+                    <div class="absolute right-0 top-[calc(100%+8px)] w-60 bg-white/95 backdrop-blur-xl rounded-2xl border border-outline shadow-2xl z-60 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300">
+                        <div class="px-5 py-4 border-b border-outline/50 bg-background/50 rounded-t-2xl">
+                            <p class="font-black text-base text-on-surface truncate"><%= locals.user ? (user.fullName || user.username) : '' %></p>
+                            <p class="text-xs font-medium text-on-surface-variant truncate mt-0.5"><%= locals.user ? user.email : '' %></p>
+                            <span class="inline-block mt-2 px-2 py-0.5 rounded-md bg-error/10 text-error text-[10px] font-black uppercase tracking-widest"><%= locals.user ? user.role : 'Quản trị' %></span>
+                        </div>
+                        <div class="p-2 space-y-1">
+                            <a href="/client/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background text-on-surface-variant hover:text-primary transition-colors no-underline group/item">
+                                <span class="material-symbols-outlined text-[20px] group-hover/item:scale-110 transition-transform">visibility</span>
+                                <span class="font-bold text-sm">Xem trang khách</span>
+                            </a>
+                            <form action="/auth/logout" method="POST" class="m-0 pt-1 border-t border-outline/50">
+                                <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <% } %>
+                                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-error/10 text-error transition-colors group/item">
+                                    <span class="material-symbols-outlined text-[20px] group-hover/item:translate-x-1 transition-transform">logout</span>
+                                    <span class="font-bold text-sm">Đăng xuất ngay</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-10">
+    <!-- Page Content -->
+    <main class="v-shell-main v-main-offset v-content-wrap v-content-wrap-admin v-main-gap">
+
+        <!-- Premium Breadcrumb Bar -->
+        <% if (crumbs && crumbs.length > 0) { %>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <nav class="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-outline shadow-sm" aria-label="Breadcrumb">
+                    <% crumbs.forEach((item, i) => { %>
+                        <% if (i > 0) { %>
+                            <span class="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
+                        <% } %>
+                        <% if (item.href && i < crumbs.length - 1) { %>
+                            <a href="<%= item.href %>" class="text-sm font-bold text-on-surface-variant hover:text-primary transition-colors no-underline"><%= item.label %></a>
+                        <% } else { %>
+                            <span class="text-sm font-black text-on-surface"><%= item.label %></span>
+                        <% } %>
+                    <% }) %>
+                </nav>
+                <% if (typeof pageActions !== 'undefined' && pageActions) { %>
+                    <div class="flex items-center gap-3">
+                        <% pageActions.forEach(action => { %>
+                            <a href="<%= action.href %>"
+                               class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm tracking-tight transition-all duration-300 transform hover:-translate-y-0.5 shadow-sm
+                                 <%= action.variant === 'primary' ? 'bg-primary text-white shadow-primary/30 hover:bg-primary-dark hover:shadow-primary/50' 
+                                   : action.variant === 'secondary' ? 'bg-secondary text-white shadow-secondary/30 hover:bg-secondary-dark' 
+                                   : 'bg-white border border-outline text-on-surface hover:border-primary hover:text-primary' %>">
+                                <% if (action.icon) { %>
+                                    <span class="material-symbols-outlined text-[18px]"><%= action.icon %></span>
+                                <% } %>
+                                <%= action.label %>
+                            </a>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+
         <%- body %>
     </main>
 
-    <!-- Mobile Bottom Navigation Fallback -->
-    <nav class="md:hidden fixed bottom-0 left-0 w-full z-50 bg-[#060e20]/90 backdrop-blur-3xl rounded-t-3xl border-t border-outline-variant/20">
-        <div class="flex justify-around items-center px-4 pb-6 pt-3">
-            <a href="/admin/dashboard" class="flex flex-col items-center justify-center text-[#dee5ff]/60 px-4 py-1.5 hover:text-[#85adff] transition-all">
-                <span class="material-symbols-outlined text-xl">dashboard</span>
-                <span class="font-headline text-[10px] font-bold uppercase tracking-widest mt-1">Tổng quan</span>
+    <!-- Premium Floating Mobile Bottom Nav (Admin) -->
+    <nav class="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-md pointer-events-none">
+        <div class="bg-surface/90 backdrop-blur-xl border border-outline/50 shadow-2xl rounded-3xl p-2 flex justify-between items-center pointer-events-auto">
+            <a href="/admin/dashboard" class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isDashboard ? 'bg-on-surface text-white' : 'text-on-surface-variant hover:bg-background' %>">
+                <span class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300">dashboard</span>
+                <span class="text-[9px] font-black uppercase tracking-widest leading-none">Tổng quan</span>
             </a>
-            <a href="/admin/schedule" class="flex flex-col items-center justify-center text-[#dee5ff]/60 px-4 py-1.5 hover:text-[#85adff] transition-all">
-                <span class="material-symbols-outlined text-xl">event_available</span>
-                <span class="font-headline text-[10px] font-bold uppercase tracking-widest mt-1">Lịch Hẹn</span>
+            <a href="/admin/appointments/pending" class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isAppointments ? 'bg-on-surface text-white' : 'text-on-surface-variant hover:bg-background' %>">
+                <span class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300">event_available</span>
+                <span class="text-[9px] font-black uppercase tracking-widest leading-none">Lịch hẹn</span>
             </a>
-            <a href="/admin/children" class="flex flex-col items-center justify-center text-[#dee5ff]/60 px-4 py-1.5 hover:text-[#85adff] transition-all">
-                <span class="material-symbols-outlined text-xl">child_care</span>
-                <span class="font-headline text-[10px] font-bold uppercase tracking-widest mt-1">Hồ sơ trẻ</span>
+            <a href="/admin/children" class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isChildren ? 'bg-on-surface text-white' : 'text-on-surface-variant hover:bg-background' %>">
+                <span class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300">child_care</span>
+                <span class="text-[9px] font-black uppercase tracking-widest leading-none">Hồ sơ</span>
             </a>
-            <a href="/admin/vaccines" class="flex flex-col items-center justify-center text-[#dee5ff]/60 px-4 py-1.5 hover:text-[#85adff] transition-all">
-                <span class="material-symbols-outlined text-xl">inventory_2</span>
-                <span class="font-headline text-[10px] font-bold uppercase tracking-widest mt-1">Kho thuốc</span>
+            <a href="/admin/vaccines" class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isVaccines ? 'bg-on-surface text-white' : 'text-on-surface-variant hover:bg-background' %>">
+                <span class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300">inventory_2</span>
+                <span class="text-[9px] font-black uppercase tracking-widest leading-none">Kho</span>
+            </a>
+            <a href="/admin/users" class="relative group flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all duration-300 <%= isUsers ? 'bg-on-surface text-white' : 'text-on-surface-variant hover:bg-background' %>">
+                <span class="material-symbols-outlined text-[24px] mb-1 group-hover:-translate-y-1 transition-transform duration-300">group</span>
+                <span class="text-[9px] font-black uppercase tracking-widest leading-none">Nhân sự</span>
             </a>
         </div>
     </nav>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize progress bars
-            document.querySelectorAll('.js-progress-bar').forEach(el => {
-                if (el.dataset.width) el.style.width = el.dataset.width;
-            });
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
 
-            // Initialize animation delays
-            document.querySelectorAll('.js-delay-init').forEach(el => {
-                if (el.dataset.delay) el.style.animationDelay = el.dataset.delay;
-            });
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.v-progress-bar[data-width]').forEach(el => {
+            requestAnimationFrame(() => { el.style.width = el.dataset.width; });
         });
+
+        document.querySelectorAll('[data-anim]').forEach((el, i) => {
+            el.style.animationDelay = (i * 0.08) + 's';
+            el.classList.add('v-anim-fade-in');
+        });
+
+        const toasts = document.querySelectorAll('[data-toast]');
+        toasts.forEach(t => { setTimeout(() => t.remove(), 5000); });
+    });
     </script>
+
     <%- typeof extraJs !== 'undefined' ? extraJs : '' %>
 </body>
 </html>

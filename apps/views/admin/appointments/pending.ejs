@@ -1,119 +1,92 @@
-<%- include('../layout', { 
-    title: 'Duyệt lịch hẹn - VaxiCare',
-    body: `
+<!-- =====================
+  Pending Appointments
+  Data: appointments[], currentPage, totalPages
+===================== -->
 
-<!-- Page Header -->
-<div class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-fade-in">
-    <div>
-        <h1 class="text-3xl v-title tracking-tight flex items-center gap-3 uppercase">
-            <span class="material-symbols-outlined text-primary text-3xl">notification_important</span>
-            Duyệt lịch hẹn mới
-        </h1>
-        <p class="text-on-surface-variant font-medium mt-1">Xử lý các yêu cầu đặt lịch tiêm chủng đang chờ phê duyệt.</p>
-    </div>
-    <a href="/admin/dashboard" class="v-btn v-btn-secondary gap-2 !py-2.5 !px-5 uppercase !text-[10px]">
-        <span class="material-symbols-outlined text-sm">arrow_back</span>
-        QUAY LẠI DASHBOARD
-    </a>
-</div>
+<%- include('../../partials/admin-page-header', {
+    title: 'Duyệt lịch hẹn',
+    subtitle: 'Xử lý các yêu cầu đặt lịch tiêm đang chờ duyệt',
+    backHref: '/admin/dashboard',
+    badge: (appointments || []).length + ' chờ duyệt',
+    badgeVariant: 'warning'
+}) %>
 
-<!-- Pending List Content -->
-<div class="v-card !p-0 overflow-hidden animate-fade-in" style="animation-delay: 0.1s">
+<% const list = appointments || []; %>
+
+<%# Empty state %>
+<% if (list.length === 0) { %>
+  <%- include('../../partials/empty-state', {
+      icon: 'task_alt',
+      title: 'Không có yêu cầu chờ duyệt',
+      message: 'Hiện tại hệ thống không có lịch hẹn nào cần xử lý.'
+  }) %>
+<% } %>
+
+<%# Table %>
+<% if (list.length > 0) { %>
+  <div class="v-card !p-0 overflow-hidden animate-fade-in">
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-background text-on-surface-variant text-[10px] font-black uppercase tracking-widest border-b border-outline">
-                    <th class="p-6">Thông tin Bé</th>
-                    <th class="p-6">Vaccine yêu cầu</th>
-                    <th class="p-6">Thời gian hẹn</th>
-                    <th class="p-6 text-center">Trạng thái</th>
-                    <th class="p-6 text-center">Xử lý yêu cầu</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-outline">
-                <% if (locals.appointments && appointments.length > 0) { %>
-                    <% appointments.forEach(app => { %>
-                        <tr class="hover:bg-primary/5 transition-colors group text-sm">
-                            <td class="p-6">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-background border border-outline flex items-center justify-center text-on-surface-variant group-hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-xl">child_care</span>
-                                    </div>
-                                    <div>
-                                        <p class="font-black text-on-surface uppercase tracking-tight"><%= app.child.fullName %></p>
-                                        <p class="text-[10px] font-bold text-on-surface-variant uppercase mt-0.5">Phụ huynh: <%= app.child.user.username %></p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="p-6">
-                                <p class="font-black text-primary text-sm uppercase tracking-tight"><%= app.vaccine.name %></p>
-                                <p class="text-[10px] font-bold text-on-surface-variant uppercase mt-0.5"><%= app.vaccine.type || 'Phổ thông' %></p>
-                            </td>
-                            <td class="p-6">
-                                <p class="font-black text-on-surface text-sm uppercase tracking-tight"><%= new Date(app.appointmentDate).toLocaleDateString('vi-VN') %></p>
-                                <p class="text-[10px] font-bold text-on-surface-variant uppercase mt-0.5">Giờ dự kiến: <%= app.appointmentTime || 'N/A' %></p>
-                            </td>
-                            <td class="p-6 text-center">
-                                <span class="v-badge bg-warning/10 text-warning border border-warning/20">ĐANG CHỜ</span>
-                            </td>
-                            <td class="p-6 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <form action="/admin/appointments/<%= app.id %>/status" method="POST" class="m-0">
-                                        <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                        <input type="hidden" name="status" value="confirmed">
-                                        <button type="submit" class="v-btn v-btn-primary !py-2 !px-4 !text-[10px] gap-1.5 shadow-sm hover:shadow-primary/20">
-                                            <span class="material-symbols-outlined text-[16px]">check</span>
-                                            PHÊ DUYỆT
-                                        </button>
-                                    </form>
-                                    <form action="/admin/appointments/<%= app.id %>/status" method="POST" class="m-0">
-                                        <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
-                                        <input type="hidden" name="status" value="cancelled">
-                                        <button type="submit" class="v-btn v-btn-secondary !py-2 !px-4 !text-[10px] gap-1.5 !bg-error/5 !text-error !border-error/20 hover:!bg-error hover:!text-white transition-all shadow-sm">
-                                            <span class="material-symbols-outlined text-[16px]">close</span>
-                                            TỪ CHỐI
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr class="opacity-60">
-                        <td colspan="5" class="py-24 text-center">
-                            <div class="w-20 h-20 bg-background rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                                <span class="material-symbols-outlined text-4xl text-on-surface-variant/30">task_alt</span>
-                            </div>
-                            <h3 class="text-xl v-title uppercase mb-2 tracking-tight">Sạch hàng chờ</h3>
-                            <p class="text-on-surface-variant text-sm font-medium max-w-sm mx-auto">Không có yêu cầu đặt lịch nào cần xử lý lúc này.</p>
-                        </td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-background text-on-surface-variant text-[10px] font-black uppercase tracking-widest border-b border-outline">
+            <th class="p-5">Bé</th>
+            <th class="p-5">Vắc xin</th>
+            <th class="p-5">Thời gian</th>
+            <th class="p-5">Trạng thái</th>
+            <th class="p-5 text-center">Xử lý</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline">
+          <% list.forEach(app => { %>
+            <tr class="hover:bg-primary/5 transition-colors">
+              <td class="p-5">
+                <p class="font-black text-sm uppercase tracking-tight text-on-surface"><%= app.child && app.child.name ? app.child.name : 'N/A' %></p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-0.5">
+                  PH: <%= app.child && app.child.parent ? (app.child.parent.fullName || app.child.parent.username) : 'N/A' %>
+                </p>
+              </td>
+              <td class="p-5">
+                <p class="font-black text-sm uppercase tracking-tight text-primary"><%= app.vaccine && app.vaccine.name ? app.vaccine.name : 'Vắc xin' %></p>
+                <p class="text-[10px] font-bold uppercase text-on-surface-variant"><%= app.vaccine && app.vaccine.type ? app.vaccine.type : '' %></p>
+              </td>
+              <td class="p-5">
+                <p class="font-black text-sm uppercase text-on-surface"><%= app.date ? new Date(app.date).toLocaleDateString('vi-VN') : '' %></p>
+                <p class="text-[10px] font-bold uppercase text-on-surface-variant"><%= app.appointmentTime || '--:--' %></p>
+              </td>
+              <td class="p-5">
+                <%- include('../../partials/status-badge', { status: app.status || 'pending' }) %>
+              </td>
+              <td class="p-5">
+                <div class="flex items-center justify-center gap-2">
+                  <form action="/admin/appointments/<%= app.id %>/status" method="POST" class="m-0">
+                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                    <input type="hidden" name="status" value="confirmed">
+                    <button type="submit" class="v-btn v-btn-primary !py-2 !px-4 !text-[10px] gap-1.5">
+                      <span class="material-symbols-outlined text-sm">check</span>
+                      DUYỆT
+                    </button>
+                  </form>
+                  <form action="/admin/appointments/<%= app.id %>/status" method="POST" class="m-0">
+                    <% if (locals.csrfToken) { %><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% } %>
+                    <input type="hidden" name="status" value="cancelled">
+                    <button type="submit" class="v-btn v-btn-secondary !bg-error/5 !text-error !border-error/20 !py-2 !px-4 !text-[10px] gap-1.5">
+                      <span class="material-symbols-outlined text-sm">close</span>
+                      TỪ CHỐI
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
 
-    <!-- Pagination -->
-    <% if (locals.totalPages && totalPages > 1) { %>
-    <div class="p-8 bg-background/50 flex items-center justify-center gap-3 border-t border-outline">
-        <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>" class="v-btn v-btn-secondary uppercase !text-[10px] !py-2">Trước</a>
-        <% } %>
-        
-        <div class="flex gap-1">
-            <% for(let i=1; i<=totalPages; i++) { %>
-                <a href="?page=<%= i %>" 
-                   class="w-10 h-10 flex items-center justify-center rounded-xl font-black text-xs transition-all <%= currentPage === i ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white border border-outline text-on-surface-variant hover:border-primary hover:text-primary' %>">
-                    <%= i %>
-                </a>
-            <% } %>
-        </div>
-
-        <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>" class="v-btn v-btn-secondary uppercase !text-[10px] !py-2">Tiếp</a>
-        <% } %>
-    </div>
-    <% } %>
-</div>
-
-` }) %>
+    <%- include('../../partials/pagination', {
+        currentPage: currentPage,
+        totalPages: totalPages,
+        baseUrl: '?page=',
+        extraParams: ''
+    }) %>
+  </div>
+<% } %>

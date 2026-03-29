@@ -1,0 +1,18 @@
+<%#
+  locals:
+    status: string — 'pending' | 'confirmed' | 'completed' | 'cancelled'
+%>
+<%
+  const s = locals.status;
+  const map = {
+    'pending':    { bg: 'bg-warning/10',   color: 'text-warning', border: 'border-warning/20', icon: 'schedule',  label: 'ĐANG CHỜ' },
+    'confirmed':  { bg: 'bg-primary/10',    color: 'text-primary', border: 'border-primary/20', icon: 'verified',    label: 'CHỜ TIÊM' },
+    'completed':  { bg: 'bg-secondary/10',  color: 'text-secondary', border: 'border-secondary/20', icon: 'check_circle', label: 'ĐÃ TIÊM' },
+    'cancelled':   { bg: 'bg-error/10',     color: 'text-error', border: 'border-error/20', icon: 'cancel',     label: 'ĐÃ HỦY' },
+  };
+  const st = map[s] || { bg: 'bg-background', color: 'text-on-surface-variant', border: 'border-outline', icon: 'help', label: s || 'N/A' };
+%>
+<span class="v-badge <%= st.bg %> <%= st.color %> <%= st.border %> gap-1">
+  <span class="material-symbols-outlined text-[12px]"><%= st.icon %></span>
+  <%= st.label %>
+</span>

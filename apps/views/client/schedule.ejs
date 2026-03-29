@@ -1,95 +1,206 @@
-<%- include('layout', { 
-    currentPath: '/client/schedule', 
-    title: 'Lộ trình tiêm chủng - VaxiCare',
-    body: `
+<!-- =====================
+  Client Schedule / Vaccination Timeline
+  Data: children[], appointments[]
+===================== -->
 
-<!-- Hero Section -->
-<section class="mb-10 flex items-center gap-4 animate-fade-in">
-    <a href="/client/dashboard" class="w-10 h-10 flex items-center justify-center rounded-lg bg-surface border border-outline text-on-surface-variant hover:text-primary transition-all">
-        <span class="material-symbols-outlined">arrow_back</span>
-    </a>
-    <div>
-        <h1 class="text-3xl v-title uppercase">Lộ trình tiêm</h1>
-        <p class="text-on-surface-variant text-sm font-medium">Theo dõi các mốc bảo vệ sức khỏe quan trọng của bé.</p>
+<%- include('../partials/client-page-header', {
+    title: 'Lộ trình tiêm chủng',
+    subtitle: 'Theo dõi các mốc bảo vệ sức khỏe của bé với lịch trình chuẩn y khoa.',
+    backHref: '/client/dashboard'
+}) %>
+
+<% const childList = children || []; %>
+<% const appts = appointments || []; %>
+
+<% if (childList.length === 0) { %>
+  <%- include('../partials/empty-state', {
+      icon: 'event_busy',
+      title: 'Chưa có lịch tiêm',
+      message: locals.user && locals.user.role === 'parent' ? 'Vui lòng đến trung tâm tiêm chủng để tạo hồ sơ và đặt lịch tiêm đầu tiên.' : 'Hãy thêm hồ sơ bé và đặt lịch tiêm đầu tiên.',
+      actionLabel: locals.user && (locals.user.role === 'admin' || locals.user.role === 'staff') ? 'Thêm hồ sơ bé' : null,
+      actionHref: locals.user && (locals.user.role === 'admin' || locals.user.role === 'staff') ? '/children/add' : null,
+      actionIcon: locals.user && (locals.user.role === 'admin' || locals.user.role === 'staff') ? 'add' : null
+  }) %>
+<% } else { %>
+
+<div class="space-y-10 animate-fade-in pb-12">
+
+  <%# Header Tabs / Filters (Visual Only for now) %>
+  <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+      <button class="px-5 py-2.5 rounded-xl bg-on-surface text-surface text-sm font-black tracking-wide whitespace-nowrap shadow-md transition-transform active:scale-95">
+          Tất cả lịch tiêm
+      </button>
+      <button class="px-5 py-2.5 rounded-xl bg-surface border-2 border-outline text-on-surface-variant text-sm font-black tracking-wide whitespace-nowrap hover:border-primary hover:text-primary transition-colors">
+          Sắp tới
+      </button>
+      <button class="px-5 py-2.5 rounded-xl bg-surface border-2 border-outline text-on-surface-variant text-sm font-black tracking-wide whitespace-nowrap hover:border-primary hover:text-primary transition-colors">
+          Đã hoàn thành
+      </button>
+  </div>
+
+  <% if (appts.length === 0) { %>
+    <%- include('../partials/empty-state', {
+        icon: 'event_busy',
+        title: 'Chưa có mốc tiêm nào',
+        message: 'Bạn chưa đặt lịch tiêm nào cho các bé. Hãy bắt đầu ngay để bảo vệ sức khỏe con yêu.'
+    }) %>
+  <% } else { %>
+    <%# Vaccination Timeline %>
+    <div class="relative pl-6 sm:pl-16">
+      
+      <%# Thick Vertical Track Line %>
+      <div class="absolute left-[38px] sm:left-[78px] top-4 bottom-0 w-1 bg-outline/50 rounded-full"></div>
+
+      <% appts.forEach((appt, i) => {
+          const isUpcoming = new Date(appt.date) > new Date();
+          const isCompleted = appt.status === 'completed';
+          
+          let statusBadgeClass = '';
+          let statusBadgeText = '';
+          let dotColorClass = '';
+          let dotIcon = '';
+          let cardStyle = '';
+
+          if (isCompleted) {
+              statusBadgeClass = 'bg-secondary/10 text-secondary border-secondary/20';
+              statusBadgeText = 'ĐÃ HOÀN THÀNH';
+              dotColorClass = 'bg-secondary text-white shadow-secondary/30';
+              dotIcon = 'check_circle';
+              cardStyle = 'bg-surface border-outline opacity-80';
+          } else if (isUpcoming) {
+              statusBadgeClass = 'bg-primary/10 text-primary border-primary/20';
+              statusBadgeText = 'SẮP TỚI';
+              dotColorClass = 'bg-primary text-white shadow-primary/30 shadow-lg scale-110';
+              dotIcon = 'event';
+              cardStyle = 'bg-primary/5 border-primary border-2 shadow-sm';
+          } else {
+              statusBadgeClass = 'bg-error/10 text-error border-error/20';
+              statusBadgeText = 'ĐÃ QUA LỊCH';
+              dotColorClass = 'bg-error text-white shadow-error/30';
+              dotIcon = 'warning';
+              cardStyle = 'bg-error/5 border-error/50';
+          }
+
+          const dateObj = new Date(appt.date);
+          const monthStr = dateObj.toLocaleString('vi-VN', { month: 'short' });
+          const dayStr = dateObj.getDate();
+          const timeStr = appt.appointmentTime || '--:--';
+          
+          // Try to find the child name to display which child this appointment belongs to
+          const childName = appt.child && appt.child.name ? appt.child.name : 'Bé yêu';
+          const childInitial = childName.charAt(0).toUpperCase();
+
+          const delay = i * 0.1;
+      %>
+        <div class="relative mb-12 last:mb-0 v-anim-fade-in group flex items-start" style="animation-delay: <%= delay %>s">
+          
+          <%# Left side: Date Block (Desktop only visible) %>
+          <div class="hidden sm:flex flex-col items-end pr-10 w-32 shrink-0 pt-4 cursor-default">
+            <span class="text-xs font-black uppercase tracking-widest text-on-surface-variant"><%= monthStr %></span>
+            <span class="text-3xl font-black text-on-surface leading-none -mt-1"><%= dayStr %></span>
+          </div>
+
+          <%# Center: Connect Node %>
+          <div class="absolute -left-[14px] sm:left-auto sm:relative w-12 h-12 rounded-xl <%= dotColorClass %> flex items-center justify-center z-10 
+                      transition-transform duration-300 group-hover:scale-[1.15] shrink-0 mt-3 sm:mt-1
+                      before:absolute before:inset-0 before:rounded-xl before:border before:border-white/20">
+            <span class="material-symbols-outlined v-icon-24"><%= dotIcon %></span>
+          </div>
+
+          <%# Right side: Content Card %>
+          <div class="ml-14 sm:ml-8 flex-1">
+            
+            <%# Mobile Date fallback %>
+            <div class="sm:hidden mb-2 flex items-center gap-2">
+               <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-on-surface text-surface">
+                 <%= dayStr %> <%= monthStr %>
+               </span>
+            </div>
+
+            <div class="v-card !p-5 sm:!p-6 <%= cardStyle %> transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+                
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="v-badge <%= statusBadgeClass %>"><%= statusBadgeText %></span>
+                    <% if(isUpcoming) { %>
+                    <span class="flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    <% } %>
+                  </div>
+                  
+                  <h3 class="text-2xl font-display font-black uppercase tracking-tight text-on-surface leading-none mt-1">
+                    <%= appt.vaccine && appt.vaccine.name ? appt.vaccine.name : 'Vắc xin' %>
+                  </h3>
+                  <p class="text-sm font-semibold text-on-surface-variant mt-1">
+                    <%= appt.vaccine && appt.vaccine.type ? appt.vaccine.type : 'Mũi tiêm định kỳ' %>
+                  </p>
+                </div>
+
+                <%# Child Identifier %>
+                <div class="flex items-center gap-3 bg-white/60 p-2 rounded-xl border border-outline/50 shrink-0 self-start">
+                  <div class="w-8 h-8 rounded-lg bg-[#E2E8F0] flex items-center justify-center font-black text-on-surface">
+                    <%= childInitial %>
+                  </div>
+                  <div class="pr-2">
+                    <p class="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Lịch của</p>
+                    <p class="text-sm font-black text-on-surface leading-none truncate max-w-[100px]"><%= childName %></p>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-surface/50 p-3 rounded-lg border border-outline/30 flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary/70">schedule</span>
+                  <div>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">Thời gian</span>
+                    <span class="text-sm font-black text-on-surface"><%= timeStr %></span>
+                  </div>
+                </div>
+                <div class="bg-surface/50 p-3 rounded-lg border border-outline/30 flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary/70">vaccines</span>
+                  <div>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">Loại</span>
+                    <span class="text-sm font-black text-on-surface truncate">Mũi <%= appt.doseNumber || 1 %></span>
+                  </div>
+                </div>
+              </div>
+
+              <% if (appt.notes) { %>
+                <div class="px-4 py-3 bg-warning/10 rounded-lg border flex gap-3 mt-4 items-start border-warning/20">
+                  <span class="material-symbols-outlined text-warning text-lg shrink-0 mt-0.5">sticky_note_2</span>
+                  <p class="text-sm font-medium text-warning-dark leading-snug">
+                    <span class="font-black">Ghi chú:</span> <%= appt.notes %>
+                  </p>
+                </div>
+              <% } %>
+            </div>
+            
+          </div>
+        </div>
+      <% }) %>
     </div>
-</section>
+  <% } %>
 
-<!-- Filter Tabs -->
-<nav class="flex gap-3 mb-10 overflow-x-auto pb-2 animate-fade-in" id="schedule-tabs" style="animation-delay: 0.1s">
-    <button class="v-btn v-btn-primary !py-2 !px-5">Tất cả</button>
-    <button class="v-btn v-btn-secondary !py-2 !px-5">Đã tiêm</button>
-    <button class="v-btn v-btn-secondary !py-2 !px-5">Sắp tới</button>
-</nav>
-
-<!-- Vaccination Timeline -->
-<div class="relative animate-fade-in" style="animation-delay: 0.2s">
-    <!-- Vertical Track (Solid Line) -->
-    <div class="absolute left-[19px] top-4 bottom-0 w-[2px] bg-outline"></div>
-    
-    <div class="space-y-10">
-        <!-- Completed Item -->
-        <div class="relative pl-12 group">
-            <div class="absolute left-0 top-1 w-10 h-10 rounded-xl bg-secondary text-white flex items-center justify-center z-10 transition-transform group-hover:scale-105">
-                <span class="material-symbols-outlined text-xl">done_all</span>
-            </div>
-            <div class="v-card v-card-hover">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="v-badge bg-secondary/10 text-secondary">HOÀN THÀNH</span>
-                    <span class="text-on-surface-variant text-xs font-bold">15 THÁNG 08, 2026</span>
-                </div>
-                <h3 class="text-xl v-title mb-2 uppercase tracking-tight">Lao (BCG)</h3>
-                <p class="text-on-surface-variant text-sm font-medium leading-normal mb-4">Phòng bệnh Lao phổi và các thể lao ngoài phổi khác.</p>
-                <div class="flex items-center gap-2 text-secondary text-xs font-black uppercase">
-                    <span class="material-symbols-outlined text-sm">verified</span>
-                    Cơ sở tiêm chủng VaxiCare
-                </div>
-            </div>
-        </div>
-
-        <!-- Upcoming Focus Item -->
-        <div class="relative pl-12 group">
-            <div class="absolute left-0 top-1 w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center z-10 transition-transform group-hover:scale-105 shadow-lg shadow-primary/20">
-                <span class="material-symbols-outlined text-xl">event_available</span>
-            </div>
-            <div class="v-card border-2 border-primary relative overflow-hidden">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="v-badge bg-primary/10 text-primary">SẮP TỚI</span>
-                    <span class="text-primary text-xs font-black">15 THÁNG 10, 2026</span>
-                </div>
-                <h3 class="text-xl v-title mb-2 uppercase tracking-tight">5 trong 1 (Quinvaxem)</h3>
-                <p class="text-on-surface-variant text-sm font-medium leading-normal mb-6">Bạch hầu, ho gà, uốn ván, viêm gan B, Hib.</p>
-                <a href="/appointments/book" class="v-btn v-btn-primary w-full">
-                    ĐẶT HẸN NGAY
-                </a>
-            </div>
-        </div>
-
-        <!-- Future Item -->
-        <div class="relative pl-12 group opacity-60 hover:opacity-100 transition-opacity">
-            <div class="absolute left-0 top-1 w-10 h-10 rounded-xl bg-background border border-outline text-on-surface-variant flex items-center justify-center z-10 transition-transform group-hover:scale-105">
-                <span class="material-symbols-outlined text-xl">schedule</span>
-            </div>
-            <div class="v-card v-card-hover">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="v-badge bg-background text-on-surface-variant">DỰ KIẾN</span>
-                    <span class="text-on-surface-variant text-xs font-bold">15 THÁNG 11, 2026</span>
-                </div>
-                <h3 class="text-xl v-title mb-2 uppercase tracking-tight">Bại liệt (IPV)</h3>
-                <p class="text-on-surface-variant text-sm font-medium leading-normal">Tiêm vaccine bất hoạt phòng bệnh bại liệt.</p>
-            </div>
-        </div>
+  <div class="mt-8 pt-6 border-t border-outline/30">
+    <div class="v-card !p-8 !bg-gradient-to-br !from-surface !to-[#EDF2F7] !border-none shadow-sm flex items-start gap-6">
+      <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shrink-0 transition-transform hover:scale-110">
+        <span class="material-symbols-outlined text-3xl">tips_and_updates</span>
+      </div>
+      <div>
+        <h4 class="text-xl font-display font-black tracking-tight text-on-surface mb-3 leading-none">Kinh nghiệm đi tiêm</h4>
+        <ul class="text-sm font-medium text-on-surface-variant leading-relaxed space-y-3">
+          <li class="flex items-start gap-3"><span class="w-2 h-2 mt-1.5 rounded-full bg-primary/50 shrink-0"></span> Mang theo sổ tiêm chủng của bé để bác sĩ dể dàng tra cứu lịch sử.</li>
+          <li class="flex items-start gap-3"><span class="w-2 h-2 mt-1.5 rounded-full bg-primary/50 shrink-0"></span> Cho bé ăn nhẹ trước khi tiêm 30 phút, tránh để bé quá no hoặc quá đói.</li>
+          <li class="flex items-start gap-3"><span class="w-2 h-2 mt-1.5 rounded-full bg-error/50 shrink-0"></span> <span class="text-error-dark font-bold">Lưu ý:</span> Nếu bé đang sốt trên 37.5°C hoặc có dấu hiệu suy giảm hệ miễn dịch, cần dời lịch tiêm.</li>
+        </ul>
+      </div>
     </div>
+  </div>
+
 </div>
 
-<!-- Important Tip Card -->
-<section class="mt-12 p-6 bg-warning/5 border border-warning/20 rounded-2xl flex items-start gap-5 animate-fade-in" style="animation-delay: 0.3s">
-    <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center shrink-0">
-        <span class="material-symbols-outlined text-warning text-2xl">lightbulb</span>
-    </div>
-    <div>
-        <h4 class="v-title mb-1 text-base">Kinh nghiệm đi tiêm</h4>
-        <p class="text-on-surface-variant text-sm font-medium leading-normal">Bố mẹ nhớ mang theo sổ tiêm chủng và cho bé ăn nhẹ trước 30 phút. Nếu bé sốt >37.5 độ, hãy tạm lùi lịch tiêm nhé.</p>
-    </div>
-</section>
-
-` }) %>
+<% } %>

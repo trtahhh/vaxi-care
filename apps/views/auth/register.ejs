@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký - VaxiCare</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="/css/tailwind-compiled.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/style.css">
@@ -46,6 +46,9 @@
             </div>
             
             <form action="/auth/register" method="POST" class="space-y-10" onsubmit="validatePassword(event)">
+                <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <% } %>
                 
                 <!-- Feedback Area -->
                 <div id="js-error-container" class="hidden p-5 rounded-xl bg-error text-white border-transparent items-center gap-4 shadow-lg shadow-error/20 animate-shake">

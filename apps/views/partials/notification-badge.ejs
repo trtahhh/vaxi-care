@@ -1,0 +1,46 @@
+<!-- Notification Badge -->
+<%
+/**
+ * @param {number} count - Unread notification count
+ * @param {string} href  - Link to notifications page
+ */
+%>
+<% if (count > 0) { %>
+    <a href="<%= href || '/client/notifications' %>"
+       class="v-nav-icon-btn v-notif-btn relative"
+       title="Thông báo (<%= count %> chưa đọc)"
+       aria-label="Thông báo, <%= count %> chưa đọc">
+        <span class="material-symbols-outlined v-icon-22">notifications</span>
+        <% if (count > 0) { %>
+            <span class="v-notif-badge-count"><%= count > 99 ? '99+' : count %></span>
+        <% } %>
+    </a>
+<% } else { %>
+    <a href="<%= href || '/client/notifications' %>"
+       class="v-nav-icon-btn"
+       title="Thông báo"
+       aria-label="Thông báo">
+        <span class="material-symbols-outlined v-icon-22">notifications_none</span>
+    </a>
+<% } %>
+
+<style>
+.v-notif-badge-count {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 1.125rem;
+    height: 1.125rem;
+    background: #E53E3E;
+    color: white;
+    font-size: 0.5rem;
+    font-weight: 900;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 2px solid white;
+    line-height: 1;
+}
+</style>

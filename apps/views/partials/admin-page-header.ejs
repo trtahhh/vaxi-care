@@ -1,0 +1,70 @@
+<%#
+  locals:
+    title: string
+    subtitle: string (optional)
+    backHref: string (optional)
+    backIcon: string (optional)
+    actions: array of { label, href, icon, variant } (optional)
+    badge: string (optional)
+    badgeVariant: string (optional)
+%>
+<%
+const pTitle = locals.title || '';
+const pSubtitle = locals.subtitle || '';
+const pBackHref = locals.backHref || '';
+const pBackIcon = locals.backIcon || 'arrow_back';
+const pActions = locals.actions || [];
+const pBadge = locals.badge || '';
+const pBadgeVariant = locals.badgeVariant || 'primary';
+
+const badgeClassMap = {
+    'primary': 'v-badge-primary',
+    'secondary': 'v-badge-secondary',
+    'error': 'v-badge-error',
+    'warning': 'v-badge-warning',
+    'success': 'v-badge-secondary',
+};
+const badgeClass = badgeClassMap[pBadgeVariant] || 'v-badge-primary';
+%>
+<div class="mb-8 animate-fade-in relative z-10">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+
+        <!-- Left: Back + Title -->
+        <div class="flex items-start gap-4 sm:gap-6">
+            <% if (pBackHref) { %>
+                <a href="<%= pBackHref %>"
+                   class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border border-outline/50 text-on-surface-variant hover:text-primary hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 shrink-0 no-underline group/back">
+                    <span class="material-symbols-outlined text-[24px] group-hover/back:-translate-x-1 transition-transform duration-300"><%= pBackIcon %></span>
+                </a>
+            <% } %>
+
+            <div class="flex-1">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h1 class="text-3xl font-display font-black tracking-tight text-on-surface leading-none"><%= pTitle %></h1>
+                    <% if (pBadge) { %>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest <%= badgeClass === 'v-badge-primary' ? 'bg-primary/10 text-primary border border-primary/20' : badgeClass === 'v-badge-error' ? 'bg-error/10 text-error border border-error/20' : badgeClass === 'v-badge-secondary' ? 'bg-secondary/10 text-secondary border border-secondary/20' : badgeClass === 'v-badge-warning' ? 'bg-warning/10 text-warning border border-warning/20' : 'bg-outline/30 text-on-surface-variant' %>"><%= pBadge %></span>
+                    <% } %>
+                </div>
+                <% if (pSubtitle) { %>
+                    <p class="text-sm font-medium text-on-surface-variant mt-2 max-w-2xl opacity-80 leading-relaxed"><%= pSubtitle %></p>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Right: Actions -->
+        <% if (pActions.length > 0) { %>
+            <div class="flex gap-3 flex-wrap md:justify-end">
+                <% pActions.forEach(action => { %>
+                    <a href="<%= action.href %>"
+                       class="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm tracking-tight transition-all duration-300 transform hover:-translate-y-0.5 shadow-sm no-underline <%= action.variant === 'secondary' ? 'bg-secondary text-white shadow-secondary/30 hover:bg-secondary-dark hover:shadow-secondary/50' : action.variant === 'ghost' ? 'bg-white border border-outline/50 text-on-surface hover:text-primary hover:border-primary/50' : 'bg-primary text-white shadow-primary/30 hover:bg-primary-dark hover:shadow-primary/50' %>">
+                        <% if (action.icon) { %>
+                            <span class="material-symbols-outlined text-[20px]"><%= action.icon %></span>
+                        <% } %>
+                        <%= action.label %>
+                    </a>
+                <% }) %>
+            </div>
+        <% } %>
+
+    </div>
+</div>

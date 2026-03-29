@@ -1,0 +1,204 @@
+/* VaxiCare Animations System */
+
+/* ===== Fade In ===== */
+@keyframes v-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.v-anim-fade-in {
+    animation: v-fade-in 0.35s ease-out forwards;
+}
+
+/* ===== Slide Up ===== */
+@keyframes v-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.v-anim-slide-up {
+    animation: v-slide-up 0.4s ease-out forwards;
+}
+
+/* ===== Scale In ===== */
+@keyframes v-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+.v-anim-scale-in {
+    animation: v-scale-in 0.2s ease-out forwards;
+}
+
+/* ===== Shake (error) ===== */
+@keyframes v-shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+.v-anim-shake {
+    animation: v-shake 0.5s ease-in-out;
+}
+
+/* ===== Pulse ===== */
+@keyframes v-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.v-anim-pulse {
+    animation: v-pulse 2s ease-in-out infinite;
+}
+
+/* ===== Float ===== */
+@keyframes v-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+.v-anim-float {
+    animation: v-float 4s ease-in-out infinite;
+}
+
+/* ===== Spin ===== */
+@keyframes v-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.v-anim-spin {
+    animation: v-spin 1s linear infinite;
+}
+
+/* ===== Progress Bar Fill ===== */
+@keyframes v-progress-fill {
+    from { width: 0; }
+}
+.v-anim-progress {
+    animation: v-progress-fill 1.2s ease-out forwards;
+}
+
+/* ===== Stagger Delays ===== */
+.v-stagger-1 { animation-delay: 0.05s; }
+.v-stagger-2 { animation-delay: 0.1s; }
+.v-stagger-3 { animation-delay: 0.15s; }
+.v-stagger-4 { animation-delay: 0.2s; }
+.v-stagger-5 { animation-delay: 0.25s; }
+.v-stagger-6 { animation-delay: 0.3s; }
+
+/* ===== Card Hover ===== */
+.v-card-hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.v-card-hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--v-shadow-lg);
+    border-color: rgba(49, 130, 206, 0.25);
+}
+
+/* ===== Button Press ===== */
+.v-btn-press:active {
+    transform: scale(0.97);
+    transition: transform 0.1s;
+}
+
+/* ===== Toast Enter ===== */
+@keyframes v-toast-enter {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+.v-toast-enter {
+    animation: v-toast-enter 0.3s ease-out forwards;
+}
+
+/* ===== Toast Exit ===== */
+@keyframes v-toast-exit {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(110%);
+    }
+}
+.v-toast-exit {
+    animation: v-toast-exit 0.25s ease-in forwards;
+}
+
+/* ===== Modal Enter ===== */
+@keyframes v-modal-enter {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+.v-modal-enter {
+    animation: v-modal-enter 0.2s ease-out forwards;
+}
+
+/* ===== Modal Backdrop ===== */
+@keyframes v-backdrop-enter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.v-backdrop-enter {
+    animation: v-backdrop-enter 0.2s ease-out forwards;
+}
+
+/* ===== Skeleton Loading ===== */
+@keyframes v-skeleton {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+.v-skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--v-outline) 25%,
+        var(--v-surface) 50%,
+        var(--v-outline) 75%
+    );
+    background-size: 200% 100%;
+    animation: v-skeleton 1.5s ease-in-out infinite;
+    border-radius: var(--v-radius-sm);
+}
+
+/* ===== Progress Ring ===== */
+@keyframes v-ring-fill {
+    from { stroke-dashoffset: 100; }
+    to { stroke-dashoffset: var(--v-ring-offset, 0); }
+}
+.v-ring-fill {
+    animation: v-ring-fill 1.2s ease-out forwards;
+}
+
+/* ===== Bounce ===== */
+@keyframes v-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+.v-anim-bounce {
+    animation: v-bounce 1s ease-in-out infinite;
+}
