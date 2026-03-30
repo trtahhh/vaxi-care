@@ -39,6 +39,40 @@ class HomeService {
     });
   }
 
+  _getDetailedStats(allVaccines, childAppointments) {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const completed = childAppointments.filter(a => a.status === 'completed');
+    const confirmed = childAppointments.filter(a => a.status === 'confirmed');
+    const pending = childAppointments.filter(a => a.status === 'pending');
+    const missed = childAppointments.filter(a =>
+      a.status !== 'cancelled' && a.status !== 'completed' && new Date(a.date) < todayStart
+    );
+    const upcoming = [...confirmed, ...pending].filter(a => new Date(a.date) >= todayStart);
+
+    // Count unique vaccines completed
+    const completedVaccineIds = new Set(
+      completed.filter(a => a.vaccine && a.vaccine.id).map(a => a.vaccine.id)
+    );
+    const totalVaccines = allVaccines.length;
+
+    return {
+      completedCount: completedVaccineIds.size,
+      totalVaccines,
+      progressPercent: totalVaccines > 0
+        ? Math.min(Math.round((completedVaccineIds.size / totalVaccines) * 100), 100)
+        : 0,
+      upcomingCount: upcoming.length,
+      missedCount: missed.length,
+      pendingCount: pending.length,
+      confirmedCount: confirmed.length,
+      completedNames: completed
+        .filter(a => a.vaccine && a.vaccine.name)
+        .map(a => a.vaccine.name)
+    };
+  }
+
   async getChildVaccinationProgress(childId) {
      const allVaccines = await this.vaccineRepo.findAll(0, 500);
      const appointments = await this.appointmentRepo.findByChildId(childId);
@@ -58,15 +92,16 @@ class HomeService {
     const enrichedChildren = children.map((child) => {
       try {
         const childAppointments = allAppointments.filter(a => a.child && a.child.id === child.id);
-        const progress = this._calculateProgress(child.id, allVaccines, childAppointments);
+        const stats = this._getDetailedStats(allVaccines, childAppointments);
         const recommendations = this._getRecommendations(child.id, child.dob, allVaccines, childAppointments);
         const nextMilestone = recommendations.length > 0
           ? recommendations[0].name
           : "Tất cả các mũi tiêm đã hoàn thành!";
-        return { ...child, progress, nextMilestone };
+        return { ...child, ...stats, nextMilestone };
       } catch (err) {
         console.error(`Error calculating progress for child ${child.id}:`, err);
-        return { ...child, progress: null, nextMilestone: "Đang cập nhật..." };
+        return { ...child, progressPercent: 0, completedCount: 0, totalVaccines: 0,
+          upcomingCount: 0, missedCount: 0, nextMilestone: "Đang cập nhật..." };
       }
     });
 
@@ -121,10 +156,58 @@ class HomeService {
   async getSlotInfo(date) {
     const dateStr = date.toISOString().split("T")[0];
     const config = await this.slotConfigRepo.findByDate(dateStr);
-    const maxSlots = config ? config.maxSlots : 50;
-    const bookedCount = await this.appointmentRepo.countByDate(date);
 
-    return { maxSlots, bookedCount, availableSlots: maxSlots - bookedCount };
+    // --- Block past dates ---
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (date < todayStart) {
+      return { maxSlots: 0, bookedCount: 0, availableSlots: 0, dayOff: true, message: "Ngày đã qua." };
+    }
+
+    // --- Block weekends ---
+    const dayOfWeek = date.getDay(); // 0 = CN, 6 = T7
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return { maxSlots: 0, bookedCount: 0, availableSlots: 0, dayOff: true, message: "Không nhận đặt lịch vào cuối tuần." };
+    }
+
+    // --- Check if admin marked as day off ---
+    if (config && config.isDayOff) {
+      return { maxSlots: 0, bookedCount: 0, availableSlots: 0, dayOff: true, message: config.note || "Ngày nghỉ, không nhận đặt lịch." };
+    }
+
+    const maxSlots = config ? config.maxSlots : 50;
+    const morningSlots = config ? (config.morningSlots || 25) : 25;
+    const afternoonSlots = config ? (config.afternoonSlots || 25) : 25;
+
+    const bookedCount = await this.appointmentRepo.countByDate(date);
+    const morningBooked = await this.appointmentRepo.countByDateAndSession(date, "morning");
+    const afternoonBooked = await this.appointmentRepo.countByDateAndSession(date, "afternoon");
+
+    return {
+      maxSlots,
+      bookedCount,
+      availableSlots: maxSlots - bookedCount,
+      morningSlots,
+      afternoonSlots,
+      morningBooked,
+      afternoonBooked,
+      morningAvailable: morningSlots - morningBooked,
+      afternoonAvailable: afternoonSlots - afternoonBooked
+    };
+  }
+
+  // Determines if a time falls within working hours (default 07:30 - 17:00)
+  _isWithinWorkingHours(hour) {
+    const start = 7;  // 7:00 AM
+    const end = 17;   // 5:00 PM (exclusive — last slot starts at 16:30)
+    return hour >= start && hour < end;
+  }
+
+  // Extract session (morning/afternoon) from appointment time
+  _getSessionFromTime(date) {
+    const hours = date.getHours();
+    if (hours < 12) return "morning";
+    return "afternoon";
   }
 
   async bookAppointment(userId, data, userRole) {
@@ -141,13 +224,44 @@ class HomeService {
     }
 
     const appointmentDate = new Date(date);
-    if (appointmentDate <= new Date()) {
-      throw new Error("Ngày hẹn phải là ngày trong tương lai.");
+
+    // --- Block past dates ---
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (appointmentDate < todayStart) {
+      throw new Error("Ngày hẹn không hợp lệ (đã qua).");
+    }
+
+    // --- Block weekends ---
+    const dayOfWeek = appointmentDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      throw new Error("Không nhận đặt lịch vào cuối tuần. Vui lòng chọn ngày trong tuần.");
+    }
+
+    // --- Working hours validation ---
+    const hour = appointmentDate.getHours();
+    if (!this._isWithinWorkingHours(hour)) {
+      throw new Error("Giờ hẹn phải trong khoảng 07:30 - 17:00.");
     }
 
     const slotInfo = await this.getSlotInfo(appointmentDate);
+
+    // --- Check day-off flag ---
+    if (slotInfo.dayOff) {
+      throw new Error(slotInfo.message || "Ngày này không nhận đặt lịch.");
+    }
+
     if (slotInfo.availableSlots <= 0) {
-      throw new Error("Ngày này đã đầy lịch hẹn.");
+      throw new Error("Ngày này đã đầy lịch hẹn. Vui lòng chọn ngày khác.");
+    }
+
+    // --- Session-based slot check ---
+    const session = this._getSessionFromTime(appointmentDate);
+    if (session === "morning" && slotInfo.morningAvailable <= 0) {
+      throw new Error("Buổi sáng ngày này đã đầy. Vui lòng chọn buổi chiều hoặc ngày khác.");
+    }
+    if (session === "afternoon" && slotInfo.afternoonAvailable <= 0) {
+      throw new Error("Buổi chiều ngày này đã đầy. Vui lòng chọn buổi sáng hoặc ngày khác.");
     }
 
     const existingAppointments = await this.appointmentRepo.findByChildIds([parseInt(childId)]);
@@ -160,34 +274,51 @@ class HomeService {
       throw new Error("Trẻ đã có lịch tiêm vắc xin này vào ngày đã chọn.");
     }
 
-    let vaccine = null;
+    // --- Validate vaccine exists (stock check is done atomically in transaction) ---
     if (vaccineId) {
-      vaccine = await this.vaccineRepo.findById(parseInt(vaccineId));
-      if (!vaccine) {
-        throw new Error("Vắc xin không tồn tại.");
-      }
-      if (vaccine.stock <= 0) {
-        throw new Error("Vắc xin này hiện đã hết hàng. Vui lòng chọn vắc xin khác.");
-      }
+      const vaccine = await this.vaccineRepo.findById(parseInt(vaccineId));
+      if (!vaccine) throw new Error("Vắc xin không tồn tại.");
     }
 
-    const appointment = this.appointmentRepo.create({
-      date: appointmentDate,
-      notes: notes || null,
-      status: (userRole === 'admin' || userRole === 'staff') ? "confirmed" : "pending",
-      child: { id: parseInt(childId) },
-      vaccine: { id: parseInt(vaccineId) }
-    });
+    // --- Execute booking + stock decrement in a single transaction ---
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const result = await this.appointmentRepo.insert(appointment);
+    try {
+      // 1. Insert appointment
+      const appointment = {
+        date: appointmentDate,
+        notes: notes || null,
+        session,
+        status: (userRole === 'admin' || userRole === 'staff') ? "confirmed" : "pending",
+        child: { id: parseInt(childId) },
+        vaccine: { id: parseInt(vaccineId) }
+      };
+      const result = await queryRunner.manager.save("Appointment", appointment);
 
-    // Deduct stock after successful appointment creation
-    if (vaccine) {
-      vaccine.stock -= 1;
-      await this.vaccineRepo.update(vaccine);
+      // 2. Atomic stock decrement — returns 0 if out of stock (race-safe)
+      if (vaccineId) {
+        const affected = await queryRunner.manager
+          .createQueryBuilder()
+          .update("vaccines")
+          .set({ stock: () => "stock - 1" })
+          .where("id = :id AND stock > 0", { id: parseInt(vaccineId) })
+          .execute();
+
+        if (!affected.affected || affected.affected === 0) {
+          throw new Error("Vắc xin này hiện đã hết hàng. Vui lòng chọn vắc xin khác.");
+        }
+      }
+
+      await queryRunner.commitTransaction();
+      return result;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-
-    return result;
   }
 
   async getUpcomingAppointments(userId) {
@@ -230,13 +361,9 @@ class HomeService {
     appointment.status = "cancelled";
     const result = await this.appointmentRepo.update(appointment);
 
-    // Refund stock upon cancellation
+    // Atomic stock refund — safe even if vaccine was already deleted
     if (appointment.vaccine && appointment.vaccine.id) {
-        const vaccine = await this.vaccineRepo.findById(appointment.vaccine.id);
-        if (vaccine) {
-            vaccine.stock += 1;
-            await this.vaccineRepo.update(vaccine);
-        }
+      await this.vaccineRepo.incrementStock(appointment.vaccine.id);
     }
 
     return result;

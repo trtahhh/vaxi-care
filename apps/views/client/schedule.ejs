@@ -45,6 +45,30 @@
         message: 'Bạn chưa đặt lịch tiêm nào cho các bé. Hãy bắt đầu ngay để bảo vệ sức khỏe con yêu.'
     }) %>
   <% } else { %>
+
+    <%# Working filter tabs with real counts %>
+    <%
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const completed = appts.filter(a => a.status === 'completed').length;
+      const upcoming = appts.filter(a => a.status !== 'cancelled' && a.status !== 'completed' && new Date(a.date) >= todayStart).length;
+      const cancelled = appts.filter(a => a.status === 'cancelled').length;
+    %>
+    <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide" id="schedule-tabs">
+      <button onclick="filterSchedule('all', this)" class="tab-btn active px-5 py-2.5 rounded-xl bg-on-surface text-surface text-sm font-black tracking-wide whitespace-nowrap shadow-md transition-all active">
+          Tất cả <span class="ml-1 text-xs opacity-70">(<%= appts.length %>)</span>
+      </button>
+      <button onclick="filterSchedule('upcoming', this)" class="tab-btn px-5 py-2.5 rounded-xl bg-surface border-2 border-outline text-on-surface-variant text-sm font-black tracking-wide whitespace-nowrap hover:border-primary hover:text-primary transition-colors">
+          Sắp tới <span class="ml-1 text-xs opacity-70">(<%= upcoming %>)</span>
+      </button>
+      <button onclick="filterSchedule('completed', this)" class="tab-btn px-5 py-2.5 rounded-xl bg-surface border-2 border-outline text-on-surface-variant text-sm font-black tracking-wide whitespace-nowrap hover:border-primary hover:text-primary transition-colors">
+          Đã hoàn thành <span class="ml-1 text-xs opacity-70">(<%= completed %>)</span>
+      </button>
+      <button onclick="filterSchedule('cancelled', this)" class="tab-btn px-5 py-2.5 rounded-xl bg-surface border-2 border-outline text-on-surface-variant text-sm font-black tracking-wide whitespace-nowrap hover:border-primary hover:text-primary transition-colors">
+          Đã hủy <span class="ml-1 text-xs opacity-70">(<%= cancelled %>)</span>
+      </button>
+    </div>
+
     <%# Vaccination Timeline %>
     <div class="relative pl-6 sm:pl-16">
       
@@ -60,6 +84,7 @@
           let dotColorClass = '';
           let dotIcon = '';
           let cardStyle = '';
+          const isCancelled = appt.status === 'cancelled';
 
           if (isCompleted) {
               statusBadgeClass = 'bg-secondary/10 text-secondary border-secondary/20';
@@ -67,6 +92,12 @@
               dotColorClass = 'bg-secondary text-white shadow-secondary/30';
               dotIcon = 'check_circle';
               cardStyle = 'bg-surface border-outline opacity-80';
+          } else if (isCancelled) {
+              statusBadgeClass = 'bg-on-surface-variant/10 text-on-surface-variant border-on-surface-variant/20';
+              statusBadgeText = 'ĐÃ HỦY';
+              dotColorClass = 'bg-on-surface-variant/40 text-white shadow-none';
+              dotIcon = 'cancel';
+              cardStyle = 'bg-surface border-outline opacity-50';
           } else if (isUpcoming) {
               statusBadgeClass = 'bg-primary/10 text-primary border-primary/20';
               statusBadgeText = 'SẮP TỚI';
@@ -84,15 +115,19 @@
           const dateObj = new Date(appt.date);
           const monthStr = dateObj.toLocaleString('vi-VN', { month: 'short' });
           const dayStr = dateObj.getDate();
-          const timeStr = appt.appointmentTime || '--:--';
+          const timeStr = dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+          const sessionLabel = appt.session === 'morning' ? 'Sáng' : (appt.session === 'afternoon' ? 'Chiều' : '');
+          const sessionIcon = appt.session === 'morning' ? 'wb_sunny' : (appt.session === 'afternoon' ? 'dark_mode' : 'schedule');
+          const sessionClass = appt.session === 'morning' ? 'bg-warning/10 text-warning border-warning/20' : 'bg-secondary/10 text-secondary border-secondary/20';
           
           // Try to find the child name to display which child this appointment belongs to
           const childName = appt.child && appt.child.name ? appt.child.name : 'Bé yêu';
           const childInitial = childName.charAt(0).toUpperCase();
 
           const delay = i * 0.1;
+          const apptStatus = isCompleted ? 'completed' : (isCancelled ? 'cancelled' : (isUpcoming ? 'upcoming' : 'past'));
       %>
-        <div class="relative mb-12 last:mb-0 v-anim-fade-in group flex items-start" style="animation-delay: <%= delay %>s">
+        <div class="relative mb-12 last:mb-0 v-anim-fade-in group flex items-start appt-item" data-status="<%= apptStatus %>" style="animation-delay: <%= delay %>s">
           
           <%# Left side: Date Block (Desktop only visible) %>
           <div class="hidden sm:flex flex-col items-end pr-10 w-32 shrink-0 pt-4 cursor-default">
@@ -156,17 +191,27 @@
                 <div class="bg-surface/50 p-3 rounded-lg border border-outline/30 flex items-center gap-3">
                   <span class="material-symbols-outlined text-primary/70">schedule</span>
                   <div>
-                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">Thời gian</span>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">Giờ hẹn</span>
                     <span class="text-sm font-black text-on-surface"><%= timeStr %></span>
                   </div>
                 </div>
+                <% if (sessionLabel) { %>
+                <div class="bg-surface/50 p-3 rounded-lg border border-outline/30 flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary/70"><%= sessionIcon %></span>
+                  <div>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">Buổi</span>
+                    <span class="text-sm font-black <%= appt.session === 'morning' ? 'text-warning' : 'text-secondary' %>"><%= sessionLabel %></span>
+                  </div>
+                </div>
+                <% } else { %>
                 <div class="bg-surface/50 p-3 rounded-lg border border-outline/30 flex items-center gap-3">
                   <span class="material-symbols-outlined text-primary/70">vaccines</span>
                   <div>
-                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">Loại</span>
-                    <span class="text-sm font-black text-on-surface truncate">Mũi <%= appt.doseNumber || 1 %></span>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">Mũi</span>
+                    <span class="text-sm font-black text-on-surface truncate"><%= appt.doseNumber || 1 %></span>
                   </div>
                 </div>
+                <% } %>
               </div>
 
               <% if (appt.notes) { %>
@@ -202,5 +247,24 @@
   </div>
 
 </div>
+
+<script>
+function filterSchedule(type, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('bg-on-surface', 'text-surface', 'shadow-md');
+    b.classList.add('bg-surface', 'border-2', 'border-outline', 'text-on-surface-variant');
+  });
+  btn.classList.add('bg-on-surface', 'text-surface', 'shadow-md');
+  btn.classList.remove('bg-surface', 'border-2', 'border-outline', 'text-on-surface-variant');
+
+  document.querySelectorAll('.appt-item').forEach(el => {
+    if (type === 'all' || el.dataset.status === type) {
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+}
+</script>
 
 <% } %>

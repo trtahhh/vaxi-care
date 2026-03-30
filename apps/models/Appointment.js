@@ -21,6 +21,11 @@ module.exports = new EntitySchema({
             type: "text",
             nullable: true,
         },
+        session: {
+            type: "enum",
+            enum: ["morning", "afternoon"],
+            nullable: true,
+        },
         createdAt: {
             createDate: true,
         },
@@ -29,12 +34,12 @@ module.exports = new EntitySchema({
         child: {
             type: "many-to-one",
             target: "Child",
-            joinColumn: { name: "child_id" },
+            joinColumn: { name: "childId" },
         },
         vaccine: {
             type: "many-to-one",
             target: "Vaccine",
-            joinColumn: { name: "vaccine_id" },
+            joinColumn: { name: "vaccineId" },
         },
     },
 });

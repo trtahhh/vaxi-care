@@ -35,7 +35,10 @@ router.get("/dashboard", async (req, res) => {
             vaccineCount: stats.vaccineCount,
             todayAppointments: stats.todayAppointments,
             weeklyTrend: stats.weeklyTrend,
+            monthlyTrend: stats.monthlyTrend,
+            appointmentStatusDistribution: stats.appointmentStatusDistribution,
             stockAlerts: stats.stockAlerts,
+            vaccineStockData: stats.vaccineStockData,
             error: null,
             success: null
         });
@@ -44,7 +47,8 @@ router.get("/dashboard", async (req, res) => {
         res.render("admin/dashboard", {
             currentPath: '/admin/dashboard',
             userCount: 0, childCount: 0, vaccineCount: 0, todayAppointments: 0,
-            weeklyTrend: [], stockAlerts: [],
+            weeklyTrend: [], monthlyTrend: [], appointmentStatusDistribution: {},
+            stockAlerts: [], vaccineStockData: [],
             error: "Lỗi tải dữ liệu", success: null
         });
     }
@@ -249,14 +253,40 @@ router.get("/schedule", async (req, res) => {
 
 router.post("/schedule/update", async (req, res) => {
     try {
-        const { date, maxSlots } = req.body;
+        const { date, maxSlots, morningSlots, afternoonSlots, isDayOff, note } = req.body;
         if (!date || maxSlots === undefined) {
             return res.redirect("/admin/schedule?error=Vui%20lòng%20nhập%20đầy%20đủ%20thông%20tin");
         }
-        await adminService.updateScheduleConfig(date, maxSlots);
+        await adminService.updateScheduleConfig(date, {
+            maxSlots,
+            morningSlots: morningSlots || 0,
+            afternoonSlots: afternoonSlots || 0,
+            isDayOff: !!isDayOff,
+            note
+        });
         res.redirect("/admin/schedule?success=Cập%20nhật%20lịch%20thành%20công");
     } catch (error) {
         console.error('Schedule update error:', error);
+        res.redirect("/admin/schedule?error=" + encodeURIComponent(error.message));
+    }
+});
+
+router.post("/schedule/bulk-update", async (req, res) => {
+    try {
+        const { month, year, maxSlots, morningSlots, afternoonSlots, isDayOff, note } = req.body;
+        if (!month || !year || maxSlots === undefined) {
+            return res.redirect("/admin/schedule?error=Vui%20lòng%20nhập%20đầy%20đủ%20thông%20tin");
+        }
+        const count = await adminService.bulkUpdateSchedule(month, year, {
+            maxSlots,
+            morningSlots: morningSlots || 0,
+            afternoonSlots: afternoonSlots || 0,
+            isDayOff: !!isDayOff,
+            note
+        });
+        res.redirect(`/admin/schedule?month=${month}&year=${year}&success=Đã%20cập%20nhật%20${count.length}%20ngày%20trong%20tháng`);
+    } catch (error) {
+        console.error('Bulk schedule update error:', error);
         res.redirect("/admin/schedule?error=" + encodeURIComponent(error.message));
     }
 });
@@ -381,6 +411,52 @@ router.get("/children/:id", async (req, res) => {
     } catch (error) {
         console.error('Child detail error:', error);
         res.redirect("/admin/children?error=Lỗi%20tải%20dữ%ệu");
+    }
+});
+
+router.get("/children/edit/:id", async (req, res) => {
+    try {
+        const result = await adminService.getChildDetail(req.params.id);
+        if (!result) {
+            return res.redirect("/admin/children?error=Không%20tìm%20thấy%20hồ%20sơ%20trẻ");
+        }
+        const parents = await adminService.getParents();
+        res.render("admin/children/form", {
+            currentPath: '/admin/children',
+            child: result.child,
+            parents,
+            error: null
+        });
+    } catch (error) {
+        console.error('Child edit error:', error);
+        res.redirect("/admin/children?error=Lỗi%20tải%20dữ%ệu");
+    }
+});
+
+router.post("/children/edit/:id", async (req, res) => {
+    try {
+        await adminService.updateChild(req.params.id, req.body);
+        res.redirect("/admin/children?success=Cập%20nhật%20hồ%20sơ%20thành%20công");
+    } catch (error) {
+        console.error('Child update error:', error);
+        const result = await adminService.getChildDetail(req.params.id);
+        const parents = await adminService.getParents();
+        res.render("admin/children/form", {
+            currentPath: '/admin/children',
+            child: result ? result.child : req.body,
+            parents,
+            error: error.message
+        });
+    }
+});
+
+router.post("/children/delete/:id", async (req, res) => {
+    try {
+        await adminService.deleteChild(req.params.id);
+        res.redirect("/admin/children?success=Xóa%20hồ%20sơ%20thành%20công");
+    } catch (error) {
+        console.error('Child delete error:', error);
+        res.redirect("/admin/children?error=" + encodeURIComponent(error.message));
     }
 });
 

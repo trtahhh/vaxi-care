@@ -27,8 +27,10 @@ const generateRefreshToken = (user) => {
 class AdminService {
   // Dashboard
   async getDashboardStats() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -36,22 +38,93 @@ class AdminService {
     const appointmentRepo = new AppointmentRepository();
     const vaccineRepo = new VaccineRepository();
 
-    const [userCount, childCount, vaccineCount, todayAppointments, weeklyAppointments, stockAlerts] = await Promise.all([
+    // Fetch all data in parallel
+    const [
+      userCount,
+      childCount,
+      vaccineCount,
+      allVaccines,
+      stockAlerts,
+      pendingCount,
+      confirmedCount,
+      completedCount,
+      cancelledCount,
+      allAppointments
+    ] = await Promise.all([
       AppDataSource.getRepository("User").count(),
       AppDataSource.getRepository("Child").count(),
       AppDataSource.getRepository("Vaccine").count(),
-      appointmentRepo.countUpcomingFromDate(today),
-      appointmentRepo.countByDateRange(sevenDaysAgo, today),
-      vaccineRepo.findLowStock(10) // Custom method to find stock < 10
+      vaccineRepo.findAll(0, 500),
+      vaccineRepo.findLowStock(10),
+      AppDataSource.getRepository("Appointment").count({ where: { status: "pending" } }),
+      AppDataSource.getRepository("Appointment").count({ where: { status: "confirmed" } }),
+      AppDataSource.getRepository("Appointment").count({ where: { status: "completed" } }),
+      AppDataSource.getRepository("Appointment").count({ where: { status: "cancelled" } }),
+      appointmentRepo.findByDateRange(sevenDaysAgo, tomorrow)
     ]);
 
-    return { 
-      userCount, 
-      childCount, 
-      vaccineCount, 
-      todayAppointments, 
-      weeklyTrend: weeklyAppointments,
-      stockAlerts 
+    // --- 7-day trend (group appointments by date) ---
+    const trendMap = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      trendMap[key] = { date: d.toLocaleDateString("vi-VN", { day: "numeric", month: "short" }), count: 0 };
+    }
+    allAppointments.forEach(a => {
+      if (a.status !== "cancelled") {
+        const key = new Date(a.date).toISOString().split("T")[0];
+        if (trendMap[key]) trendMap[key].count++;
+      }
+    });
+    const weeklyTrend = Object.values(trendMap);
+
+    // --- Monthly trend (last 6 months) ---
+    const monthlyTrend = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      const monthAppts = allAppointments.filter(a => {
+        const ad = new Date(a.date);
+        return ad >= d && ad <= nextMonth && a.status !== "cancelled";
+      });
+      monthlyTrend.push({
+        month: d.toLocaleDateString("vi-VN", { month: "short", year: "2-digit" }),
+        count: monthAppts.length
+      });
+    }
+
+    // --- Today's appointments count ---
+    const todayAppts = allAppointments.filter(a => {
+      const ad = new Date(a.date);
+      return ad >= today && ad < tomorrow && a.status !== "cancelled";
+    });
+
+    // --- Vaccine stock data for bar chart (all vaccines, sorted by stock) ---
+    const vaccineStockData = allVaccines
+      .sort((a, b) => a.stock - b.stock)
+      .slice(0, 8)  // top 8 lowest stock
+      .map(v => ({
+        name: v.name.length > 20 ? v.name.substring(0, 18) + "…" : v.name,
+        stock: v.stock,
+        low: v.stock < 10
+      }));
+
+    return {
+      userCount,
+      childCount,
+      vaccineCount,
+      todayAppointments: todayAppts.length,
+      weeklyTrend,
+      monthlyTrend,
+      appointmentStatusDistribution: {
+        pending: pendingCount,
+        confirmed: confirmedCount,
+        completed: completedCount,
+        cancelled: cancelledCount
+      },
+      stockAlerts,
+      vaccineStockData
     };
   }
 
@@ -200,6 +273,7 @@ class AdminService {
     const endDate = new Date(currentYear, currentMonth, 0);
 
     const slotConfigRepo = new DailySlotConfigRepository();
+    const appointmentRepo = new AppointmentRepository();
     const configs = await slotConfigRepo.findByDateRange(startDate, endDate);
 
     const dayNames = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
@@ -208,34 +282,107 @@ class AdminService {
 
     for (let d = 1; d <= endDate.getDate(); d++) {
       const date = new Date(currentYear, currentMonth - 1, d);
-      const config = configs.find(c => {
-        const cDate = new Date(c.date);
-        return cDate.getDate() === d;
-      });
+      const dateStr = date.toISOString().split('T')[0];
+      const config = configs.find(c => c.date === dateStr);
+
+      // Fetch booked counts for this date
+      const bookedCount = await appointmentRepo.countByDate(date);
+      const morningBooked = await appointmentRepo.countByDateAndSession(date, "morning");
+      const afternoonBooked = await appointmentRepo.countByDateAndSession(date, "afternoon");
+
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
       daysInMonth.push({
         day: d,
         dayName: dayNames[date.getDay()],
-        date: date.toISOString().split('T')[0],
+        date: dateStr,
         maxSlots: config ? config.maxSlots : 50,
+        morningSlots: config ? (config.morningSlots || 25) : 25,
+        afternoonSlots: config ? (config.afternoonSlots || 25) : 25,
+        morningBooked,
+        afternoonBooked,
+        morningAvailable: (config ? (config.morningSlots || 25) : 25) - morningBooked,
+        afternoonAvailable: (config ? (config.afternoonSlots || 25) : 25) - afternoonBooked,
+        bookedCount,
+        availableSlots: (config ? config.maxSlots : 50) - bookedCount,
+        isDayOff: config ? config.isDayOff : isWeekend,
+        note: config ? config.note : null,
         hasConfig: !!config,
-        isPast: date < todayStart
+        isPast: date < todayStart,
+        isWeekend
       });
     }
 
     return { daysInMonth, currentMonth, currentYear };
   }
 
-  async updateScheduleConfig(date, maxSlots) {
+  async updateScheduleConfig(date, data) {
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(date)) {
       throw new Error("Ngày không hợp lệ");
     }
-    const slotsNum = parseInt(maxSlots);
-    if (isNaN(slotsNum) || slotsNum < 0 || slotsNum > 1000) {
-      throw new Error("Số lượng slot phải từ 0-1000");
+
+    const maxSlots = parseInt(data.maxSlots);
+    const morningSlots = parseInt(data.morningSlots);
+    const afternoonSlots = parseInt(data.afternoonSlots);
+
+    if (isNaN(maxSlots) || maxSlots < 0 || maxSlots > 1000) {
+      throw new Error("Tổng slot phải từ 0-1000");
     }
+    if (isNaN(morningSlots) || morningSlots < 0 || morningSlots > maxSlots) {
+      throw new Error("Slot buổi sáng phải từ 0 và không vượt quá tổng slot");
+    }
+    if (isNaN(afternoonSlots) || afternoonSlots < 0 || afternoonSlots > maxSlots) {
+      throw new Error("Slot buổi chiều phải từ 0 và không vượt quá tổng slot");
+    }
+
     const slotConfigRepo = new DailySlotConfigRepository();
-    return await slotConfigRepo.upsert(date, slotsNum);
+    return await slotConfigRepo.upsertFull(date, {
+      maxSlots,
+      morningSlots,
+      afternoonSlots,
+      isDayOff: !!data.isDayOff,
+      note: data.note || null
+    });
+  }
+
+  // Bulk-configure weekdays for a month (sets same values for all weekdays)
+  async bulkUpdateSchedule(month, year, data) {
+    const m = parseInt(month);
+    const y = parseInt(year);
+    if (!m || m < 1 || m > 12) throw new Error("Tháng không hợp lệ");
+
+    const startDate = new Date(y, m - 1, 1);
+    const endDate = new Date(y, m, 0);
+    const slotConfigRepo = new DailySlotConfigRepository();
+
+    const maxSlots = parseInt(data.maxSlots);
+    const morningSlots = parseInt(data.morningSlots);
+    const afternoonSlots = parseInt(data.afternoonSlots);
+    const isDayOff = !!data.isDayOff;
+
+    if (isNaN(maxSlots) || maxSlots < 0 || maxSlots > 1000) {
+      throw new Error("Slot phải từ 0-1000");
+    }
+
+    const results = [];
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dayOfWeek = d.getDay();
+      // Skip weekends unless explicitly configured
+      if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
+      const dateStr = d.toISOString().split('T')[0];
+      const result = await slotConfigRepo.upsertFull(dateStr, {
+        maxSlots,
+        morningSlots,
+        afternoonSlots,
+        isDayOff,
+        note: data.note || null
+      });
+      results.push(result);
+    }
+    return results;
   }
 
   // Users
@@ -305,6 +452,36 @@ class AdminService {
     const appointmentRepo = new AppointmentRepository();
     const appointments = await appointmentRepo.findByChildId(child.id);
     return { child, appointments };
+  }
+
+  async updateChild(id, data) {
+    const childRepo = new ChildRepository();
+    const child = await childRepo.findById(parseInt(id));
+    if (!child) throw new Error("Không tìm thấy hồ sơ trẻ");
+
+    // Validate DOB
+    const dob = new Date(data.dob);
+    const now = new Date();
+    if (isNaN(dob.getTime())) throw new Error("Ngày sinh không hợp lệ");
+    if (dob > now) throw new Error("Ngày sinh không thể là ngày trong tương lai");
+
+    child.name = data.name;
+    child.dob = data.dob;
+    child.gender = data.gender;
+    if (data.parentId) {
+      child.parent = { id: parseInt(data.parentId) };
+    }
+    return await childRepo.update(child);
+  }
+
+  async deleteChild(id) {
+    const childRepo = new ChildRepository();
+    return await childRepo.delete(parseInt(id));
+  }
+
+  async getParents() {
+    const userRepo = new UserRepository();
+    return await userRepo.findAll(0, 1000, "parent");
   }
 }
 

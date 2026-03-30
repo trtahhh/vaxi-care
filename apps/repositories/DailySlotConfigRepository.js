@@ -35,6 +35,17 @@ class DailySlotConfigRepository {
     return await repo.save(config);
   }
 
+  async upsertFull(dateStr, data) {
+    const repo = this.context.getRepository("DailySlotConfig");
+    let config = await repo.findOne({ where: { date: dateStr } });
+    if (config) {
+      Object.assign(config, data);
+    } else {
+      config = repo.create({ date: dateStr, ...data });
+    }
+    return await repo.save(config);
+  }
+
   async delete(id) {
     const repo = this.context.getRepository("DailySlotConfig");
     const entity = await repo.findOne({ where: { id } });

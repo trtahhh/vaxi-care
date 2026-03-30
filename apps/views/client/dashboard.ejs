@@ -61,14 +61,14 @@
                                 <%= children.length %> hồ sơ được theo dõi
                             </p>
                         </div>
-                        <% if (unreadCount> 0) { %>
+                        <% if (notificationCount > 0) { %>
                             <a href="/client/notifications"
                                 class="v-btn v-btn-secondary v-btn-sm flex items-center gap-2 no-underline relative">
                                 <span class="material-symbols-outlined v-icon-16">notifications</span>
                                 <span class="hidden sm:inline">Thông báo</span>
                                 <span
                                     class="absolute -top-1 -right-1 w-4 h-4 bg-error text-white text-[10px] font-black rounded-full flex items-center justify-center">
-                                    <%= unreadCount> 9 ? '9+' : unreadCount %>
+                                    <%= notificationCount > 9 ? '9+' : notificationCount %>
                                 </span>
                             </a>
                             <% } %>
@@ -100,11 +100,13 @@
                                 dob.getMonth());
                                 const ageStr = months < 12 ? months + ' tháng' : Math.floor(months / 12) + ' tuổi' +
                                     (months % 12> 0 ? ', ' + (months % 12) + ' tháng' : '');
-                                    const progress = typeof child.progress !== 'undefined' ? child.progress : 0;
-                                    const completedCount = child.appointments
-                                    ? child.appointments.filter(a => a.status === 'completed').length
-                                    : 0;
+                                    const progressPct = child.progressPercent || 0;
+                                    const completedCount = child.completedCount || 0;
+                                    const totalVaccines = child.totalVaccines || 0;
+                                    const upcomingCount = child.upcomingCount || 0;
+                                    const missedCount = child.missedCount || 0;
                                     const milestone = child.nextMilestone || null;
+                                    const progressColor = progressPct >= 80 ? '#2F855A' : progressPct >= 50 ? '#D97706' : '#3182CE';
                                     const genderClass = child.gender === 'male' ? 'v-avatar-male' : 'v-avatar-female';
                                     const genderIcon = child.gender === 'male' ? 'boy' : 'girl';
                                     %>
@@ -112,12 +114,9 @@
 
                                         <!-- Child Header -->
                                         <div class="flex items-start gap-4 mb-5">
-                                            <!-- Avatar -->
                                             <div class="v-avatar v-avatar-lg <%= genderClass %> shrink-0">
-                                                <span class="material-symbols-outlined v-icon-32">person</span>
+                                                <span class="material-symbols-outlined v-icon-32"><%= genderIcon %></span>
                                             </div>
-
-                                            <!-- Info -->
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-start justify-between gap-2">
                                                     <div>
@@ -140,49 +139,73 @@
                                                         </div>
                                                     </div>
                                                     <!-- Progress circle -->
-                                                    <div class="relative shrink-0" title="<%= progress %>% hoàn thành">
-                                                        <svg width="48" height="48" viewBox="0 0 48 48">
-                                                            <circle cx="24" cy="24" r="20" fill="none" stroke="#E2E8F0"
-                                                                stroke-width="4" />
-                                                            <circle cx="24" cy="24" r="20" fill="none"
-                                                                stroke="<%= progress >= 80 ? '#2F855A' : '#3182CE' %>"
-                                                                stroke-width="4" stroke-linecap="round"
-                                                                stroke-dasharray="<%= (progress / 100) * 125.66 %> 125.66"
-                                                                transform="rotate(-90 24 24)" />
+                                                    <div class="relative shrink-0" title="<%= progressPct %>% hoàn thành">
+                                                        <svg width="52" height="52" viewBox="0 0 52 52">
+                                                            <circle cx="26" cy="26" r="22" fill="none" stroke="#E2E8F0" stroke-width="5"/>
+                                                            <circle cx="26" cy="26" r="22" fill="none"
+                                                                stroke="<%= progressColor %>"
+                                                                stroke-width="5" stroke-linecap="round"
+                                                                stroke-dasharray="<%= (progressPct / 100) * 138.23 %> 138.23"
+                                                                transform="rotate(-90 26 26)" />
                                                         </svg>
-                                                        <span
-                                                            class="absolute inset-0 flex items-center justify-center text-[10px] font-black text-on-surface">
-                                                            <%= progress %>%
-                                                        </span>
+                                                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                                            <span class="text-[11px] font-black text-on-surface leading-none"><%= progressPct %></span>
+                                                            <span class="text-[8px] font-bold text-on-surface-variant leading-none">%</span>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Vaccination Progress Bar -->
+                                        <div class="mb-4">
+                                            <div class="flex items-center justify-between mb-1.5">
+                                                <span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Tiến độ tiêm chủng</span>
+                                                <span class="text-[10px] font-black text-on-surface"><%= completedCount %>/<%= totalVaccines %> mũi</span>
+                                            </div>
+                                            <div class="w-full bg-outline rounded-full h-3 overflow-hidden">
+                                                <div class="h-full rounded-full transition-all duration-700"
+                                                     style="width: <%= progressPct %>%; background: <%= progressColor %>"></div>
+                                            </div>
+                                            <div class="flex gap-3 mt-1.5">
+                                                <span class="text-[9px] font-bold text-success flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-success inline-block"></span>
+                                                    Hoàn thành: <%= completedCount %>
+                                                </span>
+                                                <span class="text-[9px] font-bold text-primary flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
+                                                    Sắp tới: <%= upcomingCount %>
+                                                </span>
+                                                <% if (missedCount > 0) { %>
+                                                <span class="text-[9px] font-bold text-error flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-error inline-block"></span>
+                                                    Bỏ lỡ: <%= missedCount %>
+                                                </span>
+                                                <% } %>
                                             </div>
                                         </div>
 
                                         <!-- Stats Row -->
                                         <div class="grid grid-cols-3 gap-3 mb-4">
                                             <div class="text-center p-2 rounded-xl bg-background">
-                                                <p class="text-lg font-black text-primary">
+                                                <p class="text-lg font-black text-success">
                                                     <%= completedCount %>
                                                 </p>
-                                                <p
-                                                    class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
+                                                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
                                                     Đã tiêm</p>
                                             </div>
                                             <div class="text-center p-2 rounded-xl bg-background">
                                                 <p class="text-lg font-black text-on-surface">
                                                     <%= child.weight ? child.weight + ' kg' : '--' %>
                                                 </p>
-                                                <p
-                                                    class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
+                                                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
                                                     Cân nặng</p>
                                             </div>
                                             <div class="text-center p-2 rounded-xl bg-background">
                                                 <p class="text-lg font-black text-on-surface">
                                                     <%= child.height ? child.height + ' cm' : '--' %>
                                                 </p>
-                                                <p
-                                                    class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
+                                                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">
                                                     Chiều cao</p>
                                             </div>
                                         </div>
@@ -209,11 +232,11 @@
 
                                                 <!-- Actions -->
                                                 <div class="flex gap-2">
-                                                    <a href="/client/children/<%= child.id %>"
+                                                    <a href="/client/roadmap/<%= child.id %>"
                                                         class="v-btn v-btn-secondary v-btn-sm flex-1 no-underline text-center">
                                                         <span
-                                                            class="material-symbols-outlined v-icon-14">visibility</span>
-                                                        Chi tiết
+                                                            class="material-symbols-outlined v-icon-14">timeline</span>
+                                                        Lộ trình
                                                     </a>
                                                     <a href="/appointments/book?childId=<%= child.id %>"
                                                         class="v-btn v-btn-primary v-btn-sm flex-1 no-underline text-center">
@@ -348,16 +371,21 @@
                                                                     <%= appt.vaccine && appt.vaccine.name ?
                                                                         appt.vaccine.name : 'Vaccine' %>
                                                                 </p>
-                                                                <p class="text-xs text-on-surface-variant mt-0.5">
-                                                                    Bé: <span class="font-semibold text-on-surface">
-                                                                        <%= appt.child && appt.child.name ?
-                                                                            appt.child.name : 'N/A' %>
+                                                                <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                                                                    <span class="text-xs text-on-surface-variant">
+                                                                        <span class="font-semibold text-on-surface">
+                                                                            <%= appt.child && appt.child.name ? appt.child.name : 'N/A' %>
+                                                                        </span>
                                                                     </span>
-                                                                    <span class="mx-1 opacity-50">•</span>
-                                                                    <span class="font-semibold">
-                                                                        <%= appt.appointmentTime || '--:--' %>
+                                                                    <span class="opacity-40 text-xs">•</span>
+                                                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded <%= appt.session === 'morning' ? 'bg-warning/10 text-warning border border-warning/20' : 'bg-secondary/10 text-secondary border border-secondary/20' %>">
+                                                                        <span class="material-symbols-outlined v-icon-10 align-middle"><%= appt.session === 'morning' ? 'wb_sunny' : 'dark_mode' %></span>
+                                                                        <%= appt.session === 'morning' ? 'Sáng' : 'Chiều' %>
                                                                     </span>
-                                                                </p>
+                                                                    <span class="text-[10px] font-bold text-on-surface-variant">
+                                                                        <%= apptDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) %>
+                                                                    </span>
+                                                                </div>
                                                             </div>
 
                                                             <!-- Status -->

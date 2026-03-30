@@ -74,11 +74,15 @@ class ChildRepository {
 
   async delete(id) {
     const repo = this.context.getRepository("Child");
-    const entity = await repo.findOne({ where: { id } });
-    if (entity) {
-      return await repo.remove(entity);
+    const entity = await repo.findOne({
+      where: { id },
+      relations: ["appointments"]
+    });
+    if (!entity) return null;
+    if (entity.appointments && entity.appointments.length > 0) {
+      throw new Error("Không thể xóa: hồ sơ có lịch tiêm liên quan");
     }
-    return null;
+    return await repo.remove(entity);
   }
 }
 

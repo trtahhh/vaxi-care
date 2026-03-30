@@ -42,6 +42,7 @@
         </thead>
         <tbody class="divide-y divide-outline">
           <% list.forEach(c => { %>
+            <% const cNameEscaped = (c.name || '').replace(/'/g, "\\'"); %>
             <tr class="hover:bg-primary/5 transition-colors">
               <td class="p-5">
                 <div class="flex items-center gap-3">
@@ -73,9 +74,21 @@
                   <a href="/admin/children/<%= c.id %>" class="w-9 h-9 rounded-lg border border-outline text-primary bg-white hover:bg-primary hover:text-white flex items-center justify-center transition-all" title="Xem chi tiết">
                     <span class="material-symbols-outlined text-lg">visibility</span>
                   </a>
+                  <a href="/admin/children/edit/<%= c.id %>" class="w-9 h-9 rounded-lg border border-outline text-warning bg-white hover:bg-warning hover:text-white flex items-center justify-center transition-all" title="Sửa">
+                    <span class="material-symbols-outlined text-lg">edit</span>
+                  </a>
                   <a href="/appointments/book?childId=<%= c.id %>" class="w-9 h-9 rounded-lg border border-outline text-secondary bg-white hover:bg-secondary hover:text-white flex items-center justify-center transition-all" title="Đặt lịch tiêm">
                     <span class="material-symbols-outlined text-lg">event_available</span>
                   </a>
+                  <form action="/admin/children/delete/<%= c.id %>" method="POST" class="inline"
+                    onsubmit="return confirm('Xóa hồ sơ của <%= cNameEscaped %>? Hành động này không thể hoàn tác.')">
+                    <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                    <button type="submit"
+                      class="w-9 h-9 rounded-lg border border-outline text-error bg-white hover:bg-error hover:text-white flex items-center justify-center transition-all"
+                      title="Xóa">
+                      <span class="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                  </form>
                 </div>
               </td>
             </tr>

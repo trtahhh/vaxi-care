@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const HomeService = require('../../services/HomeService');
+const RoadmapService = require('../../services/RoadmapService');
 const { authenticate, authorizeRoles, loadNotificationCount } = require("../auth/auth.middleware");
 
 const homeService = new HomeService();
+const roadmapService = new RoadmapService();
 
 // CSRF guard for state-changing requests
 const csrfGuard = (req, res, next) => {
@@ -60,6 +62,16 @@ router.get("/children/add", isAdminOrStaff, async (req, res) => {
 
 router.post("/children/add", isAdminOrStaff, csrfGuard, async (req, res) => {
     try {
+        // Validate DOB is not in the future
+        const dob = new Date(req.body.dob);
+        const now = new Date();
+        now.setHours(23, 59, 59, 999); // allow full day today
+        if (isNaN(dob.getTime())) {
+            throw new Error("Ngày sinh không hợp lệ.");
+        }
+        if (dob > now) {
+            throw new Error("Ngày sinh không thể là ngày trong tương lai.");
+        }
         await homeService.addChild(req.body);
         res.redirect("/client/dashboard");
     } catch (error) {
@@ -74,7 +86,7 @@ router.post("/children/add", isAdminOrStaff, csrfGuard, async (req, res) => {
 
 router.get("/appointments/book", isParent, async (req, res) => {
     try {
-        const { childId } = req.query;
+        const { childId, vaccineId } = req.query;
         const children = await homeService.getChildrenForBooking(req.user.id, req.user.role);
         const vaccines = await homeService.getVaccinesForBooking();
 
@@ -88,7 +100,8 @@ router.get("/appointments/book", isParent, async (req, res) => {
             children,
             vaccines,
             recommendations,
-            selectedChildId: childId || null
+            selectedChildId: childId || null,
+            selectedVaccineId: vaccineId || null
         });
     } catch (error) {
         res.redirect("/client/dashboard");
@@ -108,6 +121,7 @@ router.post("/appointments/book", isParent, csrfGuard, async (req, res) => {
             vaccines,
             recommendations: [],
             selectedChildId: req.body.childId,
+            selectedVaccineId: req.body.vaccineId,
             error: error.message
         });
     }
@@ -207,13 +221,30 @@ router.post("/appointments/:id/cancel", isParent, csrfGuard, async (req, res) =>
 // Slot availability check (used by booking form)
 router.get("/appointments/slots", isParent, async (req, res) => {
     try {
-        const date = new Date(req.query.date);
+        // Parse datetime-local input as local time (avoids UTC conversion issues)
+        const raw = req.query.date;
+        if (!raw) return res.status(400).json({ error: "Ngày không hợp lệ" });
+
+        const [datePart, timePart] = raw.split('T');
+        if (!datePart || !timePart) return res.status(400).json({ error: "Ngày không hợp lệ" });
+
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hour, minute] = timePart.split(':').map(Number);
+
+        if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) {
+            return res.status(400).json({ error: "Ngày không hợp lệ" });
+        }
+
+        const date = new Date(year, month - 1, day, hour, minute);
+
         if (isNaN(date.getTime())) {
             return res.status(400).json({ error: "Ngày không hợp lệ" });
         }
+
         const slotInfo = await homeService.getSlotInfo(date);
         res.json(slotInfo);
     } catch (error) {
+        console.error('[Slots] Error:', error);
         res.status(500).json({ error: "Lỗi server" });
     }
 });
@@ -249,6 +280,31 @@ router.get("/client/vaccines", isParent, async (req, res) => {
             search: '',
             error: error.message
         });
+    }
+});
+
+// === Vaccination Roadmap ===
+router.get("/client/roadmap/:childId", isParent, async (req, res) => {
+    try {
+        const childId = parseInt(req.params.childId);
+        if (isNaN(childId)) return res.redirect("/client/dashboard");
+
+        const roadmap = await roadmapService.getRoadmapForChild(childId);
+        if (!roadmap) return res.redirect("/client/dashboard?error=Không%20tìm%20thấy%20hồ%20sơ%20bé");
+
+        const ChildRepository = require('../../repositories/ChildRepository');
+        const childRepo = new ChildRepository();
+        const child = await childRepo.findById(childId);
+
+        res.render("client/roadmap", {
+            currentPath: '/client/roadmap',
+            roadmap,
+            child,
+            error: null
+        });
+    } catch (err) {
+        console.error('[Roadmap] Error:', err);
+        res.redirect("/client/dashboard?error=Lỗi%20tải%20lộ%20trình");
     }
 });
 

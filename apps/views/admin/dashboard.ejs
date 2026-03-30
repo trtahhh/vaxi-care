@@ -1,6 +1,7 @@
 <!-- =====================
   Admin Dashboard
-  Data: userCount, childCount, vaccineCount, todayAppointments, weeklyTrend, stockAlerts
+  Data: userCount, childCount, vaccineCount, todayAppointments, weeklyTrend, monthlyTrend,
+        appointmentStatusDistribution, stockAlerts, vaccineStockData
 ===================== -->
 
 <%- include('../partials/admin-page-header', {
@@ -21,8 +22,10 @@
     <%- include('../partials/stat-card', { icon: 'group', label: 'Người dùng', value: userCount || 0, iconColor: 'text-error' }) %>
   </div>
 
+  <%# Charts row %>
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <%# Weekly trend chart %>
+
+    <%# ---- 1. Weekly Trend (Bar) ---- %>
     <div class="lg:col-span-2 v-card !p-6">
       <div class="flex items-center justify-between mb-5">
         <h3 class="text-xl font-display font-black tracking-tight text-on-surface flex items-center gap-2 leading-none">
@@ -30,21 +33,106 @@
           Xu hướng lịch hẹn (7 ngày)
         </h3>
       </div>
-      <div id="trendChartContainer" class="h-[300px]" data-trend='<%- JSON.stringify(weeklyTrend || []) %>'>
-        <canvas id="trendChart"></canvas>
+      <div class="h-[280px]">
+        <canvas id="weeklyTrendChart" data-trend='<%- JSON.stringify(weeklyTrend || []) %>'></canvas>
       </div>
     </div>
 
-    <%# Stock alerts %>
+    <%# ---- 2. Status Distribution (Doughnut) ---- %>
+    <div class="v-card !p-6 flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-display font-black tracking-tight text-on-surface flex items-center gap-2 leading-none">
+          <span class="material-symbols-outlined text-secondary text-2xl">pie_chart</span>
+          Phân bổ trạng thái
+        </h3>
+      </div>
+      <% const dist = appointmentStatusDistribution || {}; %>
+      <% const totalAppts = (dist.pending || 0) + (dist.confirmed || 0) + (dist.completed || 0) + (dist.cancelled || 0); %>
+      <div class="flex-1 flex items-center justify-center">
+        <div class="relative">
+          <canvas id="statusPieChart" width="200" height="200"
+                  data-pending="<%= dist.pending || 0 %>"
+                  data-confirmed="<%= dist.confirmed || 0 %>"
+                  data-completed="<%= dist.completed || 0 %>"
+                  data-cancelled="<%= dist.cancelled || 0 %>"
+                  data-total="<%= totalAppts %>"></canvas>
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span class="text-2xl font-black text-on-surface"><%= totalAppts %></span>
+            <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">Tổng lịch</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mt-4">
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-warning shrink-0"></span><span class="text-[10px] font-bold text-on-surface-variant">Chờ duyệt: <%= dist.pending || 0 %></span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-primary shrink-0"></span><span class="text-[10px] font-bold text-on-surface-variant">Xác nhận: <%= dist.confirmed || 0 %></span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-secondary shrink-0"></span><span class="text-[10px] font-bold text-on-surface-variant">Hoàn thành: <%= dist.completed || 0 %></span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-on-surface-variant/30 shrink-0"></span><span class="text-[10px] font-bold text-on-surface-variant">Đã hủy: <%= dist.cancelled || 0 %></span></div>
+      </div>
+    </div>
+  </div>
+
+  <%# Charts row 2 %>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <%# ---- 3. Vaccine Stock (Horizontal Bar) ---- %>
+    <div class="v-card !p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-xl font-display font-black tracking-tight text-on-surface flex items-center gap-2 leading-none">
+          <span class="material-symbols-outlined text-warning text-2xl">inventory_2</span>
+          Tồn kho vắc xin
+        </h3>
+        <a href="/admin/vaccines" class="text-[10px] font-black text-primary uppercase tracking-widest">Quản lý kho</a>
+      </div>
+      <% const stockData = vaccineStockData || []; %>
+      <% if (stockData.length === 0) { %>
+        <div class="py-10 text-center opacity-50">
+          <span class="material-symbols-outlined text-4xl text-secondary mb-2 block">check_circle</span>
+          <p class="text-xs font-black uppercase tracking-widest text-on-surface-variant">Kho ổn định</p>
+        </div>
+      <% } else { %>
+        <div class="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+          <% stockData.forEach(v => { %>
+            <div class="flex items-center gap-3">
+              <p class="text-xs font-bold text-on-surface w-36 truncate shrink-0" title="<%= v.name %>"><%= v.name %></p>
+              <div class="flex-1 bg-background rounded-full h-4 overflow-hidden border border-outline relative">
+                <div class="h-full rounded-full transition-all duration-500 <%= v.low ? 'bg-error' : v.stock < 30 ? 'bg-warning' : 'bg-secondary' %>"
+                     style="width: <%= Math.min(100, (v.stock / 100) * 100) %>%"></div>
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black <%= v.low ? 'text-error' : 'text-on-surface-variant' %>">
+                  <%= v.stock %>
+                </span>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        <p class="text-[9px] font-bold text-on-surface-variant/60 uppercase tracking-widest mt-3 text-center">Top 8 vắc xin có tồn kho thấp nhất</p>
+      <% } %>
+    </div>
+
+    <%# ---- 4. Monthly Trend (Line) ---- %>
+    <div class="v-card !p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-xl font-display font-black tracking-tight text-on-surface flex items-center gap-2 leading-none">
+          <span class="material-symbols-outlined text-primary text-2xl">calendar_month</span>
+          Xu hướng 6 tháng gần nhất
+        </h3>
+      </div>
+      <div class="h-[300px]">
+        <canvas id="monthlyTrendChart" data-trend='<%- JSON.stringify(monthlyTrend || []) %>'></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <%# ---- 5. Stock Alerts ---- %>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
     <div class="v-card !p-6">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-display font-black tracking-tight text-on-surface flex items-center gap-2 leading-none">
-          <span class="material-symbols-outlined text-error text-2xl">inventory_2</span>
+          <span class="material-symbols-outlined text-error text-2xl">warning</span>
           Cảnh báo kho
         </h3>
-        <a href="/admin/vaccines" class="text-[10px] font-black text-primary uppercase tracking-widest">Xem tất cả</a>
       </div>
-
       <% const alerts = stockAlerts || []; %>
       <% if (alerts.length === 0) { %>
         <div class="py-8 text-center opacity-50">
@@ -52,58 +140,217 @@
           <p class="text-xs font-black uppercase tracking-widest text-on-surface-variant">Kho ổn định</p>
         </div>
       <% } else { %>
-        <div class="space-y-3 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
+        <div class="space-y-3">
           <% alerts.forEach(v => { %>
             <div class="p-3 bg-background rounded-xl border border-outline flex items-center justify-between gap-3 hover:border-error/30 transition-colors">
               <div class="min-w-0">
                 <p class="font-black text-sm text-on-surface truncate"><%= v.name %></p>
-                <p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest"><%= v.type || 'Vaccine' %></p>
+                <p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest"><%= v.ageLabel || v.recommendedAgeMonths ? 'Từ ' + v.recommendedAgeMonths + ' tháng' : '' %></p>
               </div>
-              <span class="v-badge bg-error/10 text-error border-error/20"><%= v.stock %> còn</span>
+              <div class="flex items-center gap-2 shrink-0">
+                <div class="text-right">
+                  <p class="text-lg font-black text-error"><%= v.stock %></p>
+                  <p class="text-[9px] font-bold text-error/60 uppercase tracking-widest">còn</p>
+                </div>
+                <div class="w-8 h-8 bg-error/10 rounded-lg flex items-center justify-center">
+                  <span class="material-symbols-outlined text-error text-base">inventory_2</span>
+                </div>
+              </div>
             </div>
           <% }) %>
         </div>
       <% } %>
     </div>
+
+    <%# ---- 6. Quick Stats Panel ---- %>
+    <div class="v-card !p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-display font-black tracking-tight text-on-surface flex items-center gap-2 leading-none">
+          <span class="material-symbols-outlined text-secondary text-2xl">insights</span>
+          Thống kê nhanh
+        </h3>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <% const dist2 = appointmentStatusDistribution || {}; %>
+        <div class="bg-primary/5 rounded-xl border border-primary/20 p-4 text-center">
+          <p class="text-3xl font-black text-primary"><%= (dist2.pending || 0) %></p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-primary/70 mt-1">Chờ duyệt</p>
+        </div>
+        <div class="bg-secondary/5 rounded-xl border border-secondary/20 p-4 text-center">
+          <p class="text-3xl font-black text-secondary"><%= (dist2.confirmed || 0) %></p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-secondary/70 mt-1">Đã xác nhận</p>
+        </div>
+        <div class="bg-success/5 rounded-xl border border-success/20 p-4 text-center">
+          <p class="text-3xl font-black text-success"><%= (dist2.completed || 0) %></p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-success/70 mt-1">Hoàn thành</p>
+        </div>
+        <div class="bg-error/5 rounded-xl border border-error/20 p-4 text-center">
+          <p class="text-3xl font-black text-error"><%= (dist2.cancelled || 0) %></p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-error/70 mt-1">Đã hủy</p>
+        </div>
+      </div>
+
+      <%# Utilization rate %>
+      <% const total = (dist2.pending || 0) + (dist2.confirmed || 0) + (dist2.completed || 0); %>
+      <% const utilization = total > 0 ? Math.round(((dist2.completed || 0) / total) * 100) : 0; %>
+      <div class="mt-5 p-4 bg-background rounded-xl border border-outline">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Tỷ lệ hoàn thành</span>
+          <span class="text-sm font-black text-primary"><%= utilization %>%</span>
+        </div>
+        <div class="w-full bg-outline rounded-full h-3 overflow-hidden">
+          <div class="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-700"
+               style="width: <%= utilization %>%"></div>
+        </div>
+      </div>
+
+      <%# Avg daily appointments %>
+      <% const weeklyData = weeklyTrend || []; %>
+      <% const avgDaily = weeklyData.length > 0 ? Math.round(weeklyData.reduce((s, d) => s + d.count, 0) / weeklyData.length) : 0; %>
+      <div class="mt-3 p-4 bg-background rounded-xl border border-outline">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">TB lịch/ngày (7 ngày)</span>
+          <span class="text-sm font-black text-secondary"><%= avgDaily %></span>
+        </div>
+        <div class="w-full bg-outline rounded-full h-3 overflow-hidden">
+          <% const maxCount = Math.max(...weeklyData.map(d => d.count), 1); %>
+          <% weeklyData.forEach((d, i) => { %>
+            <div class="inline-block h-full bg-primary/60 rounded-full"
+                 style="width: <%= Math.max(5, (d.count / maxCount) * 100 / weeklyData.length) %>% margin-left: <%= i === 0 ? '0' : '2' %>px"></div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const container = document.getElementById('trendChartContainer');
-    if (!container) return;
-    const trend = JSON.parse(container.dataset.trend || '[]');
-    if (!trend || trend.length === 0) return;
-    const ctx = document.getElementById('trendChart').getContext('2d');
+document.addEventListener('DOMContentLoaded', function () {
+  // Chart.js defaults
+  Chart.defaults.font.family = 'system-ui, sans-serif';
+  Chart.defaults.font.size = 11;
 
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: trend.map(i => i.date),
-        datasets: [{
-          label: 'Lịch hẹn',
-          data: trend.map(i => i.count),
-          borderColor: '#3182CE',
-          backgroundColor: 'rgba(49,130,206,0.1)',
-          borderWidth: 3,
-          tension: 0.35,
-          fill: true,
-          pointBackgroundColor: '#fff',
-          pointBorderColor: '#3182CE',
-          pointRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, grid: { color: '#E2E8F0' } },
-          x: { grid: { display: false } }
+  // ---- 1. Weekly Trend Bar Chart ----
+  const weeklyCtx = document.getElementById('weeklyTrendChart');
+  if (weeklyCtx) {
+    const weeklyTrend = JSON.parse(weeklyCtx.dataset.trend || '[]');
+    if (weeklyTrend.length > 0) {
+      new Chart(weeklyCtx.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: weeklyTrend.map(i => i.date),
+          datasets: [{
+            label: 'Lịch hẹn',
+            data: weeklyTrend.map(i => i.count),
+            backgroundColor: weeklyTrend.map((_, i) =>
+              i === weeklyTrend.length - 1
+                ? 'rgba(49,130,206,0.9)'
+                : 'rgba(49,130,206,0.3)'
+            ),
+            borderColor: '#3182CE',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1, font: { weight: '700' } },
+              grid: { color: '#E2E8F0' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { weight: '600' } }
+            }
+          }
         }
-      }
-    });
-  });
+      });
+    }
+  }
+
+  // ---- 2. Status Pie/Doughnut Chart ----
+  const pieCtx = document.getElementById('statusPieChart');
+  if (pieCtx) {
+    const total = parseInt(pieCtx.dataset.total || '0');
+    if (total > 0) {
+      new Chart(pieCtx.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Chờ duyệt', 'Xác nhận', 'Hoàn thành', 'Đã hủy'],
+          datasets: [{
+            data: [
+              parseInt(pieCtx.dataset.pending || '0'),
+              parseInt(pieCtx.dataset.confirmed || '0'),
+              parseInt(pieCtx.dataset.completed || '0'),
+              parseInt(pieCtx.dataset.cancelled || '0')
+            ],
+            backgroundColor: ['#D97706', '#3182CE', '#2F855A', '#CBD5E0'],
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: false,
+          cutout: '70%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw / total * 100)}%)`
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // ---- 3. Monthly Trend Line Chart ----
+  const monthlyCtx = document.getElementById('monthlyTrendChart');
+  if (monthlyCtx) {
+    const monthlyTrend = JSON.parse(monthlyCtx.dataset.trend || '[]');
+    if (monthlyTrend.length > 0) {
+      new Chart(monthlyCtx.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: monthlyTrend.map(i => i.month),
+          datasets: [{
+            label: 'Lịch hẹn',
+            data: monthlyTrend.map(i => i.count),
+            borderColor: '#3182CE',
+            backgroundColor: 'rgba(49,130,206,0.08)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#3182CE',
+            pointRadius: 5,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 },
+              grid: { color: '#E2E8F0' }
+            },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+  }
+});
 </script>

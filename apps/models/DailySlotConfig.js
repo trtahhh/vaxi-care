@@ -16,7 +16,22 @@ module.exports = new EntitySchema({
         maxSlots: {
             type: "int",
             default: 50,
-            comment: "So luong lich hen toi da trong ngay, do Admin cau hinh",
+        },
+        morningSlots: {
+            type: "int",
+            default: 25,
+        },
+        afternoonSlots: {
+            type: "int",
+            default: 25,
+        },
+        isDayOff: {
+            type: "boolean",
+            default: false,
+        },
+        note: {
+            type: "varchar",
+            nullable: true,
         },
     },
 });

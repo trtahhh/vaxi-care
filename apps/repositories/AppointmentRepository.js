@@ -59,9 +59,14 @@ class AppointmentRepository {
   }
 
   async countUpcomingFromDate(date) {
-    return await this.context.getRepository("Appointment").count({
-      where: { date: MoreThanOrEqual(date) }
-    });
+    // Count only non-cancelled, non-completed appointments from given date
+    return await this.context.getRepository("Appointment")
+      .createQueryBuilder("appointment")
+      .where("appointment.date >= :date", { date })
+      .andWhere("appointment.status NOT IN (:...statuses)", {
+        statuses: ["cancelled", "completed"]
+      })
+      .getCount();
   }
 
   async countByDate(date) {
@@ -79,6 +84,16 @@ class AppointmentRepository {
       .createQueryBuilder("appointment")
       .where("DATE(appointment.date) = :date", { date: dateStr })
       .andWhere("appointment.status = :status", { status })
+      .getCount();
+  }
+
+  async countByDateAndSession(date, session) {
+    const dateStr = date.toISOString().split("T")[0];
+    return await this.context.getRepository("Appointment")
+      .createQueryBuilder("appointment")
+      .where("DATE(appointment.date) = :date", { date: dateStr })
+      .andWhere("appointment.session = :session", { session })
+      .andWhere("appointment.status != :status", { status: "cancelled" })
       .getCount();
   }
 
@@ -103,11 +118,15 @@ class AppointmentRepository {
   }
 
   async countByDateRange(startDate, endDate) {
-    return await this.context.getRepository("Appointment").count({
-      where: {
-        date: Between(startDate, endDate)
-      }
-    });
+    // Count only active (non-cancelled) appointments in date range
+    return await this.context.getRepository("Appointment")
+      .createQueryBuilder("appointment")
+      .where("appointment.date BETWEEN :start AND :end", {
+        start: startDate,
+        end: endDate
+      })
+      .andWhere("appointment.status != :status", { status: "cancelled" })
+      .getCount();
   }
 
   async findPending(skip, limit) {

@@ -67,6 +67,27 @@ class VaccineRepository {
       .orderBy("vaccine.stock", "ASC")
       .getMany();
   }
+
+  // Atomic decrement — returns affected row count (1 = success, 0 = out of stock)
+  async decrementStock(id) {
+    const result = await this.context.getRepository("Vaccine")
+      .createQueryBuilder()
+      .update()
+      .set({ stock: () => "stock - 1" })
+      .where("id = :id AND stock > 0", { id })
+      .execute();
+    return result.affected || 0;
+  }
+
+  // Atomic increment — safe, no lower bound
+  async incrementStock(id) {
+    await this.context.getRepository("Vaccine")
+      .createQueryBuilder()
+      .update()
+      .set({ stock: () => "stock + 1" })
+      .where("id = :id", { id })
+      .execute();
+  }
 }
 
 module.exports = VaccineRepository;

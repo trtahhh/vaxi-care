@@ -27,7 +27,7 @@ module.exports = new EntitySchema({
         user: {
             type: "many-to-one",
             target: "User",
-            joinColumn: { name: "user_id" },
+            joinColumn: { name: "userId" },
             onDelete: "CASCADE",
         },
     },

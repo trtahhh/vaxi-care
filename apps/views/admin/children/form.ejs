@@ -1,0 +1,114 @@
+<!-- =====================
+  Admin Child Form (Create / Edit)
+  Data: child, parents[], error, csrfToken
+===================== -->
+
+<% const isEdit = locals.child && locals.child.id; %>
+
+<%- include('../../partials/admin-page-header', {
+    title: isEdit ? 'Sửa hồ sơ trẻ' : 'Lập hồ sơ trẻ mới',
+    subtitle: isEdit ? 'Cập nhật thông tin hồ sơ trẻ em.' : 'Nhập thông tin chính xác theo giấy khai sinh.',
+    backHref: '/admin/children'
+}) %>
+
+<div class="max-w-2xl animate-fade-in">
+
+  <%# Error alert %>
+  <% if (locals.error) { %>
+    <div class="mb-6 p-4 rounded-xl bg-error/10 border border-error/20 flex items-center gap-3 animate-shake">
+      <span class="material-symbols-outlined text-error text-xl">report</span>
+      <p class="text-error text-xs font-black uppercase tracking-tight flex-1"><%= error %></p>
+    </div>
+  <% } %>
+
+  <form action="/admin/children/<%= isEdit ? 'edit/' + child.id : 'add' %>" method="POST"
+        class="v-card !p-8 space-y-7">
+
+    <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <% } %>
+
+    <%# Name %>
+    <div class="group">
+      <label class="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 ml-1">
+        Họ và tên trẻ <span class="text-error">*</span>
+      </label>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl group-focus-within:text-primary transition-colors">badge</span>
+        <input required name="name" type="text"
+          value="<%= child ? child.name : '' %>"
+          oninput="this.value = this.value.toUpperCase()"
+          class="w-full pl-12 pr-4 py-4 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-black text-sm uppercase">
+      </div>
+    </div>
+
+    <%# Parent selection %>
+    <div class="group">
+      <label class="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 ml-1">
+        Phụ huynh <span class="text-error">*</span>
+      </label>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl group-focus-within:text-primary transition-colors">family_restroom</span>
+        <select required name="parentId"
+          class="w-full pl-12 pr-10 py-4 appearance-none bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-bold text-sm cursor-pointer">
+          <option value="">Chọn cha mẹ/người giám hộ</option>
+          <% (parents || []).forEach(p => { %>
+            <% const selected = child && child.parent && child.parent.id === p.id ? 'selected' : ''; %>
+            <option value="<%= p.id %>" <%= selected %>>
+              <%= p.fullName || p.username %> (<%= p.phone || p.email %>)
+            </option>
+          <% }) %>
+        </select>
+        <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+      </div>
+    </div>
+
+    <%# Date of birth %>
+    <div class="group">
+      <label class="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2 ml-1">
+        Ngày sinh <span class="text-error">*</span>
+      </label>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl group-focus-within:text-primary transition-colors">cake</span>
+        <input required name="dob" type="date"
+          value="<%= child && child.dob ? new Date(child.dob).toISOString().split('T')[0] : '' %>"
+          class="w-full pl-12 pr-4 py-4 bg-background border border-outline text-on-surface rounded-xl focus:outline-none focus:border-primary transition-all font-black text-sm">
+      </div>
+    </div>
+
+    <%# Gender radio cards %>
+    <div>
+      <label class="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-3 ml-1">
+        Giới tính <span class="text-error">*</span>
+      </label>
+      <div class="grid grid-cols-2 gap-4">
+        <label class="relative flex items-center justify-center gap-3 p-5 rounded-xl bg-background border-2 border-outline hover:border-primary/30 cursor-pointer transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5 group/btn">
+          <input name="gender" type="radio" value="male"
+            class="hidden"
+            <%= (child && child.gender === 'male') || !child ? 'checked' : '' %> required>
+          <span class="material-symbols-outlined text-primary text-2xl group-has-[:checked]/btn:scale-110 transition-transform">boy</span>
+          <span class="font-black text-xs uppercase text-on-surface-variant group-has-[:checked]/btn:text-primary tracking-widest">BÉ TRAI</span>
+        </label>
+        <label class="relative flex items-center justify-center gap-3 p-5 rounded-xl bg-background border-2 border-outline hover:border-error/30 cursor-pointer transition-all has-[:checked]:border-error has-[:checked]:bg-error/5 group/btn">
+          <input name="gender" type="radio" value="female"
+            class="hidden"
+            <%= child && child.gender === 'female' ? 'checked' : '' %>>
+          <span class="material-symbols-outlined text-error text-2xl group-has-[:checked]/btn:scale-110 transition-transform">girl</span>
+          <span class="font-black text-xs uppercase text-on-surface-variant group-has-[:checked]/btn:text-error tracking-widest">BÉ GÁI</span>
+        </label>
+      </div>
+    </div>
+
+    <%# Submit %>
+    <div class="flex flex-col gap-3 pt-2">
+      <button type="submit"
+        class="v-btn v-btn-primary !py-5 uppercase !text-sm tracking-widest gap-3 shadow-lg">
+        <span class="material-symbols-outlined">save</span>
+        <%= isEdit ? 'LƯU THAY ĐỔI' : 'HOÀN TẤT HỒ SƠ' %>
+      </button>
+      <a href="/admin/children" class="v-btn v-btn-secondary !py-4 uppercase !text-xs tracking-widest text-center no-underline">
+        Hủy bỏ
+      </a>
+    </div>
+  </form>
+</div>

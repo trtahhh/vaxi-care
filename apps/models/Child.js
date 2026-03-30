@@ -19,12 +19,16 @@ module.exports = new EntitySchema({
             type: "enum",
             enum: ["male", "female", "other"],
         },
+        parentId: {
+            type: "int",
+            nullable: true,
+        },
     },
     relations: {
         parent: {
             type: "many-to-one",
             target: "User",
-            joinColumn: { name: "parent_id" },
+            joinColumn: { name: "parentId" },
             inverseSide: "children",
         },
     },
